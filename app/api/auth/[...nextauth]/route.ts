@@ -10,7 +10,7 @@ const handler = NextAuth({
     ],
     callbacks: {
         async signIn({ user }) {
-            const allowedEmails = ["filheinz27@gmail.com"];
+            const allowedEmails = [process.env.ADMIN_EMAIL];
             return allowedEmails.includes(user.email || "");
         }
     }
