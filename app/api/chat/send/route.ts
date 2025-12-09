@@ -1,7 +1,15 @@
 import { NextResponse } from 'next/server';
-import { createServerClient, type CookieOptions } from '@supabase/ssr';
+import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { generateLLMResponse } from '@/lib/llm';
+import { z } from 'zod';
+import xss from 'xss';
+
+// Schema for request validation
+const sendSchema = z.object({
+    conversationId: z.string().uuid(),
+    content: z.string().min(1).max(2000), // Reasonable limit
+});
 
 export async function POST(req: Request) {
     const cookieStore = await cookies();
@@ -14,7 +22,6 @@ export async function POST(req: Request) {
                 get(name: string) {
                     return cookieStore.get(name)?.value;
                 },
-                // We don't typically need to set cookies in API routes unless refreshing sessions
                 set: () => { },
                 remove: () => { },
             },
@@ -35,20 +42,27 @@ export async function POST(req: Request) {
     }
 
     try {
-        const { conversationId, content } = await req.json();
+        const body = await req.json();
 
-        if (!conversationId || !content) {
+        // 2. Validate Input
+        const result = sendSchema.safeParse(body);
+        if (!result.success) {
             return NextResponse.json(
-                { error: 'Missing conversationId or content' },
+                { error: 'Invalid input', details: result.error.format() },
                 { status: 400 }
             );
         }
 
-        // 2. Validate Conversation Ownership
-        // RLS policies should handle this on insert/select, but good to check if needed.
-        // For now, we trust the RLS on the 'messages' insert below.
+        const { conversationId, content: rawContent } = result.data;
 
-        // 3. Save User Message
+        // 3. Sanitize Content (XSS Protection)
+        // We use 'xss' library to strip dangerous tags/attributes
+        const content = xss(rawContent);
+
+        console.log(`[Send Route] User: ${user.id}, Conversation: ${conversationId}`);
+
+        // 4. Save User Message
+        // RLS policies should handle this on insert/select
         const { error: msgError } = await supabase.from('messages').insert({
             conversation_id: conversationId,
             sender_type: 'user',
@@ -60,17 +74,7 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: 'Failed to save message' }, { status: 500 });
         }
 
-        // 4. Check Admin Status
-        const { data: convo } = await supabase
-            .from('conversations')
-            .select('assigned_admin_id')
-            .eq('id', conversationId)
-            .single();
-
-        if (convo?.assigned_admin_id) {
-            // Admin has taken over, do NOT trigger AI
-            return NextResponse.json({ status: 'sent_to_admin' });
-        }
+        // REMOVED: Admin Check (Admin takeover logic removed per requirements)
 
         // 5. Gather Context for AI
         const [
@@ -96,25 +100,7 @@ export async function POST(req: Request) {
         const aiResponse = await generateLLMResponse(content, context);
 
         // 7. Save Bot Message
-        // Note: 'bot' messages might need specific RLS handling or be inserted by service role if RLS blocks user from inserting 'bot' type.
-        // However, our standard RLS check (auth.uid() = user.id) usually allows inserting into own conversation.
-        // But does it allow 'sender_type' = 'bot'? Correct logic is usually: users should NOT be able to spoof 'bot' messages.
-        // Ideally, this part uses SERVICE ROLE KEY to bypass RLS for the bot response.
-
-        // We'll try user auth first. If it fails due to strict RLS preventing 'bot' sender_type, we need a service client.
-        // For MVP/Phase 2 Reference, we kept it simple. Assuming 'sender_type' is just a field they can write to, OR we use Service Role here.
-
-        // BETTER APPROACH: Use Service Role for bot message to prevent user spoofing API.
-        // But we are in an API route, so we can use Service Key if we have it.
-        // Assuming `process.env.SUPABASE_SERVICE_ROLE_KEY` exists? Usually typically `NEXT_PUBLIC_...` are the only ones.
-        // If not, we rely on the users table policy.
-
-        // Re-checking Phase 2 RLS:
-        // create policy "Users can insert own messages" on messages for insert with check ( exists ( ... conversations ... ) );
-        // This allows them to insert ANY message content/type into their own conversation.
-        // So `sender_type='bot'` is technically allowed by current RLS if they call it. 
-        // Secure enough for now.
-
+        // We rely on RLS allowing 'bot' messages or user permissions to write to messages.
         const { error: botMsgError } = await supabase.from('messages').insert({
             conversation_id: conversationId,
             sender_type: 'bot',
@@ -123,8 +109,7 @@ export async function POST(req: Request) {
 
         if (botMsgError) {
             console.error('Error saving bot message:', botMsgError);
-            // We still return the reply to the UI even if save failed? Or error?
-            // Better to error or just warn.
+            // Log but still return response so UI updates
         }
 
         return NextResponse.json({ reply: aiResponse });

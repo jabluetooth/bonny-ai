@@ -2,6 +2,7 @@ import { createClient } from '@supabase/supabase-js'
 import { Status, StatusIndicator, StatusLabel } from "@/components/ui/shadcn-io/status"
 import { Pill, PillIcon } from '@/components/ui/shadcn-io/pill';
 import { UsersIcon } from 'lucide-react';
+import { VisitorCounter } from './visitor-counter';
 
 export async function SiteFooter() {
     // connect to supabase to fetch visitor count
@@ -25,10 +26,7 @@ export async function SiteFooter() {
             <div className="max-w-6xl mx-auto flex items-center justify-between px-4">
                 {/* Bottom Left: Number of visits */}
                 <div>
-                    <Pill className="h-7 text-xs">
-                        <PillIcon icon={UsersIcon} />
-                        <span className="p-1">{visitCount} users</span>
-                    </Pill>
+                    <VisitorCounter initialCount={visitCount} />
                 </div>
 
                 {/* Bottom Center: Copyright */}
