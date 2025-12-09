@@ -62,7 +62,6 @@ export function Chatbox() {
                             placeholder={isWelcomeOpen ? welcomePlaceholder : "Ask me anything..."}
                             className="w-full h-14 pl-6 pr-16 rounded-full text-lg shadow-lg border-muted-foreground/20 bg-background focus-visible:ring-1 focus-visible:ring-primary/50 transition-all hover:shadow-xl"
                             disabled={!conversationId || isLoading}
-                            autoFocus
                         />
                         <Button
                             type="submit"
@@ -144,7 +143,6 @@ export function Chatbox() {
                             placeholder="Type a message..."
                             className="w-full h-12 pl-5 pr-14 rounded-full shadow-md border-border/40 bg-background/80 backdrop-blur-md focus-visible:ring-1 focus-visible:ring-primary/30 transition-shadow hover:shadow-lg"
                             disabled={!conversationId || isLoading}
-                            autoFocus
                         />
                         <Button
                             type="submit"

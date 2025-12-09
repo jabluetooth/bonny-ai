@@ -7,9 +7,60 @@ import { Input } from "@/components/ui/input"
 import { useChat } from "@/components/chat-provider"
 
 export function WelcomeModal() {
-    const { conversationId, startChat, isLoading, isWelcomeOpen, setIsWelcomeOpen, welcomePlaceholder } = useChat()
+    const { conversationId, startChat, isLoading, isWelcomeOpen, setIsWelcomeOpen } = useChat()
     const [name, setName] = useState("")
     const [initializing, setInitializing] = useState(true)
+
+    // --- Local Typing Animation State ---
+    const [placeholder, setPlaceholder] = useState("|")
+    const [phraseIndex, setPhraseIndex] = useState(0)
+    const [charIndex, setCharIndex] = useState(0)
+    const [isDeleting, setIsDeleting] = useState(false)
+    const [isPausing, setIsPausing] = useState(false)
+    const [isInteracted, setIsInteracted] = useState(false)
+
+    const phrases = [
+        "welcome to bonny ai",
+        "my name is fil heinz",
+        "write your name here.."
+    ]
+
+    useEffect(() => {
+        // Stop animation if user has interacted or modal is closed
+        if (!isWelcomeOpen || isInteracted) return
+
+        const currentPhrase = phrases[phraseIndex]
+
+        let timeoutDuration = isDeleting ? 50 : 100
+        if (isPausing) timeoutDuration = 2000
+
+        const timeout = setTimeout(() => {
+            if (isPausing) {
+                setIsPausing(false)
+                setIsDeleting(true)
+                return
+            }
+
+            if (!isDeleting) {
+                if (charIndex < currentPhrase.length) {
+                    setCharIndex(prev => prev + 1)
+                } else {
+                    setIsPausing(true)
+                }
+            } else {
+                if (charIndex > 0) {
+                    setCharIndex(prev => prev - 1)
+                } else {
+                    setIsDeleting(false)
+                    setPhraseIndex((prev) => (prev + 1) % phrases.length)
+                }
+            }
+        }, timeoutDuration)
+
+        setPlaceholder(currentPhrase.substring(0, charIndex) + "|")
+
+        return () => clearTimeout(timeout)
+    }, [charIndex, isDeleting, isPausing, phraseIndex, isWelcomeOpen, isInteracted])
 
     // Only show if not connected and not loading (after initial check)
     useEffect(() => {
@@ -45,9 +96,11 @@ export function WelcomeModal() {
 
     return (
         <Dialog open={isWelcomeOpen} onOpenChange={() => { /* Prevent closing */ }}>
-            <DialogContent className="sm:max-w-[330px] p-6 border bg-background shadow-lg rounded-2xl outline-none">
+            <DialogContent
+                onOpenAutoFocus={(e) => e.preventDefault()}
+                className="sm:max-w-[330px] p-6 border bg-background shadow-lg rounded-2xl outline-none"
+            >
                 <DialogTitle className="sr-only">Welcome</DialogTitle>
-
                 <div className="flex flex-col items-center justify-center space-y-6">
 
                     {/* Input Section */}
@@ -56,10 +109,14 @@ export function WelcomeModal() {
                             id="welcome-name"
                             value={name}
                             onChange={(e) => setName(e.target.value)}
+                            onFocus={() => {
+                                setIsInteracted(true)
+                                setPlaceholder("Write your name here...")
+                            }}
+                            onBlur={() => setIsInteracted(false)}
                             className="h-12 rounded-full bg-secondary/30 border-0 focus-visible:ring-1 focus-visible:ring-primary/50 text-center text-lg placeholder:text-muted-foreground/50 transition-all font-light"
-                            placeholder={welcomePlaceholder}
+                            placeholder={isInteracted ? "Write your name here..." : placeholder}
                             onKeyDown={(e) => e.key === 'Enter' && handleStartWithName()}
-                            autoFocus
                             autoComplete="off"
                         />
                     </div>
