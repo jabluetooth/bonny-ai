@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Send, Bot, User } from "lucide-react";
+import { Send, Bot, User, ArrowRight } from "lucide-react";
 import { WelcomeModal } from "./welcome-modal";
 
 export function Chatbox() {
@@ -24,68 +24,89 @@ export function Chatbox() {
     // Auto-scroll to bottom when messages change
     useEffect(() => {
         if (scrollRef.current) {
-            const scrollContainer = scrollRef.current.querySelector('[data-radix-scroll-area-viewport]');
+            const scrollContainer = scrollRef.current.querySelector('[data-slot="scroll-area-viewport"]');
             if (scrollContainer) {
                 scrollContainer.scrollTop = scrollContainer.scrollHeight;
             }
         }
     }, [messages]);
 
+    // Lock body scroll when chat is active
+    useEffect(() => {
+        if (messages.length > 0) {
+            document.body.style.overflow = "hidden";
+        } else {
+            document.body.style.overflow = "";
+        }
+        return () => {
+            document.body.style.overflow = "";
+        };
+    }, [messages.length]);
+
+    // 1. Hero / Initial State
+    if (messages.length === 0) {
+        return (
+            <>
+                <WelcomeModal />
+                <div className="w-full max-w-lg px-4 animate-in fade-in zoom-in duration-500 slide-in-from-bottom-4">
+                    <form
+                        onSubmit={(e) => {
+                            e.preventDefault();
+                            handleSend();
+                        }}
+                        className="relative flex items-center w-full"
+                    >
+                        <Input
+                            value={input}
+                            onChange={(e) => setInput(e.target.value)}
+                            placeholder="Ask me anything..."
+                            className="w-full h-14 pl-6 pr-16 rounded-full text-lg shadow-lg border-muted-foreground/20 bg-background focus-visible:ring-1 focus-visible:ring-primary/50 transition-all hover:shadow-xl"
+                            disabled={!conversationId || isLoading}
+                            autoFocus
+                        />
+                        <Button
+                            type="submit"
+                            size="icon"
+                            disabled={!conversationId || isLoading || !input.trim()}
+                            className="absolute right-1.5 h-11 w-11 rounded-full bg-blue-500 hover:bg-blue-600 text-white shadow-sm transition-transform hover:scale-105 active:scale-95"
+                        >
+                            <ArrowRight size={20} />
+                            <span className="sr-only">Send</span>
+                        </Button>
+                    </form>
+                </div>
+            </>
+        );
+    }
+
+    // 2. Chat Interface State (Minimalist)
     return (
         <>
             <WelcomeModal />
-            <Card className="w-full max-w-md h-[600px] flex flex-col shadow-xl border-border/50 bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/75">
-                <CardHeader className="border-b px-4 py-3">
-                    <CardTitle className="flex items-center gap-2 text-md">
-                        <Avatar className="h-8 w-8">
-                            <AvatarImage src="/bot-avatar.png" />
-                            <AvatarFallback className="bg-primary/20 text-primary"><Bot size={16} /></AvatarFallback>
-                        </Avatar>
-                        <div className="flex flex-col">
-                            <span>{userName ? `Hi, ${userName}` : 'Bonny AI'}</span>
-                            <span className="text-[10px] font-normal text-muted-foreground flex items-center gap-1">
-                                {conversationId ? (
-                                    <><span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" /> Online</>
-                                ) : (
-                                    "Connecting..."
-                                )}
-                            </span>
-                        </div>
-                    </CardTitle>
-                </CardHeader>
-
-                <CardContent className="flex-1 p-0 overflow-hidden relative">
-                    <ScrollArea ref={scrollRef} className="h-full p-4">
-                        {messages.length === 0 && (
-                            <div className="h-full flex flex-col items-center justify-center text-center text-muted-foreground p-8 opacity-50">
-                                <Bot className="h-12 w-12 mb-2" />
-                                <p className="text-sm">Say hello to start the conversation!</p>
-                            </div>
-                        )}
-                        <div className="flex flex-col gap-4">
+            <div className="w-full max-w-3xl flex flex-col h-[calc(100vh-180px)] animate-in fade-in zoom-in-95 duration-500">
+                {/* Messages Area - Flexible & Transparent */}
+                <div className="flex-1 overflow-hidden relative mb-4">
+                    <ScrollArea ref={scrollRef} className="h-full pr-4">
+                        <div className="flex flex-col flex-1 justify-end gap-4 pb-2">
                             {messages.map((msg, i) => (
                                 <div
                                     key={i}
-                                    className={`flex gap-3 max-w-[85%] ${msg.role === "user" ? "ml-auto flex-row-reverse" : ""
+                                    className={`flex gap-3 max-w-[85%] ${msg.role === "user" ? "ml-auto flex-row-reverse" : "items-end"
                                         }`}
                                 >
-                                    <Avatar className="h-8 w-8 mt-0.5 shrink-0">
-                                        {msg.role === "user" ? (
-                                            <>
-                                                <AvatarImage src="/user-avatar.png" />
-                                                <AvatarFallback className="bg-muted"><User size={14} /></AvatarFallback>
-                                            </>
-                                        ) : (
-                                            <>
-                                                <AvatarImage src="/bot-avatar.png" />
-                                                <AvatarFallback className="bg-primary/20 text-primary"><Bot size={14} /></AvatarFallback>
-                                            </>
-                                        )}
-                                    </Avatar>
+                                    {/* Bot Avatar (Only for bot) */}
+                                    {msg.role === "bot" && (
+                                        <Avatar className="h-8 w-8 shrink-0 border border-border/30 shadow-sm">
+                                            <AvatarImage src="/bot-avatar.png" />
+                                            <AvatarFallback className="bg-primary/10 text-primary"><Bot size={14} /></AvatarFallback>
+                                        </Avatar>
+                                    )}
+
+                                    {/* Message Bubble */}
                                     <div
-                                        className={`rounded-2xl px-4 py-2 text-sm ${msg.role === "user"
-                                            ? "bg-primary text-primary-foreground rounded-tr-sm"
-                                            : "bg-muted text-foreground rounded-tl-sm"
+                                        className={`rounded-[20px] px-5 py-2.5 text-[15px] shadow-sm leading-relaxed ${msg.role === "user"
+                                            ? "bg-[#0084ff] text-white rounded-br-none" // Messenger Blue
+                                            : "bg-muted text-foreground rounded-bl-none" // Messenger Gray
                                             }`}
                                     >
                                         {msg.content}
@@ -93,43 +114,50 @@ export function Chatbox() {
                                 </div>
                             ))}
                             {isLoading && (
-                                <div className="flex gap-3 max-w-[85%]">
-                                    <Avatar className="h-8 w-8 mt-0.5 shrink-0">
-                                        <AvatarFallback className="bg-primary/20 text-primary"><Bot size={14} /></AvatarFallback>
+                                <div className="flex gap-3 max-w-[85%] items-end">
+                                    <Avatar className="h-8 w-8 shrink-0">
+                                        <AvatarFallback className="bg-primary/10 text-primary"><Bot size={14} /></AvatarFallback>
                                     </Avatar>
-                                    <div className="bg-muted rounded-2xl rounded-tl-sm px-4 py-3 flex gap-1 items-center">
-                                        <span className="w-1.5 h-1.5 bg-foreground/30 rounded-full animate-bounce [animation-delay:-0.3s]" />
-                                        <span className="w-1.5 h-1.5 bg-foreground/30 rounded-full animate-bounce [animation-delay:-0.15s]" />
-                                        <span className="w-1.5 h-1.5 bg-foreground/30 rounded-full animate-bounce" />
+                                    <div className="bg-muted text-foreground rounded-[20px] rounded-bl-none px-5 py-4 flex gap-1 items-center shadow-sm">
+                                        <span className="w-1.5 h-1.5 bg-foreground/40 rounded-full animate-bounce [animation-delay:-0.3s]" />
+                                        <span className="w-1.5 h-1.5 bg-foreground/40 rounded-full animate-bounce [animation-delay:-0.15s]" />
+                                        <span className="w-1.5 h-1.5 bg-foreground/40 rounded-full animate-bounce" />
                                     </div>
                                 </div>
                             )}
                         </div>
                     </ScrollArea>
-                </CardContent>
+                </div>
 
-                <CardFooter className="p-3 border-t bg-background/50">
+                {/* Input Area - Wide & Clean */}
+                <div className="w-full">
                     <form
                         onSubmit={(e) => {
                             e.preventDefault();
                             handleSend();
                         }}
-                        className="flex w-full gap-2"
+                        className="relative flex items-center w-full"
                     >
                         <Input
                             value={input}
                             onChange={(e) => setInput(e.target.value)}
-                            placeholder="Type your message..."
-                            className="flex-1 bg-background"
+                            placeholder="Type a message..."
+                            className="w-full h-12 pl-5 pr-14 rounded-full shadow-md border-border/40 bg-background/80 backdrop-blur-md focus-visible:ring-1 focus-visible:ring-primary/30 transition-shadow hover:shadow-lg"
                             disabled={!conversationId || isLoading}
+                            autoFocus
                         />
-                        <Button type="submit" size="icon" disabled={!conversationId || isLoading || !input.trim()}>
-                            <Send size={18} />
+                        <Button
+                            type="submit"
+                            size="icon"
+                            disabled={!conversationId || isLoading || !input.trim()}
+                            className="absolute right-1.5 h-9 w-9 rounded-full bg-blue-500 hover:bg-blue-600 text-white shadow-sm transition-transform hover:scale-105 active:scale-95"
+                        >
+                            <ArrowRight size={18} />
                             <span className="sr-only">Send</span>
                         </Button>
                     </form>
-                </CardFooter>
-            </Card>
+                </div>
+            </div>
         </>
     );
 }

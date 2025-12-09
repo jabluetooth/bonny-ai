@@ -1,8 +1,9 @@
 "use client"
 
 import * as React from "react"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { cn } from "@/lib/utils"
+import { useChat } from "@/components/chat-provider" // Import chat context
 import {
     NavigationMenu,
     NavigationMenuContent,
@@ -28,7 +29,9 @@ import {
     Code2,
     Palette,
     Database,
-    Terminal
+    Terminal,
+    ChevronDown, // Import icons
+    ChevronUp
 } from "lucide-react"
 
 // Unified chat trigger function
@@ -38,117 +41,163 @@ function openChat(topic: string) {
 
 export function PortfolioNavbar() {
     const [resumeOpen, setResumeOpen] = useState(false)
+    const { messages } = useChat()
+    const [isOpen, setIsOpen] = useState(true)
+    const [isHoveringTrigger, setIsHoveringTrigger] = useState(false)
+    const prevMsgLength = React.useRef(messages.length)
+
+    // Auto-collapse when chat starts (0 -> 1+) or resets (-> 0)
+    useEffect(() => {
+        // If we went from empty to having messages, auto-close
+        if (prevMsgLength.current === 0 && messages.length > 0) {
+            setIsOpen(false)
+        }
+        // If we cleared messages, auto-open
+        else if (messages.length === 0) {
+            setIsOpen(true)
+        }
+
+        prevMsgLength.current = messages.length
+    }, [messages.length])
 
     return (
-        <header className="w-full sticky top-0 bg-background/70 backdrop-blur-sm border-b z-50 transition-all duration-300">
-            <div className="max-w-6xl mx-auto flex items-center justify-between h-16 px-4">
+        <header className="w-full sticky top-0 z-[100] transition-all duration-300 pointer-events-none">
+            {/* Toggle Trigger (Only visible when chat is active/has messages) */}
+            {messages.length > 0 && (
+                <div
+                    className="absolute w-full flex justify-center -bottom-6 z-50 pointer-events-auto"
+                    onMouseEnter={() => setIsHoveringTrigger(true)}
+                    onMouseLeave={() => setIsHoveringTrigger(false)}
+                >
+                    <Button
+                        variant="secondary"
+                        size="sm"
+                        className={cn(
+                            "h-5 px-6 rounded-b-xl rounded-t-none text-[10px] shadow-sm border border-t-0 bg-background/80 backdrop-blur-sm transition-all duration-300",
+                            !isOpen && !isHoveringTrigger ? "opacity-50" : "opacity-100"
+                        )}
+                        onClick={() => setIsOpen(!isOpen)}
+                    >
+                        {isOpen ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
+                    </Button>
+                </div>
+            )}
 
-                {/* LEFT: Avatar */}
-                <Avatar onClick={() => openChat("home")} className="cursor-pointer hover:scale-105 transition-transform">
-                    <AvatarImage src="/placeholder.png" alt="Profile" />
-                    <AvatarFallback>🙂</AvatarFallback>
-                </Avatar>
+            <div
+                className={cn(
+                    "bg-background/70 backdrop-blur-sm border-b transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] pointer-events-auto",
+                    isOpen ? "mt-0 opacity-100" : "-mt-16 opacity-0 pointer-events-none border-b-0"
+                )}
+            >
+                <div className="max-w-6xl mx-auto flex items-center justify-between h-16 px-4">
 
-                {/* CENTER: Navigation Menu */}
-                <NavigationMenu>
-                    <NavigationMenuList>
-                        {/* 1. ABOUT */}
-                        <NavigationMenuItem>
-                            <NavigationMenuTrigger>About</NavigationMenuTrigger>
-                            <NavigationMenuContent>
-                                <ul className="grid gap-3 p-6 md:w-[400px] lg:w-[500px] lg:grid-cols-[.75fr_1fr]">
-                                    <li className="row-span-3">
-                                        <NavigationMenuLink asChild>
-                                            <a
-                                                className="flex h-full w-full select-none flex-col justify-end rounded-md bg-gradient-to-b from-muted/50 to-muted p-6 no-underline outline-none focus:shadow-md cursor-pointer"
-                                                onClick={() => openChat("about")}
-                                            >
-                                                <div className="mb-2 mt-4 text-lg font-medium">
-                                                    Author/Developer
-                                                </div>
-                                                <p className="text-sm leading-tight text-muted-foreground">
-                                                    Learn more about the creator behind this portfolio.
-                                                </p>
-                                            </a>
-                                        </NavigationMenuLink>
-                                    </li>
-                                    <ListItem title="Background" onClick={() => openChat("about")}>
-                                        My journey and career path.
-                                    </ListItem>
-                                    <ListItem title="Interests" onClick={() => openChat("about")}>
-                                        Hobbies and personal passions.
-                                    </ListItem>
-                                    <ListItem title="Contact" onClick={() => openChat("about")}>
-                                        Get in touch directly.
-                                    </ListItem>
-                                </ul>
-                            </NavigationMenuContent>
-                        </NavigationMenuItem>
+                    {/* LEFT: Avatar */}
+                    <Avatar onClick={() => openChat("home")} className="cursor-pointer hover:scale-105 transition-transform">
+                        <AvatarImage src="/placeholder.png" alt="Profile" />
+                        <AvatarFallback>🙂</AvatarFallback>
+                    </Avatar>
 
-                        {/* 2. PROJECTS */}
-                        <NavigationMenuItem>
-                            <NavigationMenuTrigger>Projects</NavigationMenuTrigger>
-                            <NavigationMenuContent>
-                                <ul className="grid w-[400px] gap-3 p-4 md:w-[500px] md:grid-cols-2 lg:w-[600px] ">
-                                    <ListItem title="Web Development" onClick={() => openChat("projects")}>
-                                        Full-stack web applications.
-                                    </ListItem>
-                                    <ListItem title="Mobile Apps" onClick={() => openChat("projects")}>
-                                        iOS and Android applications.
-                                    </ListItem>
-                                    <ListItem title="AI & ML" onClick={() => openChat("projects")}>
-                                        Machine learning models.
-                                    </ListItem>
-                                    <ListItem title="Open Source" onClick={() => openChat("projects")}>
-                                        Contributions to public repos.
-                                    </ListItem>
-                                </ul>
-                            </NavigationMenuContent>
-                        </NavigationMenuItem>
+                    {/* CENTER: Navigation Menu */}
+                    <NavigationMenu>
+                        <NavigationMenuList>
+                            {/* 1. ABOUT */}
+                            <NavigationMenuItem>
+                                <NavigationMenuTrigger>About</NavigationMenuTrigger>
+                                <NavigationMenuContent>
+                                    <ul className="grid gap-3 p-6 md:w-[400px] lg:w-[500px] lg:grid-cols-[.75fr_1fr]">
+                                        <li className="row-span-3">
+                                            <NavigationMenuLink asChild>
+                                                <a
+                                                    className="flex h-full w-full select-none flex-col justify-end rounded-md bg-gradient-to-b from-muted/50 to-muted p-6 no-underline outline-none focus:shadow-md cursor-pointer"
+                                                    onClick={() => openChat("about")}
+                                                >
+                                                    <div className="mb-2 mt-4 text-lg font-medium">
+                                                        Author/Developer
+                                                    </div>
+                                                    <p className="text-sm leading-tight text-muted-foreground">
+                                                        Learn more about the creator behind this portfolio.
+                                                    </p>
+                                                </a>
+                                            </NavigationMenuLink>
+                                        </li>
+                                        <ListItem title="Background" onClick={() => openChat("about")}>
+                                            My journey and career path.
+                                        </ListItem>
+                                        <ListItem title="Interests" onClick={() => openChat("about")}>
+                                            Hobbies and personal passions.
+                                        </ListItem>
+                                        <ListItem title="Contact" onClick={() => openChat("about")}>
+                                            Get in touch directly.
+                                        </ListItem>
+                                    </ul>
+                                </NavigationMenuContent>
+                            </NavigationMenuItem>
 
-                        {/* 3. SKILLS */}
-                        <NavigationMenuItem>
-                            <NavigationMenuTrigger>Skills</NavigationMenuTrigger>
-                            <NavigationMenuContent>
-                                <ul className="grid w-[400px] gap-3 p-4 md:w-[500px] md:grid-cols-2 lg:w-[600px] ">
-                                    <ListItem icon={<Code2 className="w-4 h-4" />} title="Frontend" onClick={() => openChat("skills")}>
-                                        React, Next.js, TypeScript.
-                                    </ListItem>
-                                    <ListItem icon={<Database className="w-4 h-4" />} title="Backend" onClick={() => openChat("skills")}>
-                                        Node.js, PostgreSQL.
-                                    </ListItem>
-                                    <ListItem icon={<Palette className="w-4 h-4" />} title="Design" onClick={() => openChat("skills")}>
-                                        Tailwind CSS, Figma.
-                                    </ListItem>
-                                    <ListItem icon={<Terminal className="w-4 h-4" />} title="DevOps" onClick={() => openChat("skills")}>
-                                        Docker, CI/CD pipelines.
-                                    </ListItem>
-                                </ul>
-                            </NavigationMenuContent>
-                        </NavigationMenuItem>
+                            {/* 2. PROJECTS */}
+                            <NavigationMenuItem>
+                                <NavigationMenuTrigger>Projects</NavigationMenuTrigger>
+                                <NavigationMenuContent>
+                                    <ul className="grid w-[400px] gap-3 p-4 md:w-[500px] md:grid-cols-2 lg:w-[600px] ">
+                                        <ListItem title="Web Development" onClick={() => openChat("projects")}>
+                                            Full-stack web applications.
+                                        </ListItem>
+                                        <ListItem title="Mobile Apps" onClick={() => openChat("projects")}>
+                                            iOS and Android applications.
+                                        </ListItem>
+                                        <ListItem title="AI & ML" onClick={() => openChat("projects")}>
+                                            Machine learning models.
+                                        </ListItem>
+                                        <ListItem title="Open Source" onClick={() => openChat("projects")}>
+                                            Contributions to public repos.
+                                        </ListItem>
+                                    </ul>
+                                </NavigationMenuContent>
+                            </NavigationMenuItem>
 
-                        {/* 4. EXPERIENCES */}
-                        <NavigationMenuItem>
-                            <NavigationMenuTrigger>Experiences</NavigationMenuTrigger>
-                            <NavigationMenuContent>
-                                <ul className="grid w-[400px] gap-3 p-4 md:w-[500px] md:grid-cols-2 lg:w-[600px] ">
-                                    <ListItem title="Work History" onClick={() => openChat("experiences")}>
-                                        Professional roles and companies.
-                                    </ListItem>
-                                    <ListItem title="Education" onClick={() => openChat("experiences")}>
-                                        Degrees and certifications.
-                                    </ListItem>
-                                    <ListItem title="Volunteering" onClick={() => openChat("experiences")}>
-                                        Community involvement.
-                                    </ListItem>
-                                </ul>
-                            </NavigationMenuContent>
-                        </NavigationMenuItem>
-                    </NavigationMenuList>
-                </NavigationMenu>
+                            {/* 3. SKILLS */}
+                            <NavigationMenuItem>
+                                <NavigationMenuTrigger>Skills</NavigationMenuTrigger>
+                                <NavigationMenuContent>
+                                    <ul className="grid w-[400px] gap-3 p-4 md:w-[500px] md:grid-cols-2 lg:w-[600px] ">
+                                        <ListItem icon={<Code2 className="w-4 h-4" />} title="Frontend" onClick={() => openChat("skills")}>
+                                            React, Next.js, TypeScript.
+                                        </ListItem>
+                                        <ListItem icon={<Database className="w-4 h-4" />} title="Backend" onClick={() => openChat("skills")}>
+                                            Node.js, PostgreSQL.
+                                        </ListItem>
+                                        <ListItem icon={<Palette className="w-4 h-4" />} title="Design" onClick={() => openChat("skills")}>
+                                            Tailwind CSS, Figma.
+                                        </ListItem>
+                                        <ListItem icon={<Terminal className="w-4 h-4" />} title="DevOps" onClick={() => openChat("skills")}>
+                                            Docker, CI/CD pipelines.
+                                        </ListItem>
+                                    </ul>
+                                </NavigationMenuContent>
+                            </NavigationMenuItem>
 
-                {/* RIGHT: Resume Button */}
-                <Button onClick={() => setResumeOpen(true)}>Resume</Button>
+                            {/* 4. EXPERIENCES */}
+                            <NavigationMenuItem>
+                                <NavigationMenuTrigger>Experiences</NavigationMenuTrigger>
+                                <NavigationMenuContent>
+                                    <ul className="grid w-[400px] gap-3 p-4 md:w-[500px] md:grid-cols-2 lg:w-[600px] ">
+                                        <ListItem title="Work History" onClick={() => openChat("experiences")}>
+                                            Professional roles and companies.
+                                        </ListItem>
+                                        <ListItem title="Education" onClick={() => openChat("experiences")}>
+                                            Degrees and certifications.
+                                        </ListItem>
+                                        <ListItem title="Volunteering" onClick={() => openChat("experiences")}>
+                                            Community involvement.
+                                        </ListItem>
+                                    </ul>
+                                </NavigationMenuContent>
+                            </NavigationMenuItem>
+                        </NavigationMenuList>
+                    </NavigationMenu>
+
+                    {/* RIGHT: Resume Button */}
+                    <Button onClick={() => setResumeOpen(true)}>Resume</Button>
+                </div>
             </div>
 
             {/* Resume / Contact Drawer */}

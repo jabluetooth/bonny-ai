@@ -6,7 +6,7 @@ export default function Home() {
   return (
     <main className="min-h-screen flex flex-col bg-background">
       <PortfolioNavbar />
-      <div className="flex-1 flex flex-col items-center justify-center p-4 md:p-8 gap-8">
+      <div className="flex-1 flex flex-col items-center justify-end p-4 md:p-8 pb-12 gap-8">
         <Chatbox />
       </div>
       <SiteFooter />
