@@ -41,9 +41,10 @@ function openChat(topic: string) {
 
 export function PortfolioNavbar() {
     const [resumeOpen, setResumeOpen] = useState(false)
-    const { messages } = useChat()
+    const { messages, isWelcomeOpen } = useChat()
     const [isOpen, setIsOpen] = useState(true)
     const [isHoveringTrigger, setIsHoveringTrigger] = useState(false)
+    const [navValue, setNavValue] = useState("")
     const prevMsgLength = React.useRef(messages.length)
 
     // Auto-collapse when chat starts (0 -> 1+) or resets (-> 0)
@@ -61,11 +62,11 @@ export function PortfolioNavbar() {
     }, [messages.length])
 
     return (
-        <header className="w-full sticky top-0 z-[100] transition-all duration-300 pointer-events-none">
-            {/* Toggle Trigger (Only visible when chat is active/has messages) */}
-            {messages.length > 0 && (
+        <header className="w-full sticky top-0 z-40 transition-all duration-300 pointer-events-none">
+            {/* Toggle Trigger (Only visible when chat is active/has messages, and menu is closed) */}
+            {messages.length > 0 && !navValue && (
                 <div
-                    className="absolute w-full flex justify-center -bottom-6 z-50 pointer-events-auto"
+                    className="absolute w-full flex justify-center -bottom-5 z-50 pointer-events-auto"
                     onMouseEnter={() => setIsHoveringTrigger(true)}
                     onMouseLeave={() => setIsHoveringTrigger(false)}
                 >
@@ -73,7 +74,7 @@ export function PortfolioNavbar() {
                         variant="secondary"
                         size="sm"
                         className={cn(
-                            "h-5 px-6 rounded-b-xl rounded-t-none text-[10px] shadow-sm border border-t-0 bg-background/80 backdrop-blur-sm transition-all duration-300",
+                            "h-5 px-6 rounded-b-xl rounded-t-none text-[10px] shadow-sm border border-t-0 bg-background/80 backdrop-blur-sm transition-all duration-300 flex items-end pb-1",
                             !isOpen && !isHoveringTrigger ? "opacity-50" : "opacity-100"
                         )}
                         onClick={() => setIsOpen(!isOpen)}
@@ -85,11 +86,12 @@ export function PortfolioNavbar() {
 
             <div
                 className={cn(
-                    "bg-background/70 backdrop-blur-sm border-b transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] pointer-events-auto",
-                    isOpen ? "mt-0 opacity-100" : "-mt-16 opacity-0 pointer-events-none border-b-0"
+                    "bg-background/70 backdrop-blur-sm transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] pointer-events-auto",
+                    isOpen ? "mt-0 opacity-100" : "-mt-16 opacity-0 pointer-events-none",
+                    (resumeOpen || isWelcomeOpen) && "blur-sm"
                 )}
             >
-                <div className="max-w-6xl mx-auto flex items-center justify-between h-16 px-4">
+                <div className="max-w-6xl mx-auto flex items-center justify-between h-16 px-4 relative">
 
                     {/* LEFT: Avatar */}
                     <Avatar onClick={() => openChat("home")} className="cursor-pointer hover:scale-105 transition-transform">
@@ -98,11 +100,11 @@ export function PortfolioNavbar() {
                     </Avatar>
 
                     {/* CENTER: Navigation Menu */}
-                    <NavigationMenu>
-                        <NavigationMenuList>
+                    <NavigationMenu value={navValue} onValueChange={setNavValue} className="absolute left-1/2 transform -translate-x-1/2">
+                        <NavigationMenuList className="flex items-center justify-center gap-1 bg-background/20 backdrop-blur-xl border border-white/10 shadow-sm rounded-full px-1.5 py-1">
                             {/* 1. ABOUT */}
                             <NavigationMenuItem>
-                                <NavigationMenuTrigger>About</NavigationMenuTrigger>
+                                <NavigationMenuTrigger className="bg-transparent hover:bg-primary/10 focus:bg-primary/10 data-[state=open]:bg-primary/10 rounded-full hover:text-primary relative after:absolute after:-top-1 after:left-1/2 after:-translate-x-1/2 after:w-8 after:h-[2px] after:bg-primary after:shadow-[0_0_8px_var(--primary)] after:opacity-0 hover:after:opacity-100 after:transition-all after:duration-300">About</NavigationMenuTrigger>
                                 <NavigationMenuContent>
                                     <ul className="grid gap-3 p-6 md:w-[400px] lg:w-[500px] lg:grid-cols-[.75fr_1fr]">
                                         <li className="row-span-3">
@@ -135,7 +137,7 @@ export function PortfolioNavbar() {
 
                             {/* 2. PROJECTS */}
                             <NavigationMenuItem>
-                                <NavigationMenuTrigger>Projects</NavigationMenuTrigger>
+                                <NavigationMenuTrigger className="bg-transparent hover:bg-primary/10 focus:bg-primary/10 data-[state=open]:bg-primary/10 rounded-full hover:text-primary relative after:absolute after:-top-1 after:left-1/2 after:-translate-x-1/2 after:w-8 after:h-[2px] after:bg-primary after:shadow-[0_0_8px_var(--primary)] after:opacity-0 hover:after:opacity-100 after:transition-all after:duration-300">Projects</NavigationMenuTrigger>
                                 <NavigationMenuContent>
                                     <ul className="grid w-[400px] gap-3 p-4 md:w-[500px] md:grid-cols-2 lg:w-[600px] ">
                                         <ListItem title="Web Development" onClick={() => openChat("projects")}>
@@ -156,7 +158,7 @@ export function PortfolioNavbar() {
 
                             {/* 3. SKILLS */}
                             <NavigationMenuItem>
-                                <NavigationMenuTrigger>Skills</NavigationMenuTrigger>
+                                <NavigationMenuTrigger className="bg-transparent hover:bg-primary/10 focus:bg-primary/10 data-[state=open]:bg-primary/10 rounded-full hover:text-primary relative after:absolute after:-top-1 after:left-1/2 after:-translate-x-1/2 after:w-8 after:h-[2px] after:bg-primary after:shadow-[0_0_8px_var(--primary)] after:opacity-0 hover:after:opacity-100 after:transition-all after:duration-300">Skills</NavigationMenuTrigger>
                                 <NavigationMenuContent>
                                     <ul className="grid w-[400px] gap-3 p-4 md:w-[500px] md:grid-cols-2 lg:w-[600px] ">
                                         <ListItem icon={<Code2 className="w-4 h-4" />} title="Frontend" onClick={() => openChat("skills")}>
@@ -177,7 +179,7 @@ export function PortfolioNavbar() {
 
                             {/* 4. EXPERIENCES */}
                             <NavigationMenuItem>
-                                <NavigationMenuTrigger>Experiences</NavigationMenuTrigger>
+                                <NavigationMenuTrigger className="bg-transparent hover:bg-primary/10 focus:bg-primary/10 data-[state=open]:bg-primary/10 rounded-full hover:text-primary relative after:absolute after:-top-1 after:left-1/2 after:-translate-x-1/2 after:w-8 after:h-[2px] after:bg-primary after:shadow-[0_0_8px_var(--primary)] after:opacity-0 hover:after:opacity-100 after:transition-all after:duration-300">Experiences</NavigationMenuTrigger>
                                 <NavigationMenuContent>
                                     <ul className="grid w-[400px] gap-3 p-4 md:w-[500px] md:grid-cols-2 lg:w-[600px] ">
                                         <ListItem title="Work History" onClick={() => openChat("experiences")}>

@@ -7,8 +7,7 @@ import { Input } from "@/components/ui/input"
 import { useChat } from "@/components/chat-provider"
 
 export function WelcomeModal() {
-    const { conversationId, startChat, isLoading } = useChat()
-    const [open, setOpen] = useState(false)
+    const { conversationId, startChat, isLoading, isWelcomeOpen, setIsWelcomeOpen } = useChat()
     const [name, setName] = useState("")
     const [initializing, setInitializing] = useState(true)
 
@@ -17,35 +16,35 @@ export function WelcomeModal() {
         // Wait a small tick to ensure hydration is settled (though auto-hydrate is removed, good for safety)
         const timer = setTimeout(() => {
             if (!conversationId && !isLoading) {
-                setOpen(true)
+                setIsWelcomeOpen(true)
             }
             setInitializing(false)
         }, 100)
         return () => clearTimeout(timer)
-    }, [conversationId, isLoading])
+    }, [conversationId, isLoading, setIsWelcomeOpen])
 
     // If connected, close
     useEffect(() => {
         if (conversationId) {
-            setOpen(false)
+            setIsWelcomeOpen(false)
         }
-    }, [conversationId])
+    }, [conversationId, setIsWelcomeOpen])
 
     const handleStartWithName = async () => {
         if (!name.trim()) return
         await startChat(name)
-        setOpen(false)
+        setIsWelcomeOpen(false)
     }
 
     const handleSkip = async () => {
         await startChat()
-        setOpen(false)
+        setIsWelcomeOpen(false)
     }
 
-    if (initializing && !open) return null
+    if (initializing && !isWelcomeOpen) return null
 
     return (
-        <Dialog open={open} onOpenChange={() => { /* Prevent closing by clicking outside during welcome */ }}>
+        <Dialog open={isWelcomeOpen} onOpenChange={() => { /* Prevent closing by clicking outside during welcome */ }}>
             <DialogContent className="sm:max-w-[425px] [&>button]:hidden"> {/* Hide Close X */}
                 <DialogHeader>
                     <DialogTitle>Welcome to Bonny AI</DialogTitle>

@@ -12,6 +12,8 @@ interface ChatContextType {
     userName: string | null
     setUserName: (name: string) => void
     startChat: (name?: string) => Promise<void>
+    isWelcomeOpen: boolean
+    setIsWelcomeOpen: (open: boolean) => void
 }
 
 const ChatContext = createContext<ChatContextType>({
@@ -22,7 +24,9 @@ const ChatContext = createContext<ChatContextType>({
     isLoading: false,
     userName: null,
     setUserName: () => { },
-    startChat: async () => { }
+    startChat: async () => { },
+    isWelcomeOpen: false,
+    setIsWelcomeOpen: () => { }
 })
 
 export function ChatProvider({ children }: { children: ReactNode }) {
@@ -124,8 +128,10 @@ export function ChatProvider({ children }: { children: ReactNode }) {
         }
     }
 
+    const [isWelcomeOpen, setIsWelcomeOpen] = useState(false)
+
     return (
-        <ChatContext.Provider value={{ conversationId, userId, messages, sendMessage, isLoading, userName, setUserName, startChat }}>
+        <ChatContext.Provider value={{ conversationId, userId, messages, sendMessage, isLoading, userName, setUserName, startChat, isWelcomeOpen, setIsWelcomeOpen }}>
             {children}
         </ChatContext.Provider>
     )
