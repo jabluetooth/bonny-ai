@@ -14,6 +14,7 @@ interface ChatContextType {
     startChat: (name?: string) => Promise<void>
     isWelcomeOpen: boolean
     setIsWelcomeOpen: (open: boolean) => void
+    welcomePlaceholder: string
 }
 
 const ChatContext = createContext<ChatContextType>({
@@ -26,7 +27,8 @@ const ChatContext = createContext<ChatContextType>({
     setUserName: () => { },
     startChat: async () => { },
     isWelcomeOpen: false,
-    setIsWelcomeOpen: () => { }
+    setIsWelcomeOpen: () => { },
+    welcomePlaceholder: "|"
 })
 
 export function ChatProvider({ children }: { children: ReactNode }) {
@@ -130,8 +132,71 @@ export function ChatProvider({ children }: { children: ReactNode }) {
 
     const [isWelcomeOpen, setIsWelcomeOpen] = useState(false)
 
+    // --- Typing Animation Logic (Lifted State) ---
+    const [welcomePlaceholder, setWelcomePlaceholder] = useState("|")
+    const [phraseIndex, setPhraseIndex] = useState(0)
+    const [charIndex, setCharIndex] = useState(0)
+    const [isDeleting, setIsDeleting] = useState(false)
+    const [isPausing, setIsPausing] = useState(false)
+
+    const phrases = [
+        "welcome to bonny ai",
+        "my name is fil heinz",
+        "write your name here.."
+    ]
+
+    useEffect(() => {
+        // Only run animation if welcome modal is open (or generally if we want it active during onboarding)
+        if (!isWelcomeOpen) return
+
+        const currentPhrase = phrases[phraseIndex]
+
+        let timeoutDuration = isDeleting ? 50 : 100
+        if (isPausing) timeoutDuration = 2000
+
+        const timeout = setTimeout(() => {
+            if (isPausing) {
+                setIsPausing(false)
+                setIsDeleting(true)
+                return
+            }
+
+            if (!isDeleting) {
+                if (charIndex < currentPhrase.length) {
+                    setCharIndex(prev => prev + 1)
+                } else {
+                    setIsPausing(true)
+                }
+            } else {
+                if (charIndex > 0) {
+                    setCharIndex(prev => prev - 1)
+                } else {
+                    setIsDeleting(false)
+                    setPhraseIndex((prev) => (prev + 1) % phrases.length)
+                }
+            }
+        }, timeoutDuration)
+
+        setWelcomePlaceholder(currentPhrase.substring(0, charIndex) + "|")
+
+        return () => clearTimeout(timeout)
+    }, [charIndex, isDeleting, isPausing, phraseIndex, isWelcomeOpen])
+
+
     return (
-        <ChatContext.Provider value={{ conversationId, userId, messages, sendMessage, isLoading, userName, setUserName, startChat, isWelcomeOpen, setIsWelcomeOpen }}>
+        <ChatContext.Provider value={{
+            conversationId,
+            userId,
+            messages,
+            sendMessage,
+            isLoading,
+            userName,
+            setUserName,
+            startChat,
+            isWelcomeOpen,
+            setIsWelcomeOpen,
+            welcomePlaceholder
+        }}>
             {children}
         </ChatContext.Provider>
     )

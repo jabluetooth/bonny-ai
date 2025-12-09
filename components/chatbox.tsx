@@ -11,7 +11,7 @@ import { Send, Bot, User, ArrowRight } from "lucide-react";
 import { WelcomeModal } from "./welcome-modal";
 
 export function Chatbox() {
-    const { conversationId, sendMessage, messages, isLoading, userName } = useChat();
+    const { conversationId, sendMessage, messages, isLoading, userName, welcomePlaceholder, isWelcomeOpen } = useChat();
     const [input, setInput] = useState("");
     const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -59,7 +59,7 @@ export function Chatbox() {
                         <Input
                             value={input}
                             onChange={(e) => setInput(e.target.value)}
-                            placeholder="Ask me anything..."
+                            placeholder={isWelcomeOpen ? welcomePlaceholder : "Ask me anything..."}
                             className="w-full h-14 pl-6 pr-16 rounded-full text-lg shadow-lg border-muted-foreground/20 bg-background focus-visible:ring-1 focus-visible:ring-primary/50 transition-all hover:shadow-xl"
                             disabled={!conversationId || isLoading}
                             autoFocus

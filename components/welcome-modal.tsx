@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input"
 import { useChat } from "@/components/chat-provider"
 
 export function WelcomeModal() {
-    const { conversationId, startChat, isLoading, isWelcomeOpen, setIsWelcomeOpen } = useChat()
+    const { conversationId, startChat, isLoading, isWelcomeOpen, setIsWelcomeOpen, welcomePlaceholder } = useChat()
     const [name, setName] = useState("")
     const [initializing, setInitializing] = useState(true)
 
@@ -41,61 +41,6 @@ export function WelcomeModal() {
         setIsWelcomeOpen(false)
     }
 
-    const [placeholder, setPlaceholder] = useState("|")
-    const [phraseIndex, setPhraseIndex] = useState(0)
-    const [charIndex, setCharIndex] = useState(0)
-    const [isDeleting, setIsDeleting] = useState(false)
-    const [isPausing, setIsPausing] = useState(false)
-
-    const phrases = [
-        "welcome to bonny ai",
-        "my name is fil heinz",
-        "write your name here.."
-    ]
-
-    useEffect(() => {
-        if (!isWelcomeOpen) return
-
-        const currentPhrase = phrases[phraseIndex]
-
-        // Determine speed based on state
-        // Typing: 100ms, Deleting: 50ms, Pausing: 2000ms
-        let timeoutDuration = isDeleting ? 50 : 100
-        if (isPausing) timeoutDuration = 2000
-
-        const timeout = setTimeout(() => {
-            if (isPausing) {
-                setIsPausing(false)
-                setIsDeleting(true)
-                return
-            }
-
-            if (!isDeleting) {
-                // Typing
-                if (charIndex < currentPhrase.length) {
-                    setCharIndex(prev => prev + 1)
-                } else {
-                    // Finished typing phrase
-                    setIsPausing(true)
-                }
-            } else {
-                // Deleting
-                if (charIndex > 0) {
-                    setCharIndex(prev => prev - 1)
-                } else {
-                    // Finished deleting
-                    setIsDeleting(false)
-                    setPhraseIndex((prev) => (prev + 1) % phrases.length)
-                }
-            }
-        }, timeoutDuration)
-
-        // Update displayed text
-        setPlaceholder(currentPhrase.substring(0, charIndex) + "|")
-
-        return () => clearTimeout(timeout)
-    }, [charIndex, isDeleting, isPausing, phraseIndex, isWelcomeOpen])
-
     if (initializing && !isWelcomeOpen) return null
 
     return (
@@ -112,7 +57,7 @@ export function WelcomeModal() {
                             value={name}
                             onChange={(e) => setName(e.target.value)}
                             className="h-12 rounded-full bg-secondary/30 border-0 focus-visible:ring-1 focus-visible:ring-primary/50 text-center text-lg placeholder:text-muted-foreground/50 transition-all font-light"
-                            placeholder={placeholder}
+                            placeholder={welcomePlaceholder}
                             onKeyDown={(e) => e.key === 'Enter' && handleStartWithName()}
                             autoFocus
                             autoComplete="off"
