@@ -56,7 +56,7 @@ export function WelcomeModal() {
                             id="welcome-name"
                             value={name}
                             onChange={(e) => setName(e.target.value)}
-                            className="h-12 rounded-full bg-secondary/30 border-0 focus-visible:ring-1 focus-visible:ring-primary/50 text-center text-lg placeholder:text-muted-foreground/50 transition-all font-light"
+                            className="h-14 rounded-full bg-secondary/30 border-0 focus-visible:ring-1 focus-visible:ring-primary/30 text-center text-xl placeholder:text-foreground/90 transition-all font-normal"
                             placeholder={welcomePlaceholder}
                             onKeyDown={(e) => e.key === 'Enter' && handleStartWithName()}
                             autoFocus
