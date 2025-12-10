@@ -85,14 +85,10 @@ export function Chatbox() {
             <div className="w-full max-w-3xl flex flex-col h-[calc(100vh-180px)] animate-in fade-in zoom-in-95 duration-500">
                 {/* Messages Area - Flexible & Transparent */}
                 <div className="flex-1 overflow-hidden relative mb-4">
-                    <ScrollArea ref={scrollRef} className="h-full pr-4">
-                        <div className="flex flex-col flex-1 justify-end gap-4 pb-2">
+                    <ScrollArea ref={scrollRef} className="h-full w-full">
+                        <div className="flex flex-col flex-1 justify-end gap-4 pb-12">
                             {messages.map((msg, i) => (
-                                <div
-                                    key={i}
-                                    className={`flex gap-3 max-w-[85%] ${msg.role === "user" ? "ml-auto flex-row-reverse" : "items-end"
-                                        }`}
-                                >
+                                <div key={i} className={`flex gap-3 w-full mb-6 min-w-0 ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
                                     {/* Bot Avatar (Only for bot) */}
                                     {msg.role === "bot" && (
                                         <Avatar className="h-8 w-8 shrink-0 border border-border/30 shadow-sm">
@@ -101,14 +97,22 @@ export function Chatbox() {
                                         </Avatar>
                                     )}
 
-                                    {/* Message Bubble */}
-                                    <div
-                                        className={`rounded-[20px] px-5 py-2.5 text-[15px] shadow-sm leading-relaxed ${msg.role === "user"
-                                            ? "bg-[#0084ff] text-white rounded-br-none" // Messenger Blue
-                                            : "bg-muted text-foreground rounded-bl-none" // Messenger Gray
-                                            }`}
-                                    >
-                                        {msg.content}
+                                    {/* Message Content Column (Bubble + Component) */}
+                                    <div className={`flex flex-col gap-2 max-w-[85%] min-w-0 ${msg.role === "user" ? "items-end" : "items-start"}`}>
+                                        <div
+                                            className={`rounded-[20px] px-5 py-2.5 text-[15px] shadow-sm leading-relaxed break-words whitespace-pre-wrap [word-break:break-word] min-w-0 overflow-hidden ${msg.role === "user"
+                                                ? "bg-[#0084ff] text-white rounded-br-none" // Messenger Blue
+                                                : "bg-muted text-foreground rounded-bl-none" // Messenger Gray
+                                                }`}
+                                        >
+                                            {msg.content}
+                                            {/* Component Display - Nested INSIDE Bubble */}
+                                            {msg.component && (
+                                                <div className="mt-3 w-full grid grid-cols-1 min-w-0 overflow-hidden rounded-xl bg-background/50 backdrop-blur-sm">
+                                                    {msg.component}
+                                                </div>
+                                            )}
+                                        </div>
                                     </div>
                                 </div>
                             ))}

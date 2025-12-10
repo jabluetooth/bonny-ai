@@ -35,17 +35,44 @@ import {
 } from "lucide-react"
 
 // Unified chat trigger function
-function openChat(topic: string) {
-    console.log("Opening chat with topic:", topic)
-}
+import { SkillsSection } from "@/components/skills-section"
 
 export function PortfolioNavbar() {
     const [resumeOpen, setResumeOpen] = useState(false)
-    const { messages, isWelcomeOpen } = useChat()
+    const { messages, isWelcomeOpen, startChat, addMessage, conversationId } = useChat()
     const [isOpen, setIsOpen] = useState(true)
     const [isHoveringTrigger, setIsHoveringTrigger] = useState(false)
     const [navValue, setNavValue] = useState("")
     const prevMsgLength = React.useRef(messages.length)
+
+    // Unified chat trigger function
+    const openChat = async (topic: string) => {
+        // Ensure chat is started
+        if (!conversationId) {
+            await startChat("Guest") // Or prompt? Assuming guest for now if clicking nav
+        }
+
+        if (topic === "skills") {
+            addMessage({
+                role: 'user',
+                content: "Tell me about your tech stack and skills."
+            })
+            // Small delay to simulate thinking? Or instant.
+            setTimeout(() => {
+                addMessage({
+                    role: 'bot',
+                    content: "Here is a breakdown of my technical skills across different domains:",
+                    component: <SkillsSection />
+                })
+            }, 600)
+        } else {
+            // Fallback for other topics (placeholder)
+            console.log("Opening chat with topic:", topic)
+        }
+
+        // Close menu
+        setNavValue("")
+    }
 
     // Auto-collapse when chat starts (0 -> 1+) or resets (-> 0)
     useEffect(() => {

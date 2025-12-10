@@ -6,8 +6,9 @@ import { createClient } from "@/lib/supabase-client"
 interface ChatContextType {
     conversationId: string | null
     userId: string | null
-    messages: { role: 'user' | 'bot', content: string }[]
+    messages: { role: 'user' | 'bot', content: string, component?: ReactNode }[]
     sendMessage: (content: string) => Promise<void>
+    addMessage: (message: { role: 'user' | 'bot', content: string, component?: ReactNode }) => void
     isLoading: boolean
     userName: string | null
     setUserName: (name: string) => void
@@ -22,6 +23,7 @@ const ChatContext = createContext<ChatContextType>({
     userId: null,
     messages: [],
     sendMessage: async () => { },
+    addMessage: () => { },
     isLoading: false,
     userName: null,
     setUserName: () => { },
@@ -36,7 +38,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     const [userId, setUserId] = useState<string | null>(null)
     const [isLoading, setIsLoading] = useState(false)
     const [userName, setUserName] = useState<string | null>(null)
-    const [messages, setMessages] = useState<{ role: 'user' | 'bot', content: string }[]>([])
+    const [messages, setMessages] = useState<{ role: 'user' | 'bot', content: string, component?: ReactNode }[]>([])
 
     // Create client once
     const [supabase] = useState(() => createClient())
@@ -95,6 +97,10 @@ export function ChatProvider({ children }: { children: ReactNode }) {
 
 
 
+
+    const addMessage = (message: { role: 'user' | 'bot', content: string, component?: ReactNode }) => {
+        setMessages(prev => [...prev, message])
+    }
 
     const sendMessage = async (content: string) => {
         if (!conversationId) {
@@ -189,6 +195,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
             userId,
             messages,
             sendMessage,
+            addMessage,
             isLoading,
             userName,
             setUserName,
