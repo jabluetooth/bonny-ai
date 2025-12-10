@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { Root, List, Item, Trigger, Content, Viewport, Link, Indicator } from "@radix-ui/react-navigation-menu"
+import { Root, List, Item, NavigationMenuTrigger as RadixTrigger, Content, Viewport, Link, Indicator } from "@radix-ui/react-navigation-menu"
 import { cva } from "class-variance-authority"
 import { ChevronDown } from "lucide-react"
 
@@ -52,10 +52,10 @@ const navigationMenuTriggerStyle = cva(
 )
 
 const NavigationMenuTrigger = React.forwardRef<
-  React.ComponentRef<typeof Trigger>,
-  React.ComponentPropsWithoutRef<typeof Trigger>
+  React.ComponentRef<typeof RadixTrigger>,
+  React.ComponentPropsWithoutRef<typeof RadixTrigger>
 >(({ className, children, ...props }, ref) => (
-  <Trigger
+  <RadixTrigger
     ref={ref}
     data-slot="navigation-menu-trigger"
     className={cn(navigationMenuTriggerStyle(), "group", className)}
@@ -66,9 +66,9 @@ const NavigationMenuTrigger = React.forwardRef<
       className="relative top-[1px] ml-1 size-3 transition duration-300 group-data-[state=open]:rotate-180"
       aria-hidden="true"
     />
-  </Trigger>
+  </RadixTrigger>
 ))
-NavigationMenuTrigger.displayName = Trigger.displayName
+NavigationMenuTrigger.displayName = RadixTrigger.displayName
 
 const NavigationMenuContent = React.forwardRef<
   React.ComponentRef<typeof Content>,

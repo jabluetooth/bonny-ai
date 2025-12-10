@@ -141,16 +141,16 @@ export function Chatbox() {
                             value={input}
                             onChange={(e) => setInput(e.target.value)}
                             placeholder="Type a message..."
-                            className="w-full h-12 pl-5 pr-14 rounded-full shadow-md border-border/40 bg-background/80 backdrop-blur-md focus-visible:ring-1 focus-visible:ring-primary/30 transition-shadow hover:shadow-lg"
+                            className="w-full h-14 pl-6 pr-16 rounded-full shadow-md border-border/40 bg-background/80 backdrop-blur-md focus-visible:ring-1 focus-visible:ring-primary/30 transition-shadow hover:shadow-lg text-lg"
                             disabled={!conversationId || isLoading}
                         />
                         <Button
                             type="submit"
                             size="icon"
                             disabled={!conversationId || isLoading || !input.trim()}
-                            className="absolute right-1.5 h-9 w-9 rounded-full bg-blue-500 hover:bg-blue-600 text-white shadow-sm transition-transform hover:scale-105 active:scale-95"
+                            className="absolute right-1.5 h-11 w-11 rounded-full bg-blue-500 hover:bg-blue-600 text-white shadow-sm transition-transform hover:scale-105 active:scale-95"
                         >
-                            <ArrowRight size={18} />
+                            <ArrowRight size={20} />
                             <span className="sr-only">Send</span>
                         </Button>
                     </form>
