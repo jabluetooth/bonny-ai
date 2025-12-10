@@ -36,6 +36,7 @@ import {
 
 // Unified chat trigger function
 import { SkillsSection } from "@/components/skills-section"
+import { InteractiveHoverButton } from "@/components/ui/interactive-hover-button"
 
 export function PortfolioNavbar() {
     const [resumeOpen, setResumeOpen] = useState(false)
@@ -225,7 +226,7 @@ export function PortfolioNavbar() {
                     </NavigationMenu>
 
                     {/* RIGHT: Resume Button */}
-                    <Button onClick={() => setResumeOpen(true)}>Resume</Button>
+                    <InteractiveHoverButton onClick={() => setResumeOpen(true)}>Resume</InteractiveHoverButton>
                 </div>
             </div>
 

@@ -54,7 +54,7 @@ const SkillCard = ({
     return (
         <figure
             className={cn(
-                "relative w-16 h-16 cursor-pointer overflow-hidden rounded-xl border p-2",
+                "relative w-16 h-16 cursor-pointer overflow-hidden rounded-full border p-2",
                 "border-gray-950/[.1] bg-gray-950/[.01] hover:bg-gray-950/[.05]",
                 "dark:border-gray-50/[.1] dark:bg-gray-50/[.10] dark:hover:bg-gray-50/[.15]",
                 "flex items-center justify-center"
@@ -84,6 +84,7 @@ export function SkillsSection() {
                     </MarqueeContent>
                 </Marquee>
             </div>
+            <Separator />
             {/* 2. Static Categories (Pill/Tag style) */}
             <div className="flex flex-col gap-5 w-full max-w-full min-w-0 overflow-hidden">
                 {skillCategories.map((group, idx) => (

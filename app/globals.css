@@ -116,6 +116,7 @@
   * {
     @apply border-border outline-ring/50;
   }
+
   body {
     @apply bg-background text-foreground;
   }
@@ -125,6 +126,7 @@
   .animate-marquee {
     animation: marquee var(--duration) linear infinite;
   }
+
   .animate-marquee-vertical {
     animation: marquee-vertical var(--duration) linear infinite;
   }
@@ -134,6 +136,7 @@
   from {
     transform: translateX(0);
   }
+
   to {
     transform: translateX(calc(-100% - var(--gap)));
   }
@@ -143,6 +146,7 @@
   from {
     transform: translateY(0);
   }
+
   to {
     transform: translateY(calc(-100% - var(--gap)));
   }

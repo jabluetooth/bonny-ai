@@ -1,22 +1,16 @@
 'use client';
-
 import type { HTMLAttributes } from 'react';
 import type { MarqueeProps as FastMarqueeProps } from 'react-fast-marquee';
 import FastMarquee from 'react-fast-marquee';
-
 import { cn } from '@/lib/utils';
-
 export type MarqueeProps = HTMLAttributes<HTMLDivElement>;
-
 export const Marquee = ({ className, ...props }: MarqueeProps) => (
     <div
         className={cn('relative w-full overflow-hidden', className)}
         {...(props as any)}
     />
 );
-
 export type MarqueeContentProps = FastMarqueeProps;
-
 export const MarqueeContent = ({
     loop = 0,
     autoFill = true,
@@ -30,11 +24,9 @@ export const MarqueeContent = ({
         {...(props as any)}
     />
 );
-
 export type MarqueeFadeProps = HTMLAttributes<HTMLDivElement> & {
     side: 'left' | 'right';
 };
-
 export const MarqueeFade = ({
     className,
     side,
@@ -49,9 +41,7 @@ export const MarqueeFade = ({
         {...(props as any)}
     />
 );
-
 export type MarqueeItemProps = HTMLAttributes<HTMLDivElement>;
-
 export const MarqueeItem = ({ className, ...props }: MarqueeItemProps) => (
     <div
         className={cn('mx-2 flex-shrink-0 object-contain', className)}
