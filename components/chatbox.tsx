@@ -86,7 +86,7 @@ export function Chatbox() {
                 {/* Messages Area - Flexible & Transparent */}
                 <div className="flex-1 overflow-hidden relative mb-4">
                     <ScrollArea ref={scrollRef} className="h-full w-full">
-                        <div className="flex flex-col flex-1 justify-end gap-4 pb-12">
+                        <div className="flex flex-col flex-1 justify-end gap-4 pb-12 px-4">
                             {messages.map((msg, i) => (
                                 <div key={i} className={`flex gap-3 w-full mb-6 min-w-0 ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
                                     {/* Bot Avatar (Only for bot) */}

@@ -1,7 +1,7 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import Marquee from "@/components/ui/marquee";
+import { Marquee, MarqueeContent, MarqueeFade, MarqueeItem } from "@/components/ui/marquee";
 import { Separator } from "@/components/ui/separator";
 import { Cpu, Globe, Database, Palette, Users } from "lucide-react";
 
@@ -70,13 +70,18 @@ export function SkillsSection() {
         <div className="w-full max-w-full min-w-0 flex flex-col gap-2 p-2 rounded-xl border border-border/40 bg-card/50 shadow-sm animate-in fade-in slide-in-from-bottom-2">
 
             {/* 1. Highlights Marquee */}
-            <div className="w-full max-w-full relative overflow-hidden">
-                <div className="absolute left-0 top-0 z-10 h-full w-8 bg-gradient-to-r from-background to-transparent" />
-                <div className="absolute right-0 top-0 z-10 h-full w-8 bg-gradient-to-l from-background to-transparent" />
-                <Marquee pauseOnHover className="[--duration:30s]">
-                    {marqueeSkills.map((skill) => (
-                        <SkillCard key={skill.name} {...skill} />
-                    ))}
+            {/* 1. Highlights Marquee */}
+            <div className="w-full max-w-full relative overflow-hidden h-24">
+                <Marquee className="h-full">
+                    <MarqueeFade side="left" />
+                    <MarqueeFade side="right" />
+                    <MarqueeContent>
+                        {marqueeSkills.map((skill) => (
+                            <MarqueeItem key={skill.name}>
+                                <SkillCard {...skill} />
+                            </MarqueeItem>
+                        ))}
+                    </MarqueeContent>
                 </Marquee>
             </div>
             {/* 2. Static Categories (Pill/Tag style) */}
