@@ -93,11 +93,6 @@ export function ChatProvider({ children }: { children: ReactNode }) {
         }
     }
 
-
-
-
-
-
     const addMessage = (message: { role: 'user' | 'bot', content: string, component?: ReactNode }) => {
         setMessages(prev => [...prev, message])
     }

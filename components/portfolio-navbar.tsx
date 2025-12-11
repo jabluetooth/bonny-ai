@@ -29,7 +29,7 @@ import {
     Code2,
     Palette,
     Database,
-    Terminal,
+    Users,
     ChevronDown, // Import icons
     ChevronUp
 } from "lucide-react"
@@ -40,38 +40,18 @@ import { InteractiveHoverButton } from "@/components/ui/interactive-hover-button
 
 export function PortfolioNavbar() {
     const [resumeOpen, setResumeOpen] = useState(false)
-    const { messages, isWelcomeOpen, startChat, addMessage, conversationId } = useChat()
+    const { messages, isWelcomeOpen, startChat, addMessage, sendMessage, conversationId } = useChat()
     const [isOpen, setIsOpen] = useState(true)
     const [isHoveringTrigger, setIsHoveringTrigger] = useState(false)
     const [navValue, setNavValue] = useState("")
     const prevMsgLength = React.useRef(messages.length)
 
-    // Unified chat trigger function
-    const openChat = async (topic: string) => {
+    const handleNavClick = async (query: string) => {
         // Ensure chat is started
         if (!conversationId) {
-            await startChat("Guest") // Or prompt? Assuming guest for now if clicking nav
+            await startChat("Guest")
         }
-
-        if (topic === "skills") {
-            addMessage({
-                role: 'user',
-                content: "Tell me about your tech stack and skills."
-            })
-            // Small delay to simulate thinking? Or instant.
-            setTimeout(() => {
-                addMessage({
-                    role: 'bot',
-                    content: "Here is a breakdown of my technical skills across different domains:",
-                    component: <SkillsSection />
-                })
-            }, 600)
-        } else {
-            // Fallback for other topics (placeholder)
-            console.log("Opening chat with topic:", topic)
-        }
-
-        // Close menu
+        sendMessage(query)
         setNavValue("")
     }
 
@@ -122,7 +102,7 @@ export function PortfolioNavbar() {
                 <div className="max-w-6xl mx-auto flex items-center justify-between h-16 px-4 relative">
 
                     {/* LEFT: Avatar */}
-                    <Avatar onClick={() => openChat("home")} className="cursor-pointer hover:scale-105 transition-transform">
+                    <Avatar onClick={() => handleNavClick("Hello! Tell me about this portfolio.")} className="cursor-pointer hover:scale-105 transition-transform">
                         <AvatarImage src="/placeholder.png" alt="Profile" />
                         <AvatarFallback>🙂</AvatarFallback>
                     </Avatar>
@@ -139,7 +119,7 @@ export function PortfolioNavbar() {
                                             <NavigationMenuLink asChild>
                                                 <a
                                                     className="flex h-full w-full select-none flex-col justify-end rounded-md bg-gradient-to-b from-muted/50 to-muted p-6 no-underline outline-none focus:shadow-md cursor-pointer"
-                                                    onClick={() => openChat("about")}
+                                                    onClick={() => handleNavClick("Tell me about yourself.")}
                                                 >
                                                     <div className="mb-2 mt-4 text-lg font-medium">
                                                         Author/Developer
@@ -150,13 +130,13 @@ export function PortfolioNavbar() {
                                                 </a>
                                             </NavigationMenuLink>
                                         </li>
-                                        <ListItem title="Background" onClick={() => openChat("about")}>
+                                        <ListItem title="Background" onClick={() => handleNavClick("What is your professional background?")}>
                                             My journey and career path.
                                         </ListItem>
-                                        <ListItem title="Interests" onClick={() => openChat("about")}>
+                                        <ListItem title="Interests" onClick={() => handleNavClick("What are your interests outside of work?")}>
                                             Hobbies and personal passions.
                                         </ListItem>
-                                        <ListItem title="Contact" onClick={() => openChat("about")}>
+                                        <ListItem title="Contact" onClick={() => handleNavClick("How can I contact you?")}>
                                             Get in touch directly.
                                         </ListItem>
                                     </ul>
@@ -168,16 +148,16 @@ export function PortfolioNavbar() {
                                 <NavigationMenuTrigger className="bg-transparent hover:bg-primary/10 focus:bg-primary/10 data-[state=open]:bg-primary/10 rounded-full hover:text-primary relative after:absolute after:-top-1 after:left-1/2 after:-translate-x-1/2 after:w-8 after:h-[2px] after:bg-primary after:shadow-[0_0_8px_var(--primary)] after:opacity-0 hover:after:opacity-100 after:transition-all after:duration-300">Projects</NavigationMenuTrigger>
                                 <NavigationMenuContent>
                                     <ul className="grid w-[400px] gap-3 p-4 md:w-[500px] md:grid-cols-2 lg:w-[600px] ">
-                                        <ListItem title="Web Development" onClick={() => openChat("projects")}>
+                                        <ListItem title="Web Development" onClick={() => handleNavClick("Show me your web development projects.")}>
                                             Full-stack web applications.
                                         </ListItem>
-                                        <ListItem title="Mobile Apps" onClick={() => openChat("projects")}>
+                                        <ListItem title="Mobile Apps" onClick={() => handleNavClick("Do you have any mobile app projects?")}>
                                             iOS and Android applications.
                                         </ListItem>
-                                        <ListItem title="AI & ML" onClick={() => openChat("projects")}>
+                                        <ListItem title="AI & ML" onClick={() => handleNavClick("Tell me about your AI and Machine Learning projects.")}>
                                             Machine learning models.
                                         </ListItem>
-                                        <ListItem title="Open Source" onClick={() => openChat("projects")}>
+                                        <ListItem title="Open Source" onClick={() => handleNavClick("What open source contributions have you made?")}>
                                             Contributions to public repos.
                                         </ListItem>
                                     </ul>
@@ -189,17 +169,17 @@ export function PortfolioNavbar() {
                                 <NavigationMenuTrigger className="bg-transparent hover:bg-primary/10 focus:bg-primary/10 data-[state=open]:bg-primary/10 rounded-full hover:text-primary relative after:absolute after:-top-1 after:left-1/2 after:-translate-x-1/2 after:w-8 after:h-[2px] after:bg-primary after:shadow-[0_0_8px_var(--primary)] after:opacity-0 hover:after:opacity-100 after:transition-all after:duration-300">Skills</NavigationMenuTrigger>
                                 <NavigationMenuContent>
                                     <ul className="grid w-[400px] gap-3 p-4 md:w-[500px] md:grid-cols-2 lg:w-[600px] ">
-                                        <ListItem icon={<Code2 className="w-4 h-4" />} title="Frontend" onClick={() => openChat("skills")}>
+                                        <ListItem icon={<Code2 className="w-4 h-4" />} title="Frontend" onClick={() => handleNavClick("What are your Frontend Development skills?")}>
                                             React, Next.js, TypeScript.
                                         </ListItem>
-                                        <ListItem icon={<Database className="w-4 h-4" />} title="Backend" onClick={() => openChat("skills")}>
+                                        <ListItem icon={<Database className="w-4 h-4" />} title="Backend" onClick={() => handleNavClick("What are your Backend Development skills?")}>
                                             Node.js, PostgreSQL.
                                         </ListItem>
-                                        <ListItem icon={<Palette className="w-4 h-4" />} title="Design" onClick={() => openChat("skills")}>
+                                        <ListItem icon={<Palette className="w-4 h-4" />} title="Design" onClick={() => handleNavClick("What are your Design skills?")}>
                                             Tailwind CSS, Figma.
                                         </ListItem>
-                                        <ListItem icon={<Terminal className="w-4 h-4" />} title="DevOps" onClick={() => openChat("skills")}>
-                                            Docker, CI/CD pipelines.
+                                        <ListItem icon={<Users className="w-4 h-4" />} title="Soft Skills" onClick={() => handleNavClick("What are your Soft Skills?")}>
+                                            Teamwork, Communication
                                         </ListItem>
                                     </ul>
                                 </NavigationMenuContent>
@@ -210,13 +190,13 @@ export function PortfolioNavbar() {
                                 <NavigationMenuTrigger className="bg-transparent hover:bg-primary/10 focus:bg-primary/10 data-[state=open]:bg-primary/10 rounded-full hover:text-primary relative after:absolute after:-top-1 after:left-1/2 after:-translate-x-1/2 after:w-8 after:h-[2px] after:bg-primary after:shadow-[0_0_8px_var(--primary)] after:opacity-0 hover:after:opacity-100 after:transition-all after:duration-300">Experiences</NavigationMenuTrigger>
                                 <NavigationMenuContent>
                                     <ul className="grid w-[400px] gap-3 p-4 md:w-[500px] md:grid-cols-2 lg:w-[600px] ">
-                                        <ListItem title="Work History" onClick={() => openChat("experiences")}>
+                                        <ListItem title="Work History" onClick={() => handleNavClick("Tell me about your work history.")}>
                                             Professional roles and companies.
                                         </ListItem>
-                                        <ListItem title="Education" onClick={() => openChat("experiences")}>
+                                        <ListItem title="Education" onClick={() => handleNavClick("What is your educational background?")}>
                                             Degrees and certifications.
                                         </ListItem>
-                                        <ListItem title="Volunteering" onClick={() => openChat("experiences")}>
+                                        <ListItem title="Volunteering" onClick={() => handleNavClick("Have you done any volunteering?")}>
                                             Community involvement.
                                         </ListItem>
                                     </ul>

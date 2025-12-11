@@ -4,21 +4,42 @@ import { useState, useRef, useEffect } from "react";
 import { useChat } from "@/components/chat-provider";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Send, Bot, User, ArrowRight } from "lucide-react";
+import { Bot, ArrowRight } from "lucide-react";
 import { WelcomeModal } from "./welcome-modal";
+import { SkillsSection } from "@/components/skills-section";
 
 export function Chatbox() {
-    const { conversationId, sendMessage, messages, isLoading, userName, welcomePlaceholder, isWelcomeOpen } = useChat();
+    const { conversationId, sendMessage, messages, isLoading, welcomePlaceholder, isWelcomeOpen } = useChat();
     const [input, setInput] = useState("");
     const scrollRef = useRef<HTMLDivElement>(null);
 
     const handleSend = async () => {
         if (!input.trim()) return;
-        await sendMessage(input);
-        setInput("");
+        const msg = input;
+        setInput(""); // Immediate clear
+        await sendMessage(msg);
+    };
+
+    // Helper to parse content for skill tags
+    const getMessageData = (content: string) => {
+        const skillMatch = content.match(/\[\[SKILL:\s*(.*?)\]\]/);
+        const categoryMatch = content.match(/\[\[CATEGORY:\s*(.*?)\]\]/);
+        const showAllSkills = content.includes("[[SHOW_SKILLS]]");
+
+        const highlightSkill = skillMatch ? skillMatch[1] : undefined;
+        const highlightCategory = categoryMatch ? categoryMatch[1] : undefined;
+
+        // Clean the tag out of the displayed text (remove all types of tags)
+        let cleanContent = content.replace(/\[\[SKILL:\s*.*?\]\]/, "");
+        cleanContent = cleanContent.replace(/\[\[CATEGORY:\s*.*?\]\]/, "");
+        cleanContent = cleanContent.replace("[[SHOW_SKILLS]]", "").trim();
+
+        // Show skills if tag exists OR context keywords found (heuristic fallback)
+        const showSkills = !!highlightSkill || !!highlightCategory || showAllSkills;
+
+        return { cleanContent, highlightSkill, highlightCategory, showSkills };
     };
 
     // Auto-scroll to bottom when messages change
@@ -87,35 +108,51 @@ export function Chatbox() {
                 <div className="flex-1 overflow-hidden relative mb-4">
                     <ScrollArea ref={scrollRef} className="h-full w-full">
                         <div className="flex flex-col flex-1 justify-end gap-4 pb-12 px-4">
-                            {messages.map((msg, i) => (
-                                <div key={i} className={`flex gap-3 w-full mb-6 min-w-0 ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
-                                    {/* Bot Avatar (Only for bot) */}
-                                    {msg.role === "bot" && (
-                                        <Avatar className="h-8 w-8 shrink-0 border border-border/30 shadow-sm">
-                                            <AvatarImage src="/bot-avatar.png" />
-                                            <AvatarFallback className="bg-primary/10 text-primary"><Bot size={14} /></AvatarFallback>
-                                        </Avatar>
-                                    )}
+                            {messages.map((msg: any, i) => {
+                                const { cleanContent, highlightSkill, highlightCategory, showSkills } = getMessageData(msg.content);
 
-                                    {/* Message Content Column (Bubble + Component) */}
-                                    <div className={`flex flex-col gap-2 max-w-[85%] min-w-0 ${msg.role === "user" ? "items-end" : "items-start"}`}>
-                                        <div
-                                            className={`rounded-[20px] px-5 py-2.5 text-[15px] shadow-sm leading-relaxed break-words whitespace-pre-wrap [word-break:break-word] min-w-0 overflow-hidden ${msg.role === "user"
-                                                ? "bg-[#0084ff] text-white rounded-br-none" // Messenger Blue
-                                                : "bg-muted text-foreground rounded-bl-none" // Messenger Gray
-                                                }`}
-                                        >
-                                            {msg.content}
-                                            {/* Component Display - Nested INSIDE Bubble */}
-                                            {msg.component && (
-                                                <div className="mt-3 w-full grid grid-cols-1 min-w-0 overflow-hidden rounded-xl bg-background/50 backdrop-blur-sm">
-                                                    {msg.component}
-                                                </div>
-                                            )}
+                                return (
+                                    <div key={msg.id || i} className={`flex gap-3 w-full mb-6 min-w-0 ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
+                                        {/* Bot Avatar (Only for bot) */}
+                                        {msg.role === "bot" && (
+                                            <Avatar className="h-8 w-8 shrink-0 border border-border/30 shadow-sm">
+                                                <AvatarImage src="/bot-avatar.png" />
+                                                <AvatarFallback className="bg-primary/10 text-primary"><Bot size={14} /></AvatarFallback>
+                                            </Avatar>
+                                        )}
+
+                                        {/* Message Content Column (Bubble + Component) */}
+                                        <div className={`flex flex-col gap-2 max-w-[85%] min-w-0 ${msg.role === "user" ? "items-end" : "items-start"}`}>
+                                            <div
+                                                className={`rounded-[20px] px-5 py-2.5 text-[15px] shadow-sm leading-relaxed break-words whitespace-pre-wrap [word-break:break-word] min-w-0 overflow-hidden ${msg.role === "user"
+                                                    ? "bg-[#0084ff] text-white rounded-br-none" // Messenger Blue
+                                                    : "bg-muted text-foreground rounded-bl-none" // Messenger Gray
+                                                    }`}
+                                            >
+                                                {cleanContent}
+
+                                                {/* Component Display - Nested INSIDE Bubble */}
+
+                                                {/* 1. Explicit Component (e.g. forced via code) */}
+                                                {msg.component && (
+                                                    <div className="mt-3 w-full grid grid-cols-1 min-w-0 overflow-hidden rounded-xl bg-background/50 backdrop-blur-sm">
+                                                        {msg.component}
+                                                    </div>
+                                                )}
+
+                                                {/* 2. Skills Section (Triggered by Tag or Heuristic) */}
+                                                {!msg.component && showSkills && msg.role === 'bot' && (
+                                                    <div className="mt-3 w-full grid grid-cols-1 min-w-0 overflow-hidden rounded-xl bg-background/50 backdrop-blur-sm">
+                                                        <SkillsSection highlightSkill={highlightSkill} highlightCategory={highlightCategory} />
+                                                    </div>
+                                                )}
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
-                            ))}
+                                );
+                            })}
+
+                            {/* Loading Indicator */}
                             {isLoading && (
                                 <div className="flex gap-3 max-w-[85%] items-end">
                                     <Avatar className="h-8 w-8 shrink-0">

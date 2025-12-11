@@ -33,8 +33,13 @@ ${JSON.stringify(context, null, 2)}
 
 Instructions:
 - Be professional, friendly, and concise.
-- Only answer based on the provided context.
-- If you don't know the answer, say "I don't have that information in my current context."
+- **PERSONALIZATION**: The context may contain a 'userName'. If it is not "Guest", please address the user by their name occasionally to be friendly.
+- Answer based on the provided context. The context contains a 'skills' list from the database.
+- **CRITICAL**: When asked about a specific skill, use the provided 'description' field in the context as the authoritative source of your answer.
+- **VISUALS**: If the user asks about a specific skill that exists in your database (e.g. "React", "Python"), strictly output the tag '[[SKILL: <Exact Name>]]' at the start of your response. Example: "[[SKILL: React]] React is a library..."
+- **VISUALS**: If the user asks about a broad category (e.g. "Frontend", "Backend", "Design"), check the 'categories' list in the context and output the tag '[[CATEGORY: <Exact Title>]]' at the start. Example: "[[CATEGORY: Frontend Development]] Here are my frontend skills..."
+- **VISUALS**: If the user asks generally about your skills, capabilities, or "what can you do", output the tag '[[SHOW_SKILLS]]' at the start.
+- If you don't know the answer or it's not in the context, say "I don't have that information in my current context."
 - Do not make up facts.
 `;
 

@@ -82,16 +82,23 @@ export async function POST(req: Request) {
             { data: skills },
             { data: experience },
             { data: about },
+            { data: userProfile }
         ] = await Promise.all([
             supabase.from('projects').select('*'),
-            supabase.from('skills').select('*'),
+            supabase.from('skills').select('*, category:skill_categories(title)'),
             supabase.from('experience').select('*'),
             supabase.from('about').select('*'),
+            supabase.from('users').select('name').eq('id', user.id).single(),
         ]);
 
+        // Extract unique categories for better context
+        const categories = Array.from(new Set(skills?.map((s: any) => s.category?.title).filter(Boolean)));
+
         const context = {
+            userName: userProfile?.name || "Guest",
             projects: projects || [],
             skills: skills || [],
+            categories: categories || [],
             experience: experience || [],
             about: about || [],
         };
