@@ -1,14 +1,34 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase-client';
+import { createServerClient } from '@supabase/ssr';
+import { cookies } from 'next/headers';
 
 export async function GET() {
-    const supabase = createClient();
+    const cookieStore = cookies();
+
+    const supabase = createServerClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+        {
+            cookies: {
+                getAll() {
+                    return cookieStore.getAll();
+                },
+                setAll(cookiesToSet) {
+                    try {
+                        cookiesToSet.forEach(({ name, value, options }) =>
+                            cookieStore.set(name, value, options)
+                        );
+                    } catch {
+                        // The `setAll` method was called from a Server Component.
+                        // This can be ignored if you have middleware refreshing
+                        // user sessions.
+                    }
+                },
+            },
+        }
+    );
 
     // Fetch categories with their skills
-    // We join the tables manually or via easy relation query if setup, but standard join is safer if relation names vary.
-    // Actually, supbase js client handles nested resource embedding if foreign keys exist.
-    // We set up REFERENCES in SQL, so it should work.
-
     const { data: categories, error } = await supabase
         .from('skill_categories')
         .select(`
@@ -37,7 +57,7 @@ export async function GET() {
     const sortedCategories = categories?.map(cat => ({
         ...cat,
         skills: Array.isArray(cat.skills)
-            ? cat.skills.sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0))
+            ? cat.skills.sort((a: any, b: any) => (a.sort_order || 0) - (b.sort_order || 0))
             : []
     })) || [];
 

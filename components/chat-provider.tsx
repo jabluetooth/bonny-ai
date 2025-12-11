@@ -16,6 +16,7 @@ interface ChatContextType {
     isWelcomeOpen: boolean
     setIsWelcomeOpen: (open: boolean) => void
     welcomePlaceholder: string
+    isChatDisabled: boolean
 }
 
 const ChatContext = createContext<ChatContextType>({
@@ -30,7 +31,8 @@ const ChatContext = createContext<ChatContextType>({
     startChat: async () => { },
     isWelcomeOpen: false,
     setIsWelcomeOpen: () => { },
-    welcomePlaceholder: "|"
+    welcomePlaceholder: "|",
+    isChatDisabled: false
 })
 
 export function ChatProvider({ children }: { children: ReactNode }) {
@@ -39,6 +41,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     const [isLoading, setIsLoading] = useState(false)
     const [userName, setUserName] = useState<string | null>(null)
     const [messages, setMessages] = useState<{ role: 'user' | 'bot', content: string, component?: ReactNode }[]>([])
+    const [isChatDisabled, setIsChatDisabled] = useState(false)
 
     // Create client once
     const [supabase] = useState(() => createClient())
@@ -46,18 +49,27 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     // Expose startChat for manual initialization
     const startChat = async (name?: string) => {
         try {
-            // 1. Check/Create Auth
-            const { data: { session } } = await supabase.auth.getSession()
+            setIsLoading(true)
+            // Clear previous state immediately to prevent "flashing" old data
+            setMessages([])
+            setConversationId(null)
+            setUserId(null)
 
-            if (!session) {
-                const { error: authError } = await supabase.auth.signInAnonymously()
-                if (authError) {
-                    console.error("ChatProvider: Auth error", authError)
-                    return
-                }
+            // 1. Force New Session (User wanted to start fresh)
+            // We sign out to ensure we get a fresh Anonymous ID each time 'startChat' is explicitly called.
+            const { data: { session: existingSession } } = await supabase.auth.getSession()
+            if (existingSession) {
+                await supabase.auth.signOut()
             }
 
-            // 2. Start Session (Pass name if provided)
+            // 2. Create New Anonymous Auth
+            const { error: authError } = await supabase.auth.signInAnonymously()
+            if (authError) {
+                console.error("ChatProvider: Auth error", authError)
+                return
+            }
+
+            // 3. Start Session (Pass name if provided)
             const res = await fetch('/api/chat/start', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -90,6 +102,8 @@ export function ChatProvider({ children }: { children: ReactNode }) {
 
         } catch (err) {
             console.error("ChatProvider: Initialization error", err)
+        } finally {
+            setIsLoading(false)
         }
     }
 
@@ -117,6 +131,9 @@ export function ChatProvider({ children }: { children: ReactNode }) {
             const data = await res.json()
 
             if (res.ok) {
+                if (data.limitReached) {
+                    setIsChatDisabled(true)
+                }
                 setMessages(prev => [...prev, { role: 'bot', content: data.reply }])
             } else {
                 console.error("ChatProvider: Send error", data.error)
@@ -197,7 +214,8 @@ export function ChatProvider({ children }: { children: ReactNode }) {
             startChat,
             isWelcomeOpen,
             setIsWelcomeOpen,
-            welcomePlaceholder
+            welcomePlaceholder,
+            isChatDisabled
         }}>
             {children}
         </ChatContext.Provider>

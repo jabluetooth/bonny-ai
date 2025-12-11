@@ -18,6 +18,46 @@ export async function generateLLMResponse(
         return "I'm currently unable to process requests due to a configuration error (Missing API Key).";
     }
 
+    // Helper to format context as token-efficient text (Pseudo-YAML/Markdown)
+    const formatContext = (data: LLMContext): string => {
+        let output = "";
+        if (data.userName) output += `User Name: ${data.userName}\n`;
+
+        if (data.skills?.length) {
+            output += "\nMy Skills:\n";
+            data.skills.forEach((s: any) => {
+                output += `- ${s.name}: ${s.description || ''}\n`;
+            });
+        }
+
+        if (data.projects?.length) {
+            output += "\nMy Projects:\n";
+            data.projects.forEach((p: any) => {
+                output += `- ${p.title}: ${p.description} (Tech: ${p.technologies || p.tech_stack || ''})\n`;
+            });
+        }
+
+        if (data.experience?.length) {
+            output += "\nExperience:\n";
+            data.experience.forEach((e: any) => {
+                output += `- ${e.role} at ${e.company} (${e.period || e.duration || ''}): ${e.description}\n`;
+            });
+        }
+
+        if (data.about?.length) {
+            output += "\nAbout Me:\n";
+            data.about.forEach((a: any) => {
+                output += `- ${a.title}: ${a.content || a.description}\n`;
+            });
+        }
+
+        if (data.categories?.length) {
+            output += `\nSkill Categories: ${data.categories.join(', ')}\n`;
+        }
+
+        return output;
+    };
+
     try {
         const openai = new OpenAI({
             apiKey: apiKey,
@@ -29,22 +69,22 @@ You are the Fil Heinz O. Re La Torre.
 Your goal is to answer visitor questions about the developer's experience, projects, and skills.
 
 Here is the context data:
-${JSON.stringify(context, null, 2)}
+${formatContext(context)}
 
 Instructions:
 - Be professional, friendly, and concise.
-- **PERSONALIZATION**: The context may contain a 'userName'. If it is not "Guest", please address the user by their name occasionally to be friendly.
-- Answer based on the provided context. The context contains a 'skills' list from the database.
-- **CRITICAL**: When asked about a specific skill, use the provided 'description' field in the context as the authoritative source of your answer.
-- **VISUALS**: If the user asks about a specific skill that exists in your database (e.g. "React", "Python"), strictly output the tag '[[SKILL: <Exact Name>]]' at the start of your response. Example: "[[SKILL: React]] React is a library..."
-- **VISUALS**: If the user asks about a broad category (e.g. "Frontend", "Backend", "Design"), check the 'categories' list in the context and output the tag '[[CATEGORY: <Exact Title>]]' at the start. Example: "[[CATEGORY: Frontend Development]] Here are my frontend skills..."
+- **PERSONALIZATION**: The context may contain a 'User Name'. If it is not "Guest", please address the user by their name occasionally to be friendly.
+- Answer based on the provided context.
+- **CRITICAL**: When asked about a specific skill, use the provided skill description as the authoritative source of your answer.
+- **VISUALS**: If the user asks about a specific skill that exists in the context (e.g. "React", "Python"), strictly output the tag '[[SKILL: <Exact Name>]]' at the start of your response. Example: "[[SKILL: React]] React is a library..."
+- **VISUALS**: If the user asks about a broad category (e.g. "Frontend", "Backend", "Design"), check the 'Skill Categories' list and output the tag '[[CATEGORY: <Exact Title>]]' at the start. Example: "[[CATEGORY: Frontend Development]] Here are my frontend skills..."
 - **VISUALS**: If the user asks generally about your skills, capabilities, or "what can you do", output the tag '[[SHOW_SKILLS]]' at the start.
 - If you don't know the answer or it's not in the context, say "I don't have that information in my current context."
 - Do not make up facts.
 `;
 
         const completion = await openai.chat.completions.create({
-            model: baseURL ? 'llama-3.3-70b-versatile' : 'gpt-4o-mini',
+            model: baseURL ? 'llama-3.1-8b-instant' : 'gpt-4o-mini',
             messages: [
                 { role: 'system', content: systemPrompt },
                 { role: 'user', content: userMessage },

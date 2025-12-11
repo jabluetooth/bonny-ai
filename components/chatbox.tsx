@@ -11,9 +11,8 @@ import { WelcomeModal } from "./welcome-modal";
 import { SkillsSection } from "@/components/skills-section";
 
 export function Chatbox() {
-    const { conversationId, sendMessage, messages, isLoading, welcomePlaceholder, isWelcomeOpen } = useChat();
+    const { conversationId, sendMessage, messages, isLoading, welcomePlaceholder, isWelcomeOpen, isChatDisabled } = useChat();
     const [input, setInput] = useState("");
-    const scrollRef = useRef<HTMLDivElement>(null);
 
     const handleSend = async () => {
         if (!input.trim()) return;
@@ -79,16 +78,21 @@ export function Chatbox() {
                         className="relative flex items-center w-full"
                     >
                         <Input
+                            id="hero-chat-input"
+                            name="message"
+                            autoComplete="off"
+                            autoCorrect="off"
+                            spellCheck={false}
                             value={input}
                             onChange={(e) => setInput(e.target.value)}
-                            placeholder={isWelcomeOpen ? welcomePlaceholder : "Ask me anything..."}
+                            placeholder={isChatDisabled ? "Message limit reached." : (isWelcomeOpen ? welcomePlaceholder : "Ask me anything...")}
                             className="w-full h-14 pl-6 pr-16 rounded-full text-lg shadow-lg border-muted-foreground/20 bg-background focus-visible:ring-1 focus-visible:ring-primary/50 transition-all hover:shadow-xl"
-                            disabled={!conversationId || isLoading}
+                            disabled={!conversationId || isLoading || isChatDisabled}
                         />
                         <Button
                             type="submit"
                             size="icon"
-                            disabled={!conversationId || isLoading || !input.trim()}
+                            disabled={!conversationId || isLoading || !input.trim() || isChatDisabled}
                             className="absolute right-1.5 h-11 w-11 rounded-full bg-blue-500 hover:bg-blue-600 text-white shadow-sm transition-transform hover:scale-105 active:scale-95"
                         >
                             <ArrowRight size={20} />
@@ -107,7 +111,7 @@ export function Chatbox() {
             <div className="w-full max-w-3xl flex flex-col h-[calc(100vh-180px)] animate-in fade-in zoom-in-95 duration-500">
                 {/* Messages Area - Flexible & Transparent */}
                 <div className="flex-1 overflow-hidden relative mb-4">
-                    <ScrollArea ref={scrollRef} className="h-full w-full">
+                    <ScrollArea className="h-full w-full">
                         <div className="flex flex-col flex-1 justify-end gap-4 pb-12 px-4">
                             {messages.map((msg: any, i) => {
                                 const { cleanContent, highlightSkill, highlightCategory, showSkills } = getMessageData(msg.content);
@@ -182,16 +186,21 @@ export function Chatbox() {
                         className="relative flex items-center w-full"
                     >
                         <Input
+                            id="chat-input"
+                            name="message"
+                            autoComplete="off"
+                            autoCorrect="off"
+                            spellCheck={false}
                             value={input}
                             onChange={(e) => setInput(e.target.value)}
-                            placeholder="Type a message..."
+                            placeholder={isChatDisabled ? "Message limit reached." : "Type a message..."}
                             className="w-full h-14 pl-6 pr-16 rounded-full shadow-md border-border/40 bg-background/80 backdrop-blur-md focus-visible:ring-1 focus-visible:ring-primary/30 transition-shadow hover:shadow-lg text-lg"
-                            disabled={!conversationId || isLoading}
+                            disabled={!conversationId || isLoading || isChatDisabled}
                         />
                         <Button
                             type="submit"
                             size="icon"
-                            disabled={!conversationId || isLoading || !input.trim()}
+                            disabled={!conversationId || isLoading || !input.trim() || isChatDisabled}
                             className="absolute right-1.5 h-11 w-11 rounded-full bg-blue-500 hover:bg-blue-600 text-white shadow-sm transition-transform hover:scale-105 active:scale-95"
                         >
                             <ArrowRight size={20} />

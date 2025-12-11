@@ -68,7 +68,28 @@ export async function POST(req: Request) {
         // We use 'xss' library to strip dangerous tags/attributes
         const content = xss(rawContent);
 
-        console.log(`[Send Route] User: ${user.id}, Conversation: ${conversationId}`);
+        // CHECK LIMIT: Count user messages in this conversation
+        // Robust count: select IDs instead of head:true to avoid RLS flakiness
+        const { count, error: countError } = await supabase
+            .from('messages')
+            .select('id', { count: 'exact', head: false })
+            .eq('conversation_id', conversationId)
+            .eq('sender_type', 'user');
+
+        if (countError) {
+            console.error('Error counting messages:', countError);
+        }
+
+        // Handle null count (RLS issue) safely as 0 to assume good faith
+        const safeCount = count ?? 0;
+        const MESSAGE_LIMIT = 10;
+
+        if (safeCount >= MESSAGE_LIMIT) {
+            return NextResponse.json({
+                limitReached: true,
+                reply: "I'm sorry, you've reached the message limit for this preview. Thank you for chatting!"
+            });
+        }
 
         // 4. Save User Message
         // RLS policies should handle this on insert/select

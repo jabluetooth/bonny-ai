@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { useChat } from "@/components/chat-provider"
@@ -88,7 +88,7 @@ export function WelcomeModal() {
     }
 
     const handleSkip = async () => {
-        await startChat()
+        await startChat("Guest")
         setIsWelcomeOpen(false)
     }
 
@@ -101,12 +101,16 @@ export function WelcomeModal() {
                 className="sm:max-w-[330px] p-6 border bg-background shadow-lg rounded-2xl outline-none"
             >
                 <DialogTitle className="sr-only">Welcome</DialogTitle>
+                <DialogDescription className="sr-only">
+                    Please enter your name or continue anonymously to start chatting.
+                </DialogDescription>
                 <div className="flex flex-col items-center justify-center space-y-6">
 
                     {/* Input Section */}
                     <div className="w-full">
                         <Input
                             id="welcome-name"
+                            name="name"
                             value={name}
                             onChange={(e) => setName(e.target.value)}
                             onFocus={() => {

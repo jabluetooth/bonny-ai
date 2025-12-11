@@ -42,7 +42,7 @@ export async function POST(req: Request) {
         );
     }
 
-    const body = await req.text(); // Use text() to handle potentially empty body safely
+    const body = await req.text();
     let name: string | undefined;
     try {
         if (body) {
@@ -61,9 +61,7 @@ export async function POST(req: Request) {
         }, { onConflict: 'id' });
 
     if (userError) {
-        // Log error but don't block the conversation
-        console.error('Error creating/updating user (Non-blocking):', userError);
-        // Continue...
+        console.error('Error creating/updating user:', userError);
     }
 
     // 3. Search for existing conversation
