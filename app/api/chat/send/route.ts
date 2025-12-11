@@ -12,18 +12,27 @@ const sendSchema = z.object({
 });
 
 export async function POST(req: Request) {
-    const cookieStore = await cookies();
+    const cookieStore = cookies();
 
     const supabase = createServerClient(
         process.env.NEXT_PUBLIC_SUPABASE_URL!,
         process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
         {
             cookies: {
-                get(name: string) {
-                    return cookieStore.get(name)?.value;
+                getAll() {
+                    return cookieStore.getAll();
                 },
-                set: () => { },
-                remove: () => { },
+                setAll(cookiesToSet) {
+                    try {
+                        cookiesToSet.forEach(({ name, value, options }) =>
+                            cookieStore.set(name, value, options)
+                        );
+                    } catch {
+                        // The `setAll` method was called from a Server Component.
+                        // This can be ignored if you have middleware refreshing
+                        // user sessions.
+                    }
+                },
             },
         }
     );
@@ -91,16 +100,28 @@ export async function POST(req: Request) {
             supabase.from('users').select('name').eq('id', user.id).single(),
         ]);
 
-        // Extract unique categories for better context
-        const categories = Array.from(new Set(skills?.map((s: any) => s.category?.title).filter(Boolean)));
+        // Helper to reduce token usage by stripping metadata
+        const minifyData = (items: any[], fields: string[]) => {
+            return items?.map(item => {
+                const mini: any = {};
+                fields.forEach(f => {
+                    if (item[f]) mini[f] = item[f];
+                });
+                // Special case for nested category in skills
+                if (item.category?.title) mini.category = item.category.title;
+                return mini;
+            }) || [];
+        };
 
         const context = {
             userName: userProfile?.name || "Guest",
-            projects: projects || [],
-            skills: skills || [],
-            categories: categories || [],
-            experience: experience || [],
-            about: about || [],
+            // Selectively keep fields to save tokens. 
+            // Fallback: If 'title'/'name' missing, it might be the other. Included common variations.
+            projects: minifyData(projects || [], ['title', 'name', 'description', 'technologies', 'tech_stack', 'link', 'url']),
+            skills: minifyData(skills || [], ['name', 'description']),
+            experience: minifyData(experience || [], ['company', 'role', 'position', 'period', 'duration', 'date', 'description']),
+            about: minifyData(about || [], ['title', 'bio', 'content', 'description']),
+            categories: Array.from(new Set(skills?.map((s: any) => s.category?.title).filter(Boolean))) || [],
         };
 
         // 6. Generate AI Response

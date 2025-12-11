@@ -56,6 +56,6 @@ Instructions:
         return completion.choices[0]?.message?.content || "I'm sorry, I couldn't generate a response.";
     } catch (error: any) {
         console.error('LLM Generation Error:', error);
-        return "I'm experiencing technical difficulties properly processing your request right now.";
+        return `I'm experiencing technical difficulties (Error: ${error.message}).`;
     }
 }

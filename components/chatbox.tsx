@@ -42,14 +42,15 @@ export function Chatbox() {
         return { cleanContent, highlightSkill, highlightCategory, showSkills };
     };
 
+    const messagesEndRef = useRef<HTMLDivElement>(null);
+
+    const scrollToBottom = () => {
+        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    };
+
     // Auto-scroll to bottom when messages change
     useEffect(() => {
-        if (scrollRef.current) {
-            const scrollContainer = scrollRef.current.querySelector('[data-slot="scroll-area-viewport"]');
-            if (scrollContainer) {
-                scrollContainer.scrollTop = scrollContainer.scrollHeight;
-            }
-        }
+        scrollToBottom();
     }, [messages]);
 
     // Lock body scroll when chat is active
@@ -165,6 +166,8 @@ export function Chatbox() {
                                     </div>
                                 </div>
                             )}
+                            {/* Invisible div to scroll to */}
+                            <div ref={messagesEndRef} />
                         </div>
                     </ScrollArea>
                 </div>
