@@ -31,7 +31,7 @@ export async function SiteFooter() {
 
                 {/* Bottom Center: Copyright */}
                 <div className="text-xs text-muted-foreground absolute left-1/2 -translate-x-1/2">
-                    &copy; {new Date().getFullYear()} Bonny AI
+                    &copy; {new Date().getFullYear()} <b>Bonny AI</b>
                 </div>
 
                 {/* Bottom Right: Online Status */}

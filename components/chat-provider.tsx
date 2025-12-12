@@ -7,7 +7,7 @@ interface ChatContextType {
     conversationId: string | null
     userId: string | null
     messages: { role: 'user' | 'bot', content: string, component?: ReactNode }[]
-    sendMessage: (content: string) => Promise<void>
+    sendMessage: (content: string, intent?: string) => Promise<void>
     addMessage: (message: { role: 'user' | 'bot', content: string, component?: ReactNode }) => void
     isLoading: boolean
     userName: string | null
@@ -111,7 +111,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
         setMessages(prev => [...prev, message])
     }
 
-    const sendMessage = async (content: string) => {
+    const sendMessage = async (content: string, intent?: string) => {
         if (!conversationId) {
             console.error("ChatProvider: No active conversation")
             return
@@ -126,7 +126,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
             const res = await fetch('/api/chat/send', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ conversationId, content })
+                body: JSON.stringify({ conversationId, content, intent })
             })
             const data = await res.json()
 
