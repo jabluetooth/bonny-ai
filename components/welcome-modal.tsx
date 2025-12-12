@@ -97,6 +97,7 @@ export function WelcomeModal() {
     return (
         <Dialog open={isWelcomeOpen} onOpenChange={() => { /* Prevent closing */ }}>
             <DialogContent
+                showCloseButton={false}
                 onOpenAutoFocus={(e) => e.preventDefault()}
                 className="sm:max-w-[330px] p-6 border bg-background shadow-lg rounded-2xl outline-none"
             >
