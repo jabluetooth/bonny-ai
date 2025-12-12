@@ -1,8 +1,11 @@
 import OpenAI from 'openai';
 
 export interface LLMContext {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     projects?: any[];
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     skills?: any[];
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     [key: string]: any;
 }
 
@@ -25,6 +28,7 @@ export async function generateLLMResponse(
 
         if (data.skills?.length) {
             output += "\nMy Skills:\n";
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             data.skills.forEach((s: any) => {
                 output += `- ${s.name}: ${s.description || ''}\n`;
             });
@@ -32,6 +36,7 @@ export async function generateLLMResponse(
 
         if (data.projects?.length) {
             output += "\nMy Projects:\n";
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             data.projects.forEach((p: any) => {
                 output += `- ${p.title}: ${p.description} (Tech: ${p.technologies || p.tech_stack || ''})\n`;
             });
@@ -39,6 +44,7 @@ export async function generateLLMResponse(
 
         if (data.experience?.length) {
             output += "\nExperience:\n";
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             data.experience.forEach((e: any) => {
                 output += `- ${e.role} at ${e.company} (${e.period || e.duration || ''}): ${e.description}\n`;
             });
@@ -46,6 +52,7 @@ export async function generateLLMResponse(
 
         if (data.about?.length) {
             output += "\nAbout Me:\n";
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             data.about.forEach((a: any) => {
                 output += `- ${a.title}: ${a.content || a.description}\n`;
             });
@@ -65,20 +72,28 @@ export async function generateLLMResponse(
         });
 
         const systemPrompt = `
-You are the Fil Heinz O. Re La Torre.
-Your goal is to answer visitor questions about the developer's experience, projects, and skills.
+You are Fil Heinz O. Re La Torre, a passionate and innovative Software Engineer.
+Your goal is to answer visitor questions about your experience, projects, and skills with confidence and helpfulness.
 
 Here is the context data:
 ${formatContext(context)}
 
 Instructions:
-- Be professional, friendly, and concise.
+- **Tone**: Be enthusiastic, confident, and inviting. Show passion for technology.
+- **Perspective**: Speak in the FIRST PERSON ("I", "my"). You ARE the developer. Never say "I am an AI" or "The developer".
+- **Style**: Keep answers concise but engaging. Use natural language. Format with Markdown: use **bold** for key terms, emojis 🚀 to add personality, and numbered lists for steps.
 - **PERSONALIZATION**: The context may contain a 'User Name'. If it is not "Guest", please address the user by their name occasionally to be friendly.
 - Answer based on the provided context.
-- **CRITICAL**: When asked about a specific skill, use the provided skill description as the authoritative source of your answer.
-- **VISUALS**: If the user asks about a specific skill that exists in the context (e.g. "React", "Python"), strictly output the tag '[[SKILL: <Exact Name>]]' at the start of your response. Example: "[[SKILL: React]] React is a library..."
-- **VISUALS**: If the user asks about a broad category (e.g. "Frontend", "Backend", "Design"), check the 'Skill Categories' list and output the tag '[[CATEGORY: <Exact Title>]]' at the start. Example: "[[CATEGORY: Frontend Development]] Here are my frontend skills..."
-- **VISUALS**: If the user asks generally about your skills, capabilities, or "what can you do", output the tag '[[SHOW_SKILLS]]' at the start.
+- **SKILL VISUALS**:
+  - If asked about a *specific skill* (e.g. "React", "Python"), output '[[SKILL: <Exact Name>]]'.
+  - If asked about a *broad category* (e.g. "Frontend", "Backend"), output '[[CATEGORY: <Exact Title>]]'.
+  - If asked generally about skills/capabilities, output '[[SHOW_SKILLS]]'.
+
+- **PROJECT VISUALS**:
+  - If asked generally about projects, portfolio, or work (e.g. "What have you built?", "Show me your projects"), output '[[SHOW_PROJECTS]]'.
+  - If asked about *specific types of projects* (e.g. "Web Development projects", "AI Apps", "Mobile Apps"), output '[[SHOW_PROJECTS]]'.
+  - Always prioritize showing the visual carousel when discussing projects.
+
 - If you don't know the answer or it's not in the context, say "I don't have that information in my current context."
 - Do not make up facts.
 `;
@@ -94,8 +109,9 @@ Instructions:
         });
 
         return completion.choices[0]?.message?.content || "I'm sorry, I couldn't generate a response.";
-    } catch (error: any) {
+    } catch (error) {
         console.error('LLM Generation Error:', error);
-        return `I'm experiencing technical difficulties (Error: ${error.message}).`;
+        const errorMessage = error instanceof Error ? error.message : "Unknown error";
+        return `I'm experiencing technical difficulties (Error: ${errorMessage}).`;
     }
 }

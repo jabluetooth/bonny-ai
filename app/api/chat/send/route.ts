@@ -107,11 +107,76 @@ export async function POST(req: Request) {
 
         // 5. Gather Context for AI based on Intent
         // Logic extracted to lib/chat-context.ts for cleaner code
-        let context = await getContextForIntent(supabase, intent, userProfile?.name || "Guest");
+        const context = await getContextForIntent(supabase, intent, userProfile?.name || "Guest");
 
 
         // 6. Generate AI Response
-        const aiResponse = await generateLLMResponse(content, context);
+        // TOKEN OPTIMIZATION: Check for Static Response first
+        let aiResponse = "";
+
+        // Helper to format static data
+        const formatList = (items: any[], key: string, desc: string) =>
+            items?.map(i => `**${i[key]}**: ${i[desc] || ''}`).join('\n') || "No information available.";
+
+        // Helper for Variations
+        const pickVariation = (variations: string[], name: string = "Guest") => {
+            const template = variations[Math.floor(Math.random() * variations.length)];
+            const cleanName = name !== "Guest" ? `, ${name}` : "";
+            return template.replace("{{name}}", cleanName);
+        };
+
+        // Deterministic Responses based on Intent
+        if (intent === 'QUERY_PROJECTS') {
+            const lowerContent = content.toLowerCase();
+            const name = context.userName || "Guest";
+
+            if (lowerContent.includes('web')) {
+                const webVars = [
+                    "[[SHOW_PROJECTS]] Here are my **Web Development** projects{{name}}! 🌐",
+                    "[[SHOW_PROJECTS]] I've built some exciting things for the web. Check them out{{name}} 👇",
+                    "[[SHOW_PROJECTS]] Exploring the full stack is my passion. Here are my web projects! 💻"
+                ];
+                aiResponse = pickVariation(webVars, name);
+            } else if (lowerContent.includes('ai') || lowerContent.includes('machine learning')) {
+                const aiVars = [
+                    "[[SHOW_PROJECTS]] Check out my **AI & Machine Learning** innovations{{name}}! 🤖",
+                    "[[SHOW_PROJECTS]] Here's how I'm using AI to solve problems. Take a look{{name}}!",
+                    "[[SHOW_PROJECTS]] Diving into the future with AI & ML. Here are my projects 🧠"
+                ];
+                aiResponse = pickVariation(aiVars, name);
+            } else {
+                const genVars = [
+                    "[[SHOW_PROJECTS]] Check out my projects below{{name}}! 🚀",
+                    "[[SHOW_PROJECTS]] Here is a collection of my work. Enjoy{{name}}!",
+                    "[[SHOW_PROJECTS]] I'm proud of what I've built. Have a look{{name}} 👇"
+                ];
+                aiResponse = pickVariation(genVars, name);
+            }
+        }
+        else if (intent === 'QUERY_SKILLS') {
+            const lowerContent = content.toLowerCase();
+            if (lowerContent.includes('frontend')) aiResponse = "[[CATEGORY: Frontend Development]] Here are my Frontend skills.";
+            else if (lowerContent.includes('backend')) aiResponse = "[[CATEGORY: Backend Development]] Here are my Backend skills.";
+            else if (lowerContent.includes('design')) aiResponse = "[[CATEGORY: Design]] I love creating beautiful UIs.";
+            else aiResponse = "[[SHOW_SKILLS]] Here are my technical skills.";
+        }
+        else if (intent === 'QUERY_WORK') {
+            aiResponse = `Here is my professional experience:\n\n${formatList(context.experience, 'company', 'role')}`;
+        }
+        else if (intent === 'QUERY_EDUCATION') {
+            // Assuming education is in experience table for now, or fall back to generic
+            aiResponse = `Here is my background:\n\n${formatList(context.experience, 'company', 'role')}`;
+        }
+        else if (intent === 'QUERY_ABOUT_ME' || intent === 'QUERY_INTERESTS' || intent === 'QUERY_VISION') {
+            aiResponse = `Here is a bit about me:\n\n${formatList(context.about, 'title', 'content')}`;
+        }
+
+        // If no static response, use LLM
+        if (!aiResponse) {
+            aiResponse = await generateLLMResponse(content, context);
+        }
+
+
 
         // 7. Save Bot Message
         const { error: botMsgError } = await supabase.from('messages').insert({
@@ -126,10 +191,10 @@ export async function POST(req: Request) {
 
         return NextResponse.json({ reply: aiResponse });
 
-    } catch (error: any) {
+    } catch (error) {
         console.error('Chat API Error:', error);
         return NextResponse.json(
-            { error: 'Internal Server Error', details: error.message },
+            { error: 'Internal Server Error', details: error instanceof Error ? error.message : "Unknown error" },
             { status: 500 }
         );
     }

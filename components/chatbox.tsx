@@ -9,6 +9,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Bot, ArrowRight } from "lucide-react";
 import { WelcomeModal } from "./welcome-modal";
 import { SkillsSection } from "@/components/skills-section";
+import { ProjectsSection } from "@/components/projects-section";
 
 export function Chatbox() {
     const { conversationId, sendMessage, messages, isLoading, welcomePlaceholder, isWelcomeOpen, isChatDisabled } = useChat();
@@ -26,6 +27,7 @@ export function Chatbox() {
         const skillMatch = content.match(/\[\[SKILL:\s*(.*?)\]\]/);
         const categoryMatch = content.match(/\[\[CATEGORY:\s*(.*?)\]\]/);
         const showAllSkills = content.includes("[[SHOW_SKILLS]]");
+        const showProjects = content.includes("[[SHOW_PROJECTS]]");
 
         const highlightSkill = skillMatch ? skillMatch[1] : undefined;
         const highlightCategory = categoryMatch ? categoryMatch[1] : undefined;
@@ -33,12 +35,12 @@ export function Chatbox() {
         // Clean the tag out of the displayed text (remove all types of tags)
         let cleanContent = content.replace(/\[\[SKILL:\s*.*?\]\]/, "");
         cleanContent = cleanContent.replace(/\[\[CATEGORY:\s*.*?\]\]/, "");
-        cleanContent = cleanContent.replace("[[SHOW_SKILLS]]", "").trim();
+        cleanContent = cleanContent.replace("[[SHOW_SKILLS]]", "").replace("[[SHOW_PROJECTS]]", "").trim();
 
         // Show skills if tag exists OR context keywords found (heuristic fallback)
         const showSkills = !!highlightSkill || !!highlightCategory || showAllSkills;
 
-        return { cleanContent, highlightSkill, highlightCategory, showSkills };
+        return { cleanContent, highlightSkill, highlightCategory, showSkills, showProjects };
     };
 
     const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -113,8 +115,9 @@ export function Chatbox() {
                 <div className="flex-1 overflow-hidden relative mb-4">
                     <ScrollArea className="h-full w-full">
                         <div className="flex flex-col flex-1 justify-end gap-4 pb-12 px-4">
+                            {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
                             {messages.map((msg: any, i) => {
-                                const { cleanContent, highlightSkill, highlightCategory, showSkills } = getMessageData(msg.content);
+                                const { cleanContent, highlightSkill, highlightCategory, showSkills, showProjects } = getMessageData(msg.content);
 
                                 return (
                                     <div key={msg.id || i} className={`flex gap-3 w-full mb-6 min-w-0 ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
@@ -134,7 +137,13 @@ export function Chatbox() {
                                                     : "bg-muted text-foreground rounded-bl-none" // Messenger Gray
                                                     }`}
                                             >
-                                                {cleanContent}
+                                                {/* Format message with BOLD support */}
+                                                {cleanContent.split(/(\*\*.*?\*\*)/).map((part, idx) => {
+                                                    if (part.startsWith('**') && part.endsWith('**')) {
+                                                        return <strong key={idx}>{part.slice(2, -2)}</strong>;
+                                                    }
+                                                    return <span key={idx}>{part}</span>;
+                                                })}
 
                                                 {/* Component Display - Nested INSIDE Bubble */}
 
@@ -149,6 +158,27 @@ export function Chatbox() {
                                                 {!msg.component && showSkills && msg.role === 'bot' && (
                                                     <div className="mt-3 w-full grid grid-cols-1 min-w-0 overflow-hidden rounded-xl bg-background/50 backdrop-blur-sm">
                                                         <SkillsSection highlightSkill={highlightSkill} highlightCategory={highlightCategory} />
+                                                    </div>
+                                                )}
+
+                                                {/* 3. Projects Section (Triggered by Tag) */}
+                                                {/* 3. Projects Section (Triggered by Tag) */}
+                                                {msg.role === 'bot' && showProjects && (
+                                                    <div className="mt-3 w-full grid grid-cols-1 min-w-0 overflow-hidden rounded-xl bg-background/50 backdrop-blur-sm">
+                                                        {(() => {
+                                                            // Detect intent from the PREVIOUS user message
+                                                            const prevMsg = messages[i - 1];
+                                                            let category = undefined;
+                                                            if (prevMsg && prevMsg.role === 'user') {
+                                                                const text = prevMsg.content.toLowerCase();
+                                                                if (text.includes('web') || text.includes('frontend') || text.includes('backend') || text.includes('fullstack')) {
+                                                                    category = 'web';
+                                                                } else if (text.includes('ai') || text.includes('machine') || text.includes('learning') || text.includes('intelligence') || text.includes('ml')) {
+                                                                    category = 'ai';
+                                                                }
+                                                            }
+                                                            return <ProjectsSection category={category} />;
+                                                        })()}
                                                     </div>
                                                 )}
                                             </div>

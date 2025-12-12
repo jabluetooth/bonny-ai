@@ -60,11 +60,11 @@ export function PortfolioNavbar() {
     useEffect(() => {
         // If we went from empty to having messages, auto-close
         if (prevMsgLength.current === 0 && messages.length > 0) {
-            setIsOpen(false)
+            setTimeout(() => setIsOpen(false), 0)
         }
         // If we cleared messages, auto-open
         else if (messages.length === 0) {
-            setIsOpen(true)
+            setTimeout(() => setIsOpen(true), 0)
         }
 
         prevMsgLength.current = messages.length

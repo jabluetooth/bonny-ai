@@ -11,7 +11,7 @@ export function VisitorCounter({ initialCount }: { initialCount: number }) {
 
     useEffect(() => {
         // Update local count if initial changes
-        setCount(initialCount)
+        setTimeout(() => setCount(initialCount), 0)
 
         // Subscribe to INSERT/DELETE events on 'users' table
         // Note: usage of this subscription depends on RLS policies allowing the user to see these events.
