@@ -11,6 +11,7 @@ import {
     CarouselNext,
     CarouselPrevious,
 } from "@/components/ui/carousel";
+import { ProgressiveBlur } from "@/components/ui/progressive-blur";
 import { Separator } from "@/components/ui/separator";
 import { Loader2, Github, ExternalLink } from "lucide-react";
 import {
@@ -108,13 +109,11 @@ export function ProjectsSection({ category }: ProjectsSectionProps) {
                     }}
                     className="w-full max-w-5xl mx-auto relative"
                 >
-                    {/* Left Blur Fade */}
-                    <div className="absolute inset-y-0 left-0 w-12 z-10 bg-gradient-to-r from-background/80 to-transparent pointer-events-none" />
-                    {/* Right Blur Fade */}
-                    <div className="absolute inset-y-0 right-0 w-12 z-10 bg-gradient-to-l from-background/80 to-transparent pointer-events-none" />
+                    {/* Progressive Blur Overlays */}
+                    <ProgressiveBlur direction="left" className="w-16 md:w-24 z-10" />
+                    <ProgressiveBlur direction="right" className="w-16 md:w-24 z-10" />
 
-                    {/* Gap 10px approx 10px = 2.5 tailwind units, closest is pl-2.5 */}
-                    <CarouselContent className="-ml-[10px]">
+                    <CarouselContent className="-ml-[10px] py-4">
                         {projects.map((project, index) => (
                             <CarouselItem key={index} className="pl-[10px] basis-[70%] md:basis-[60%] lg:basis-[45%]">
                                 <div className="h-full py-2">
@@ -175,7 +174,7 @@ export function ProjectsSection({ category }: ProjectsSectionProps) {
                         />
                     ))}
                 </div>
-            </div>
+            </div >
 
             <Dialog open={!!selectedProject} onOpenChange={(open) => !open && setSelectedProject(null)}>
                 <DialogContent className="sm:max-w-[600px] max-h-[85vh] overflow-y-auto">

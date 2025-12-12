@@ -36,7 +36,7 @@ export async function GET(request: Request) {
                 github_url: 'https://github.com/',
                 live_url: 'https://demo.com',
                 demo_url: 'https://demo.com',
-                image_url: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=1000&auto=format&fit=crop',
+                image_url: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&q=80&w=1000',
                 key_features: ['Real-time sales analytics', 'Inventory management', 'User role management', 'Order tracking system'],
                 challenges_learned: 'Implementing real-time updates for the inventory system was challenging.',
                 type: 'Web Development'
@@ -48,7 +48,7 @@ export async function GET(request: Request) {
                 github_url: 'https://github.com/',
                 live_url: 'https://demo.com',
                 demo_url: 'https://demo.com',
-                image_url: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?q=80&w=1000&auto=format&fit=crop',
+                image_url: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&q=80&w=1000',
                 key_features: ['Responsive Design', 'Stripe Checkout', 'Animated sequences', 'SEO Optimized'],
                 challenges_learned: 'Optimizing images and animations for a perfect Lighthouse score.',
                 type: 'Web Development'
@@ -60,7 +60,7 @@ export async function GET(request: Request) {
                 github_url: 'https://github.com/',
                 live_url: 'https://demo.com',
                 demo_url: 'https://demo.com',
-                image_url: 'https://images.unsplash.com/photo-1484480974693-6ca0a78fb36b?q=80&w=1000&auto=format&fit=crop',
+                image_url: 'https://images.unsplash.com/photo-1484480974693-6ca0a78fb36b?auto=format&fit=crop&q=80&w=1000',
                 key_features: ['Drag and drop interface', 'Collaborative workspaces', 'Due date notifications', 'Dark mode support'],
                 challenges_learned: 'Designing a smooth drag-and-drop experience across different devices.',
                 type: 'Web Development'
