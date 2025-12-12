@@ -198,7 +198,7 @@ export function PortfolioNavbar() {
                     </NavigationMenu>
 
                     {/* RIGHT: Resume Button */}
-                    <InteractiveHoverButton onClick={() => setResumeOpen(true)}>Resume</InteractiveHoverButton>
+                    <InteractiveHoverButton onClick={() => setResumeOpen(true)}>Contact me</InteractiveHoverButton>
                 </div>
             </div>
 
