@@ -38,6 +38,7 @@ import {
 import { SkillsSection } from "@/components/skills-section"
 import { InteractiveHoverButton } from "@/components/ui/interactive-hover-button"
 import { ChatIntents } from "@/lib/intents"
+import { ProgressiveBlur } from "@/components/ui/progressive-blur"
 
 export function PortfolioNavbar() {
     const [resumeOpen, setResumeOpen] = useState(false)
@@ -95,12 +96,22 @@ export function PortfolioNavbar() {
 
             <div
                 className={cn(
-                    "bg-background/70 backdrop-blur-sm transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] pointer-events-auto",
+                    "relative transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] pointer-events-auto",
                     isOpen ? "mt-0 opacity-100" : "-mt-16 opacity-0 pointer-events-none",
                     (resumeOpen || isWelcomeOpen) && "blur-sm"
                 )}
             >
-                <div className="max-w-6xl mx-auto flex items-center justify-between h-16 px-4 relative">
+                {/* Progressive Blur Background - Extended to curtain over messages */}
+                <div className="absolute top-0 left-0 right-0 h-32 overflow-hidden pointer-events-none">
+                    <ProgressiveBlur
+                        direction="top"
+                        showBackground={true}
+                        blurIntensity={4}
+                        gradientStart="50%"
+                        className="h-full w-full"
+                    />
+                </div>
+                <div className="max-w-6xl mx-auto flex items-center justify-between h-16 px-4 relative z-10">
 
                     {/* LEFT: Avatar */}
                     <Avatar onClick={() => handleNavClick("Hello! Tell me about this portfolio.")} className="cursor-pointer hover:scale-105 transition-transform">
