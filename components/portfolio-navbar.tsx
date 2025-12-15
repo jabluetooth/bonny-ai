@@ -97,7 +97,7 @@ export function PortfolioNavbar() {
             <div
                 className={cn(
                     "relative transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] pointer-events-auto",
-                    isOpen ? "mt-0 opacity-100" : "-mt-16 opacity-0 pointer-events-none",
+                    isOpen ? "h-16 opacity-100" : "h-0 opacity-0 pointer-events-none overflow-hidden",
                     (resumeOpen || isWelcomeOpen) && "blur-sm"
                 )}
             >

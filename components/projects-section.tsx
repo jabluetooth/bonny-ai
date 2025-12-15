@@ -87,19 +87,27 @@ export function ProjectsSection({ category }: ProjectsSectionProps) {
 
     if (isLoading) {
         return (
-            <div className="w-full max-w-full min-w-0 flex flex-col gap-4 p-4 rounded-xl animate-in fade-in">
+            <div className="w-full max-w-full min-w-0 flex flex-col gap-4 p-4 rounded-xl border border-transparent animate-in fade-in">
                 <Skeleton className="h-7 w-48 mb-2 px-2" />
 
                 {/* Carousel Area Match */}
-                <div className="w-full max-w-5xl mx-auto relative px-4 md:px-12">
-                    {/* Simulate 3 visible cards for "center" alignment feel? Or just one big block? 
-                         Real carousel shows partial next/prev. 
-                         Let's show 3 cols to mimic carousel items 
-                     */}
-                    <div className="flex gap-4 overflow-hidden h-64 items-center justify-center">
-                        <Skeleton className="h-64 w-[15%] hidden lg:block rounded-xl opacity-40 shrink-0" />
-                        <Skeleton className="h-64 w-[70%] md:w-[60%] lg:w-[45%] rounded-xl shrink-0 shadow-md" />
-                        <Skeleton className="h-64 w-[15%] hidden lg:block rounded-xl opacity-40 shrink-0" />
+                <div className="w-full max-w-5xl mx-auto relative">
+                    <div className="flex -ml-[10px] py-4 overflow-hidden justify-center">
+                        <div className="pl-[10px] w-[15%] md:w-[20%] lg:w-[27.5%] shrink-0 opacity-40">
+                            <div className="py-2">
+                                <Skeleton className="h-64 w-full rounded-xl" />
+                            </div>
+                        </div>
+                        <div className="pl-[10px] w-[70%] md:w-[60%] lg:w-[45%] shrink-0">
+                            <div className="py-2">
+                                <Skeleton className="h-64 w-full rounded-xl shadow-md" />
+                            </div>
+                        </div>
+                        <div className="pl-[10px] w-[15%] md:w-[20%] lg:w-[27.5%] shrink-0 opacity-40">
+                            <div className="py-2">
+                                <Skeleton className="h-64 w-full rounded-xl" />
+                            </div>
+                        </div>
                     </div>
                 </div>
 

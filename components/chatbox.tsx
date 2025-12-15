@@ -133,11 +133,11 @@ export function Chatbox() {
     return (
         <>
             <WelcomeModal />
-            <div className="w-full max-w-3xl flex flex-col h-[calc(100vh-180px)] animate-in fade-in zoom-in-95 duration-500">
+            <div className="w-full max-w-3xl flex flex-col h-full animate-in fade-in zoom-in-95 duration-500">
                 {/* Messages Area - Flexible & Transparent */}
                 <div className="flex-1 overflow-hidden relative mb-4">
                     <ScrollArea className="h-full w-full" viewportId="chat-scroll-area">
-                        <div className="flex flex-col flex-1 justify-end gap-4 pb-12 px-4">
+                        <div className="flex flex-col flex-1 justify-end gap-6 pb-12 px-4">
                             {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
                             {messages.map((msg: any, i) => {
                                 const { cleanContent, highlightSkill, highlightCategory, showSkills, showProjects, showExperiences, experienceCategory } = getMessageData(msg.content);
