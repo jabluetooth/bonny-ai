@@ -161,3 +161,17 @@
 .animate-border-beam {
   animation: border-beam calc(var(--duration)*1s) infinite linear;
 }
+
+@keyframes shimmer {
+  from {
+    background-position: 0 0;
+  }
+
+  to {
+    background-position: -200% 0;
+  }
+}
+
+.animate-shimmer {
+  animation: shimmer 2s linear infinite;
+}

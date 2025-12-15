@@ -45,3 +45,6 @@ Reference/
 
 # SQL files
 *.sql
+
+# Text files
+*.txt
