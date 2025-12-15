@@ -12,10 +12,13 @@ import { SkillsSection } from "@/components/skills-section";
 import { ProjectsSection } from "@/components/projects-section";
 
 import { ExperiencesSection } from "@/components/experiences-section";
+import { BorderBeam } from "@/components/ui/border-beam";
+import { cn } from "@/lib/utils";
 
 export function Chatbox() {
     const { conversationId, sendMessage, messages, isLoading, welcomePlaceholder, isWelcomeOpen, isChatDisabled } = useChat();
     const [input, setInput] = useState("");
+    const [isInputFocused, setIsInputFocused] = useState(false);
 
     const handleSend = async () => {
         if (!input.trim()) return;
@@ -228,7 +231,10 @@ export function Chatbox() {
                             e.preventDefault();
                             handleSend();
                         }}
-                        className="relative flex items-center w-full"
+                        className={cn(
+                            "relative flex items-center w-full rounded-full transition-all duration-300",
+                            isInputFocused ? "overflow-hidden" : ""
+                        )}
                     >
                         <Input
                             id="chat-input"
@@ -238,19 +244,45 @@ export function Chatbox() {
                             spellCheck={false}
                             value={input}
                             onChange={(e) => setInput(e.target.value)}
+                            onFocus={() => setIsInputFocused(true)}
+                            onBlur={() => setIsInputFocused(false)}
                             placeholder={isChatDisabled ? "Message limit reached." : "Type a message..."}
-                            className="w-full h-14 pl-6 pr-16 rounded-full shadow-md border-border/40 bg-background/80 backdrop-blur-md focus-visible:ring-1 focus-visible:ring-primary/30 transition-shadow hover:shadow-lg text-lg"
+                            className="w-full h-14 pl-6 pr-16 rounded-full shadow-md border-border/40 bg-background/80 backdrop-blur-md focus-visible:ring-1 focus-visible:ring-primary/30 transition-shadow hover:shadow-lg text-lg relative z-10"
                             disabled={!conversationId || isLoading || isChatDisabled}
                         />
                         <Button
                             type="submit"
                             size="icon"
                             disabled={!conversationId || isLoading || !input.trim() || isChatDisabled}
-                            className="absolute right-1.5 h-11 w-11 rounded-full bg-blue-500 hover:bg-blue-600 text-white shadow-sm transition-transform hover:scale-105 active:scale-95"
+                            className="absolute right-1.5 h-11 w-11 rounded-full bg-blue-500 hover:bg-blue-600 text-white shadow-sm transition-transform hover:scale-105 active:scale-95 z-20"
                         >
                             <ArrowRight size={20} />
                             <span className="sr-only">Send</span>
                         </Button>
+
+                        {/* Border Beams - Active on Focus */}
+                        {isInputFocused && (
+                            <>
+                                <BorderBeam
+                                    duration={6}
+                                    size={400}
+                                    radius={100}
+                                    colorFrom="transparent"
+                                    colorTo="#ef4444" // red-500
+                                    className="from-transparent via-red-500 to-transparent pointer-events-none z-30"
+                                />
+                                <BorderBeam
+                                    duration={6}
+                                    delay={3}
+                                    size={400}
+                                    radius={100}
+                                    borderWidth={2}
+                                    colorFrom="transparent"
+                                    colorTo="#3b82f6" // blue-500
+                                    className="from-transparent via-blue-500 to-transparent pointer-events-none z-30"
+                                />
+                            </>
+                        )}
                     </form>
                 </div>
             </div>
