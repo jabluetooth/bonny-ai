@@ -161,11 +161,13 @@ export async function POST(req: Request) {
             else aiResponse = "[[SHOW_SKILLS]] Here are my technical skills.";
         }
         else if (intent === 'QUERY_WORK') {
-            aiResponse = `Here is my professional experience:\n\n${formatList(context.experience, 'company', 'role')}`;
+            aiResponse = "[[SHOW_EXPERIENCE:WORK]] Here is my professional work history.";
         }
         else if (intent === 'QUERY_EDUCATION') {
-            // Assuming education is in experience table for now, or fall back to generic
-            aiResponse = `Here is my background:\n\n${formatList(context.experience, 'company', 'role')}`;
+            aiResponse = "[[SHOW_EXPERIENCE:EDUCATION]] Here is my educational background.";
+        }
+        else if (intent === 'QUERY_EXPERIENCE') {
+            aiResponse = "[[SHOW_EXPERIENCE:WORK]] Here is my professional experience.";
         }
         else if (intent === 'QUERY_ABOUT_ME' || intent === 'QUERY_INTERESTS' || intent === 'QUERY_VISION') {
             aiResponse = `Here is a bit about me:\n\n${formatList(context.about, 'title', 'content')}`;

@@ -94,6 +94,11 @@ Instructions:
   - If asked about *specific types of projects* (e.g. "Web Development projects", "AI Apps", "Mobile Apps"), output '[[SHOW_PROJECTS]]'.
   - Always prioritize showing the visual carousel when discussing projects.
 
+- **EXPERIENCE VISUALS**:
+  - If asked about work history, jobs, specific companies, or professional experience, output '[[SHOW_EXPERIENCE:WORK]]'.
+  - If asked about education, degrees, certifications, university, or bootcamp, output '[[SHOW_EXPERIENCE:EDUCATION]]'.
+  - If asked generally about "background" or "journey" without context, default to '[[SHOW_EXPERIENCE:WORK]]'.
+
 - If you don't know the answer or it's not in the context, say "I don't have that information in my current context."
 - Do not make up facts.
 `;

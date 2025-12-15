@@ -6,6 +6,7 @@ export const ChatIntents = {
     SKILLS: 'QUERY_SKILLS',
     INTERESTS: 'QUERY_INTERESTS',
     VISION: 'QUERY_VISION',
+    EXPERIENCE: 'QUERY_EXPERIENCE',
 } as const;
 
 export type ChatIntentType = typeof ChatIntents[keyof typeof ChatIntents];

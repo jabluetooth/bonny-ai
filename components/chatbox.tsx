@@ -11,6 +11,8 @@ import { WelcomeModal } from "./welcome-modal";
 import { SkillsSection } from "@/components/skills-section";
 import { ProjectsSection } from "@/components/projects-section";
 
+import { ExperiencesSection } from "@/components/experiences-section";
+
 export function Chatbox() {
     const { conversationId, sendMessage, messages, isLoading, welcomePlaceholder, isWelcomeOpen, isChatDisabled } = useChat();
     const [input, setInput] = useState("");
@@ -26,21 +28,27 @@ export function Chatbox() {
     const getMessageData = (content: string) => {
         const skillMatch = content.match(/\[\[SKILL:\s*(.*?)\]\]/);
         const categoryMatch = content.match(/\[\[CATEGORY:\s*(.*?)\]\]/);
+        const experienceMatch = content.match(/\[\[SHOW_EXPERIENCE:\s*(.*?)\]\]/);
+
         const showAllSkills = content.includes("[[SHOW_SKILLS]]");
         const showProjects = content.includes("[[SHOW_PROJECTS]]");
+        // Fallback for old tag or if specific tag missing, though API now sends specific
+        const showExperiences = !!experienceMatch || content.includes("[[SHOW_EXPERIENCE]]");
 
         const highlightSkill = skillMatch ? skillMatch[1] : undefined;
         const highlightCategory = categoryMatch ? categoryMatch[1] : undefined;
+        const experienceCategory = experienceMatch ? experienceMatch[1].toLowerCase() : undefined;
 
         // Clean the tag out of the displayed text (remove all types of tags)
         let cleanContent = content.replace(/\[\[SKILL:\s*.*?\]\]/, "");
         cleanContent = cleanContent.replace(/\[\[CATEGORY:\s*.*?\]\]/, "");
-        cleanContent = cleanContent.replace("[[SHOW_SKILLS]]", "").replace("[[SHOW_PROJECTS]]", "").trim();
+        cleanContent = cleanContent.replace(/\[\[SHOW_EXPERIENCE:\s*.*?\]\]/, "");
+        cleanContent = cleanContent.replace("[[SHOW_SKILLS]]", "").replace("[[SHOW_PROJECTS]]", "").replace("[[SHOW_EXPERIENCE]]", "").trim();
 
         // Show skills if tag exists OR context keywords found (heuristic fallback)
         const showSkills = !!highlightSkill || !!highlightCategory || showAllSkills;
 
-        return { cleanContent, highlightSkill, highlightCategory, showSkills, showProjects };
+        return { cleanContent, highlightSkill, highlightCategory, showSkills, showProjects, showExperiences, experienceCategory };
     };
 
     const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -113,11 +121,11 @@ export function Chatbox() {
             <div className="w-full max-w-3xl flex flex-col h-[calc(100vh-180px)] animate-in fade-in zoom-in-95 duration-500">
                 {/* Messages Area - Flexible & Transparent */}
                 <div className="flex-1 overflow-hidden relative mb-4">
-                    <ScrollArea className="h-full w-full">
+                    <ScrollArea className="h-full w-full" viewportId="chat-scroll-area">
                         <div className="flex flex-col flex-1 justify-end gap-4 pb-12 px-4">
                             {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
                             {messages.map((msg: any, i) => {
-                                const { cleanContent, highlightSkill, highlightCategory, showSkills, showProjects } = getMessageData(msg.content);
+                                const { cleanContent, highlightSkill, highlightCategory, showSkills, showProjects, showExperiences, experienceCategory } = getMessageData(msg.content);
 
                                 return (
                                     <div key={msg.id || i} className={`flex gap-3 w-full mb-6 min-w-0 ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
@@ -179,6 +187,13 @@ export function Chatbox() {
                                                             }
                                                             return <ProjectsSection category={category} />;
                                                         })()}
+                                                    </div>
+                                                )}
+
+                                                {/* 4. Experiences Section (Triggered by Tag) */}
+                                                {msg.role === 'bot' && showExperiences && (
+                                                    <div className="mt-3 w-full grid grid-cols-1 min-w-0 overflow-hidden rounded-xl bg-background/50 backdrop-blur-sm">
+                                                        <ExperiencesSection category={experienceCategory} />
                                                     </div>
                                                 )}
                                             </div>

@@ -1,0 +1,98 @@
+-- 1. Create the 'experiences' table
+CREATE TABLE IF NOT EXISTS public.experiences (
+    id SERIAL PRIMARY KEY,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW(),
+    category TEXT CHECK (category IN ('work', 'education')) NOT NULL,
+    company TEXT NOT NULL,
+    role TEXT NOT NULL,
+    date TEXT NOT NULL,
+    location TEXT NOT NULL,
+    type TEXT NOT NULL,
+    logo_url TEXT,
+    description TEXT[] DEFAULT '{}',
+    tech_stack TEXT[] DEFAULT '{}'
+);
+
+-- 2. Enable Row Level Security (RLS)
+ALTER TABLE public.experiences ENABLE ROW LEVEL SECURITY;
+
+-- 3. Create Policy for Public Read Access
+-- This allows anyone (including unauthenticated guests) to view the experiences.
+CREATE POLICY "Allow public read access"
+    ON public.experiences
+    FOR SELECT
+    USING (true);
+
+-- 4. Seed Data (based on "temporary" mock data)
+INSERT INTO public.experiences (id, category, company, role, date, location, type, logo_url, description, tech_stack)
+VALUES
+    (
+        1,
+        'work',
+        'Roboto Studio',
+        'Frontend Engineer',
+        'Jan 2025 - Present',
+        'London Area, United Kingdom',
+        'Remote work',
+        '/placeholder.png',
+        ARRAY[
+            'Architected enterprise-scale, CMS-driven reusable pagebuilder blocks with dynamic configurability using Sanity and Contentful, enabling non-technical teams to manage content across 6+ production websites. Designed custom schemas and optimized GROQ queries, resulting in 40% faster content delivery.',
+            'Delivered high-performance web applications using Next.js, React, and Tailwind CSS with advanced rendering strategies (SSG/SSR), achieving 25% increase in user engagement and 20% improvement in Core Web Vitals.',
+            'Implemented TypeScript across full-stack codebases, reducing production defects by 15% and establishing type-safe development standards for enhanced code quality and maintainability.',
+            'Enhanced team productivity via a scalable Monorepo architecture (Turborepo) and rigorous peer code reviews, contributing 40+ hours weekly while maintaining high engineering standards.',
+            'Collaborated with cross-functional teams (Design, Product) to ship WCAG 2.1 AA-compliant, user-centered interfaces using Agile methodologies, managing sprints in Linear and coordinating communication via Slack.',
+            'Optimized performance and SEO by implementing lazy loading, strategic code splitting, and adhering to SEO best practices, resulting in higher search rankings and better UX metrics.'
+        ],
+        ARRAY['TypeScript', 'Next.js', 'Sanity CMS', 'Contentful CMS', 'Tailwind CSS', 'Figma', 'Turborepo', 'Vercel AI SDK', 'Agile', 'Teamwork', 'Research', 'Problem-solving']
+    ),
+    (
+        2,
+        'work',
+        'Tech Innovators Inc.',
+        'Full Stack Developer',
+        'Jun 2022 - Dec 2024',
+        'San Francisco, CA',
+        'Hybrid',
+        '/placeholder.png',
+        ARRAY[
+            'Led the migration of a legacy monolithic application to a microservices architecture using Node.js and Docker, improving system scalability and reducing downtime by 30%.',
+            'Developed and maintained RESTful APIs consumed by web and mobile clients, ensuring high availability and secure data transmission.',
+            'Mentored junior developers and conducted code workshops to foster a culture of continuous learning and improvement.'
+        ],
+        ARRAY['JavaScript', 'Node.js', 'React', 'Docker', 'AWS', 'MongoDB', 'Jest', 'CI/CD']
+    ),
+    (
+        3,
+        'education',
+        'Tech University',
+        'Bachelor of Science in Computer Science',
+        '2018 - 2022',
+        'New York, NY',
+        'On-campus',
+        '/placeholder.png',
+        ARRAY[
+            'Graduated with Honors (GPA 3.8/4.0).',
+            'Specialized in Software Engineering and Artificial Intelligence.',
+            'Completed Capstone Project: "AI-driven Accessibility Tools for Web Applications".'
+        ],
+        ARRAY['Algorithms', 'Data Structures', 'AI Principles', 'System Design']
+    ),
+    (
+        4,
+        'education',
+        'Online Mastery',
+        'Full Stack Web Development Bootcamp',
+        '2021',
+        'Remote',
+        'Certification',
+        '/placeholder.png',
+        ARRAY[
+            'Intensive 12-week bootcamp focused on modern MERN stack development.',
+            'Built 3 production-ready applications from scratch.'
+        ],
+        ARRAY['React', 'Node.js', 'Express', 'MongoDB']
+    );
+
+-- Reset sequence to avoid id conflicts if manual inserts happen later
+SELECT setval('public.experiences_id_seq', (SELECT MAX(id) FROM public.experiences));
