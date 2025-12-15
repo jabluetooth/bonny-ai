@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { MapPin, Briefcase, Calendar } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface Experience {
     id: number;
@@ -55,12 +56,52 @@ export function ExperiencesSection({ category }: { category?: string }) {
 
     if (!container || filteredExperiences.length === 0) {
         return (
-            <div className="w-full max-w-7xl mx-auto px-4 py-20 bg-gray-50 text-gray-900" id="experiences">
-                <h2 className="text-3xl font-bold text-center mb-16 tracking-tight text-gray-900">
-                    {category === 'education' ? 'Education' : 'Experience'}
-                </h2>
-                <div className="flex justify-center items-center py-20 text-gray-500">
-                    {experiences.length === 0 ? "Loading experiences..." : "No items found in this category."}
+            <div className="w-full max-w-7xl mx-auto px-4 py-20" id="experiences">
+                {/* Title Skeleton */}
+                <div className="flex justify-center mb-16">
+                    <Skeleton className="h-10 w-48 rounded-md bg-gray-200" />
+                </div>
+                <div className="flex flex-col gap-16 relative min-h-[400px]">
+                    {/* Timeline Line Skeleton */}
+                    <div className="absolute left-8 md:left-[35%] transform -translate-x-1/2 w-[2px] h-full bg-gray-200" />
+
+                    {[1, 2, 3].map((i) => (
+                        <div key={i} className="relative grid grid-cols-1 md:grid-cols-[35%_1fr] gap-8 md:gap-0">
+                            {/* Dot */}
+                            <div className="absolute left-8 md:left-[35%] transform -translate-x-1/2 w-4 h-4 rounded-full bg-gray-200" />
+
+                            {/* Left Side (Company & Date) */}
+                            <div className="md:text-left flex flex-col items-start md:items-start pl-20 md:pl-0 md:pr-16">
+                                {/* Company Title (h-7 approx xl font) */}
+                                <Skeleton className="h-7 w-40 mb-3 bg-gray-200" />
+                                {/* Meta Row */}
+                                <div className="flex flex-wrap gap-2">
+                                    <Skeleton className="h-4 w-24 bg-gray-200" />
+                                    <Skeleton className="h-4 w-20 bg-gray-200" />
+                                </div>
+                            </div>
+
+                            {/* Right Side (Role, Desc, Stack) */}
+                            <div className="pl-20 md:pl-16">
+                                {/* Role Title (h-8 approx 2xl font) */}
+                                <Skeleton className="h-8 w-64 mb-6 bg-gray-200" />
+
+                                {/* Description Paragraphs */}
+                                <div className="space-y-3 mb-8">
+                                    <Skeleton className="h-4 w-full bg-gray-200" />
+                                    <Skeleton className="h-4 w-[90%] bg-gray-200" />
+                                    <Skeleton className="h-4 w-[95%] bg-gray-200" />
+                                </div>
+
+                                {/* Tech Stack Chips */}
+                                <div className="flex flex-wrap gap-2">
+                                    <Skeleton className="h-6 w-16 rounded-full bg-gray-200" />
+                                    <Skeleton className="h-6 w-20 rounded-full bg-gray-200" />
+                                    <Skeleton className="h-6 w-14 rounded-full bg-gray-200" />
+                                </div>
+                            </div>
+                        </div>
+                    ))}
                 </div>
             </div>
         );
@@ -83,7 +124,7 @@ function ExperiencesContent({ container, experiences, category }: { container: H
     const heightStyle = useTransform(scrollYProgress, [0, 1], ["0%", "100%"]);
 
     return (
-        <div className="w-full max-w-7xl mx-auto px-4 py-20 bg-gray-50 text-gray-900" id="experiences">
+        <div className="w-full max-w-7xl mx-auto px-4 py-20" id="experiences">
             <h2 className="text-3xl font-bold text-center mb-16 tracking-tight text-gray-900">
                 {category === 'education' ? 'Education' : 'Experience'}
             </h2>

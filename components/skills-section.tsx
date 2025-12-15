@@ -5,6 +5,7 @@ import { useState, useEffect } from "react";
 import { Marquee, MarqueeContent, MarqueeFade, MarqueeItem } from "@/components/ui/marquee";
 import { Separator } from "@/components/ui/separator";
 import { Cpu, Globe, Database, Palette, Users } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 
 
 
@@ -83,10 +84,32 @@ export function SkillsSection({ highlightSkill, highlightCategory }: { highlight
 
     if (isLoading) {
         return (
-            <div className="w-full h-48 animate-pulse rounded-xl border border-border/40 bg-card/50 shadow-sm p-4 flex flex-col gap-4">
-                <div className="h-20 bg-muted/20 rounded-lg w-full"></div>
-                <div className="h-4 bg-muted/20 rounded w-1/3"></div>
-                <div className="h-10 bg-muted/20 rounded w-2/3"></div>
+            <div className="w-full max-w-full min-w-0 flex flex-col gap-2 p-2 rounded-xl animate-in fade-in">
+                {/* Marquee Header Match */}
+                <div className="w-full h-24 mb-2">
+                    <Skeleton className="w-full h-full" />
+                </div>
+
+                {/* Category Group 1 */}
+                <div className="flex flex-col gap-3 mt-2 px-1">
+                    <Skeleton className="h-5 w-32 rounded" />
+                    <div className="flex flex-wrap gap-2">
+                        <Skeleton className="h-8 w-24 rounded-xl" />
+                        <Skeleton className="h-8 w-32 rounded-xl" />
+                        <Skeleton className="h-8 w-20 rounded-xl" />
+                        <Skeleton className="h-8 w-28 rounded-xl" />
+                    </div>
+                </div>
+
+                {/* Category Group 2 */}
+                <div className="flex flex-col gap-3 mt-4 px-1">
+                    <Skeleton className="h-5 w-24 rounded" />
+                    <div className="flex flex-wrap gap-2">
+                        <Skeleton className="h-8 w-20 rounded-xl" />
+                        <Skeleton className="h-8 w-24 rounded-xl" />
+                        <Skeleton className="h-8 w-16 rounded-xl" />
+                    </div>
+                </div>
             </div>
         )
     }

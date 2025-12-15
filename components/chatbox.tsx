@@ -12,13 +12,25 @@ import { SkillsSection } from "@/components/skills-section";
 import { ProjectsSection } from "@/components/projects-section";
 
 import { ExperiencesSection } from "@/components/experiences-section";
+import { TypingAnimation } from "@/components/ui/typing-animation";
 import { BorderBeam } from "@/components/ui/border-beam";
+import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 
 export function Chatbox() {
     const { conversationId, sendMessage, messages, isLoading, welcomePlaceholder, isWelcomeOpen, isChatDisabled } = useChat();
     const [input, setInput] = useState("");
     const [isInputFocused, setIsInputFocused] = useState(false);
+    const [typedMessages, setTypedMessages] = useState<Set<string | number>>(new Set());
+
+    const handleTypingComplete = (id: string | number) => {
+        setTypedMessages(prev => {
+            const newSet = new Set(prev);
+            newSet.add(id);
+            return newSet;
+        });
+    };
+
 
     const handleSend = async () => {
         if (!input.trim()) return;
@@ -130,6 +142,11 @@ export function Chatbox() {
                             {messages.map((msg: any, i) => {
                                 const { cleanContent, highlightSkill, highlightCategory, showSkills, showProjects, showExperiences, experienceCategory } = getMessageData(msg.content);
 
+                                const isLatestBotMessage = msg.role === 'bot' && i === messages.length - 1;
+                                const messageId = msg.id || i;
+                                const hasTyped = typedMessages.has(messageId);
+                                const shouldAnimate = isLatestBotMessage && !hasTyped;
+
                                 return (
                                     <div key={msg.id || i} className={`flex gap-3 w-full mb-6 min-w-0 ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
                                         {/* Bot Avatar (Only for bot) */}
@@ -148,58 +165,101 @@ export function Chatbox() {
                                                     : "bg-muted text-foreground rounded-bl-none" // Messenger Gray
                                                     }`}
                                             >
-                                                {/* Format message with BOLD support */}
-                                                {cleanContent.split(/(\*\*.*?\*\*)/).map((part, idx) => {
-                                                    if (part.startsWith('**') && part.endsWith('**')) {
-                                                        return <strong key={idx}>{part.slice(2, -2)}</strong>;
-                                                    }
-                                                    return <span key={idx}>{part}</span>;
-                                                })}
-
-                                                {/* Component Display - Nested INSIDE Bubble */}
-
-                                                {/* 1. Explicit Component (e.g. forced via code) */}
-                                                {msg.component && (
-                                                    <div className="mt-3 w-full grid grid-cols-1 min-w-0 overflow-hidden rounded-xl bg-background/50 backdrop-blur-sm">
-                                                        {msg.component}
-                                                    </div>
-                                                )}
-
-                                                {/* 2. Skills Section (Triggered by Tag or Heuristic) */}
-                                                {!msg.component && showSkills && msg.role === 'bot' && (
-                                                    <div className="mt-3 w-full grid grid-cols-1 min-w-0 overflow-hidden rounded-xl bg-background/50 backdrop-blur-sm">
-                                                        <SkillsSection highlightSkill={highlightSkill} highlightCategory={highlightCategory} />
-                                                    </div>
-                                                )}
-
-                                                {/* 3. Projects Section (Triggered by Tag) */}
-                                                {/* 3. Projects Section (Triggered by Tag) */}
-                                                {msg.role === 'bot' && showProjects && (
-                                                    <div className="mt-3 w-full grid grid-cols-1 min-w-0 overflow-hidden rounded-xl bg-background/50 backdrop-blur-sm">
-                                                        {(() => {
-                                                            // Detect intent from the PREVIOUS user message
-                                                            const prevMsg = messages[i - 1];
-                                                            let category = undefined;
-                                                            if (prevMsg && prevMsg.role === 'user') {
-                                                                const text = prevMsg.content.toLowerCase();
-                                                                if (text.includes('web') || text.includes('frontend') || text.includes('backend') || text.includes('fullstack')) {
-                                                                    category = 'web';
-                                                                } else if (text.includes('ai') || text.includes('machine') || text.includes('learning') || text.includes('intelligence') || text.includes('ml')) {
-                                                                    category = 'ai';
-                                                                }
-                                                            }
-                                                            return <ProjectsSection category={category} />;
-                                                        })()}
-                                                    </div>
-                                                )}
-
-                                                {/* 4. Experiences Section (Triggered by Tag) */}
-                                                {msg.role === 'bot' && showExperiences && (
-                                                    <div className="mt-3 w-full grid grid-cols-1 min-w-0 overflow-hidden rounded-xl bg-background/50 backdrop-blur-sm">
-                                                        <ExperiencesSection category={experienceCategory} />
-                                                    </div>
+                                                {shouldAnimate ? (
+                                                    <TypingAnimation
+                                                        text={cleanContent}
+                                                        duration={1}
+                                                        className="font-normal"
+                                                        onComplete={() => handleTypingComplete(messageId)}
+                                                    />
+                                                ) : (
+                                                    /* Format message with BOLD support */
+                                                    cleanContent.split(/(\*\*.*?\*\*)/).map((part, idx) => {
+                                                        if (part.startsWith('**') && part.endsWith('**')) {
+                                                            return <strong key={idx}>{part.slice(2, -2)}</strong>;
+                                                        }
+                                                        return <span key={idx}>{part}</span>;
+                                                    })
                                                 )}
                                             </div>
+
+                                            {/* Component Display - Outside Message Bubble */}
+                                            {!shouldAnimate && (
+                                                <>
+                                                    {/* 1. Explicit Component (e.g. forced via code) */}
+                                                    {msg.component && (
+                                                        <motion.div
+                                                            initial={{ opacity: 0, scale: 0 }}
+                                                            animate={{ opacity: 1, scale: 1 }}
+                                                            transition={{
+                                                                duration: 0.4,
+                                                                scale: { type: "spring", visualDuration: 0.4, bounce: 0.25 },
+                                                            }}
+                                                            className="mt-1 w-full grid grid-cols-1 min-w-0 overflow-hidden rounded-xl bg-background/50 backdrop-blur-sm"
+                                                        >
+                                                            {msg.component}
+                                                        </motion.div>
+                                                    )}
+
+                                                    {/* 2. Skills Section (Triggered by Tag or Heuristic) */}
+                                                    {!msg.component && showSkills && msg.role === 'bot' && (
+                                                        <motion.div
+                                                            initial={{ opacity: 0, scale: 0 }}
+                                                            animate={{ opacity: 1, scale: 1 }}
+                                                            transition={{
+                                                                duration: 0.4,
+                                                                scale: { type: "spring", visualDuration: 0.4, bounce: 0.25 },
+                                                            }}
+                                                            className="mt-1 w-full grid grid-cols-1 min-w-0 overflow-hidden rounded-xl bg-background/50 backdrop-blur-sm"
+                                                        >
+                                                            <SkillsSection highlightSkill={highlightSkill} highlightCategory={highlightCategory} />
+                                                        </motion.div>
+                                                    )}
+
+                                                    {/* 3. Projects Section (Triggered by Tag) */}
+                                                    {msg.role === 'bot' && showProjects && (
+                                                        <motion.div
+                                                            initial={{ opacity: 0, scale: 0 }}
+                                                            animate={{ opacity: 1, scale: 1 }}
+                                                            transition={{
+                                                                duration: 0.4,
+                                                                scale: { type: "spring", visualDuration: 0.4, bounce: 0.25 },
+                                                            }}
+                                                            className="mt-1 w-full grid grid-cols-1 min-w-0 overflow-hidden rounded-xl bg-background/50 backdrop-blur-sm"
+                                                        >
+                                                            {(() => {
+                                                                // Detect intent from the PREVIOUS user message
+                                                                const prevMsg = messages[i - 1];
+                                                                let category = undefined;
+                                                                if (prevMsg && prevMsg.role === 'user') {
+                                                                    const text = prevMsg.content.toLowerCase();
+                                                                    if (text.includes('web') || text.includes('frontend') || text.includes('backend') || text.includes('fullstack')) {
+                                                                        category = 'web';
+                                                                    } else if (text.includes('ai') || text.includes('machine') || text.includes('learning') || text.includes('intelligence') || text.includes('ml')) {
+                                                                        category = 'ai';
+                                                                    }
+                                                                }
+                                                                return <ProjectsSection category={category} />;
+                                                            })()}
+                                                        </motion.div>
+                                                    )}
+
+                                                    {/* 4. Experiences Section (Triggered by Tag) */}
+                                                    {msg.role === 'bot' && showExperiences && (
+                                                        <motion.div
+                                                            initial={{ opacity: 0, scale: 0 }}
+                                                            animate={{ opacity: 1, scale: 1 }}
+                                                            transition={{
+                                                                duration: 0.4,
+                                                                scale: { type: "spring", visualDuration: 0.4, bounce: 0.20 },
+                                                            }}
+                                                            className="mt-1 w-full grid grid-cols-1 min-w-0 overflow-hidden rounded-xl bg-background/50 backdrop-blur-sm"
+                                                        >
+                                                            <ExperiencesSection category={experienceCategory} />
+                                                        </motion.div>
+                                                    )}
+                                                </>
+                                            )}
                                         </div>
                                     </div>
                                 );

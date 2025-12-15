@@ -22,6 +22,7 @@ import {
     DialogTitle,
     DialogFooter,
 } from "@/components/ui/dialog";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface Project {
     title: string;
@@ -86,8 +87,27 @@ export function ProjectsSection({ category }: ProjectsSectionProps) {
 
     if (isLoading) {
         return (
-            <div className="flex justify-center items-center h-48 w-full border rounded-xl bg-card/50">
-                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            <div className="w-full max-w-full min-w-0 flex flex-col gap-4 p-4 rounded-xl animate-in fade-in">
+                <Skeleton className="h-7 w-48 mb-2 px-2" />
+
+                {/* Carousel Area Match */}
+                <div className="w-full max-w-5xl mx-auto relative px-4 md:px-12">
+                    {/* Simulate 3 visible cards for "center" alignment feel? Or just one big block? 
+                         Real carousel shows partial next/prev. 
+                         Let's show 3 cols to mimic carousel items 
+                     */}
+                    <div className="flex gap-4 overflow-hidden h-64 items-center justify-center">
+                        <Skeleton className="h-64 w-[15%] hidden lg:block rounded-xl opacity-40 shrink-0" />
+                        <Skeleton className="h-64 w-[70%] md:w-[60%] lg:w-[45%] rounded-xl shrink-0 shadow-md" />
+                        <Skeleton className="h-64 w-[15%] hidden lg:block rounded-xl opacity-40 shrink-0" />
+                    </div>
+                </div>
+
+                <div className="flex justify-center gap-2 mt-2">
+                    {[1, 2, 3].map(i => (
+                        <Skeleton key={i} className="h-2 w-2 rounded-full" />
+                    ))}
+                </div>
             </div>
         );
     }
