@@ -39,6 +39,7 @@ import { SkillsSection } from "@/components/skills-section"
 import { InteractiveHoverButton } from "@/components/ui/interactive-hover-button"
 import { ChatIntents } from "@/lib/intents"
 import { ProgressiveBlur } from "@/components/ui/progressive-blur"
+import { toast } from "sonner"
 
 export function PortfolioNavbar() {
     const [resumeOpen, setResumeOpen] = useState(false)
@@ -46,6 +47,11 @@ export function PortfolioNavbar() {
     const [isOpen, setIsOpen] = useState(true)
     const [isHoveringTrigger, setIsHoveringTrigger] = useState(false)
     const [navValue, setNavValue] = useState("")
+
+    // Contact Form State
+    const [email, setEmail] = useState("")
+    const [message, setMessage] = useState("")
+    const [isSending, setIsSending] = useState(false)
     const prevMsgLength = React.useRef(messages.length)
 
     const handleNavClick = async (query: string, intent?: string) => {
@@ -55,6 +61,40 @@ export function PortfolioNavbar() {
         }
         sendMessage(query, intent)
         setNavValue("")
+    }
+
+    const handleSendMessage = async () => {
+        if (!email.trim() || !message.trim()) {
+            toast.error("Please fill in both email and message fields.")
+            return
+        }
+
+        setIsSending(true)
+        try {
+            const res = await fetch("/api/send", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ email, message }),
+            })
+
+            const data = await res.json()
+
+            if (!res.ok) {
+                throw new Error(data.error || "Failed to send message")
+            }
+
+            toast.success("Message sent successfully!", {
+                description: "I'll get back to you as soon as possible.",
+            })
+            setEmail("")
+            setMessage("")
+            setResumeOpen(false)
+        } catch (error) {
+            console.error("Failed to send message", error)
+            toast.error("Failed to send message. Please try again later.")
+        } finally {
+            setIsSending(false)
+        }
     }
 
     // Auto-collapse when chat starts (0 -> 1+) or resets (-> 0)
@@ -226,12 +266,26 @@ export function PortfolioNavbar() {
                             {/* Message Form */}
                             <div className="space-y-3">
                                 <div className="space-y-1">
-                                    <Input placeholder="Your Email" />
+                                    <Input
+                                        placeholder="Your Email"
+                                        type="email"
+                                        value={email}
+                                        onChange={(e) => setEmail(e.target.value)}
+                                        disabled={isSending}
+                                    />
                                 </div>
                                 <div className="space-y-1">
-                                    <Textarea placeholder="Type your message here..." className="min-h-[100px]" />
+                                    <Textarea
+                                        placeholder="Type your message here..."
+                                        className="min-h-[100px]"
+                                        value={message}
+                                        onChange={(e) => setMessage(e.target.value)}
+                                        disabled={isSending}
+                                    />
                                 </div>
-                                <Button className="w-full">Send Message</Button>
+                                <Button className="w-full" onClick={handleSendMessage} disabled={isSending}>
+                                    {isSending ? "Sending..." : "Send Message"}
+                                </Button>
                             </div>
 
                             <div className="relative">
