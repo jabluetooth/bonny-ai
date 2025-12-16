@@ -10,6 +10,7 @@ import { Bot, ArrowRight } from "lucide-react";
 import { WelcomeModal } from "./welcome-modal";
 import { SkillsSection } from "@/components/skills-section";
 import { ProjectsSection } from "@/components/projects-section";
+import { AboutSection } from "@/components/about-section";
 
 import { ExperiencesSection } from "@/components/experiences-section";
 import { TypingAnimation } from "@/components/ui/typing-animation";
@@ -47,6 +48,7 @@ export function Chatbox() {
 
         const showAllSkills = content.includes("[[SHOW_SKILLS]]");
         const showProjects = content.includes("[[SHOW_PROJECTS]]");
+        const showAbout = content.includes("[[SHOW_ABOUT]]");
         // Fallback for old tag or if specific tag missing, though API now sends specific
         const showExperiences = !!experienceMatch || content.includes("[[SHOW_EXPERIENCE]]");
 
@@ -58,12 +60,12 @@ export function Chatbox() {
         let cleanContent = content.replace(/\[\[SKILL:\s*.*?\]\]/, "");
         cleanContent = cleanContent.replace(/\[\[CATEGORY:\s*.*?\]\]/, "");
         cleanContent = cleanContent.replace(/\[\[SHOW_EXPERIENCE:\s*.*?\]\]/, "");
-        cleanContent = cleanContent.replace("[[SHOW_SKILLS]]", "").replace("[[SHOW_PROJECTS]]", "").replace("[[SHOW_EXPERIENCE]]", "").trim();
+        cleanContent = cleanContent.replace("[[SHOW_SKILLS]]", "").replace("[[SHOW_PROJECTS]]", "").replace("[[SHOW_EXPERIENCE]]", "").replace("[[SHOW_ABOUT]]", "").trim();
 
         // Show skills if tag exists OR context keywords found (heuristic fallback)
         const showSkills = !!highlightSkill || !!highlightCategory || showAllSkills;
 
-        return { cleanContent, highlightSkill, highlightCategory, showSkills, showProjects, showExperiences, experienceCategory };
+        return { cleanContent, highlightSkill, highlightCategory, showSkills, showProjects, showExperiences, experienceCategory, showAbout };
     };
 
     const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -140,12 +142,16 @@ export function Chatbox() {
                         <div className="flex flex-col flex-1 justify-end gap-6 pb-12 px-4">
                             {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
                             {messages.map((msg: any, i) => {
-                                const { cleanContent, highlightSkill, highlightCategory, showSkills, showProjects, showExperiences, experienceCategory } = getMessageData(msg.content);
+                                const { cleanContent, highlightSkill, highlightCategory, showSkills, showProjects, showExperiences, experienceCategory, showAbout } = getMessageData(msg.content);
 
                                 const isLatestBotMessage = msg.role === 'bot' && i === messages.length - 1;
                                 const messageId = msg.id || i;
                                 const hasTyped = typedMessages.has(messageId);
                                 const shouldAnimate = isLatestBotMessage && !hasTyped;
+
+                                // Heuristic for About Section if not explicitly tagged
+                                const prevMsg = messages[i - 1];
+                                const showAboutHeuristic = prevMsg && prevMsg.role === 'user' && prevMsg.content.includes("Tell me about yourself");
 
                                 return (
                                     <div key={msg.id || i} className={`flex gap-3 w-full mb-6 min-w-0 ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
@@ -256,6 +262,21 @@ export function Chatbox() {
                                                             className="mt-1 w-full grid grid-cols-1 min-w-0 overflow-hidden rounded-xl bg-background/50 backdrop-blur-sm"
                                                         >
                                                             <ExperiencesSection category={experienceCategory} />
+                                                        </motion.div>
+                                                    )}
+
+                                                    {/* 5. About Section (Triggered by Tag or Heuristic) */}
+                                                    {msg.role === 'bot' && (showAbout || showAboutHeuristic) && (
+                                                        <motion.div
+                                                            initial={{ opacity: 0, scale: 0 }}
+                                                            animate={{ opacity: 1, scale: 1 }}
+                                                            transition={{
+                                                                duration: 0.4,
+                                                                scale: { type: "spring", visualDuration: 0.4, bounce: 0.20 },
+                                                            }}
+                                                            className="mt-1 w-full grid grid-cols-1 min-w-0 rounded-xl bg-background/50 backdrop-blur-sm overflow-visible py-4"
+                                                        >
+                                                            <AboutSection />
                                                         </motion.div>
                                                     )}
                                                 </>
