@@ -41,6 +41,7 @@ import { ChatIntents } from "@/lib/intents"
 import { ProgressiveBlur } from "@/components/ui/progressive-blur"
 import { toast } from "sonner"
 import { AuthorCard } from "@/components/author-card"
+import { BackgroundCards } from "@/components/background-cards"
 
 export function PortfolioNavbar() {
     const [resumeOpen, setResumeOpen] = useState(false)
@@ -173,7 +174,20 @@ export function PortfolioNavbar() {
                                                 <AuthorCard />
                                             </NavigationMenuLink>
                                         </li>
-                                        <ListItem title="Background" onClick={() => handleNavClick("What is your professional background?", ChatIntents.WORK)}>
+                                        <ListItem title="Background" onClick={async () => {
+                                            if (!conversationId) {
+                                                await startChat("Guest")
+                                            }
+                                            addMessage({ role: 'user', content: "What is your professional background?" })
+                                            setNavValue("")
+                                            setTimeout(() => {
+                                                addMessage({
+                                                    role: 'bot',
+                                                    content: "Here is a timeline of my professional journey. You can drag and flip the cards to learn more!",
+                                                    component: <BackgroundCards />
+                                                })
+                                            }, 500)
+                                        }}>
                                             My journey and career path.
                                         </ListItem>
                                         <ListItem title="Interests" onClick={() => handleNavClick("What are your interests outside of work?", ChatIntents.INTERESTS)}>
