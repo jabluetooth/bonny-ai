@@ -92,7 +92,7 @@ Instructions:
 - **PROJECT VISUALS**:
   - If asked generally about projects, portfolio, or work (e.g. "What have you built?", "Show me your projects"), output '[[SHOW_PROJECTS]]'.
   - If asked about *specific types of projects* (e.g. "Web Development projects", "AI Apps", "Mobile Apps"), output '[[SHOW_PROJECTS]]'.
-  - Always prioritize showing the visual carousel when discussing projects.
+  - Always prioritize showing the interactive list when discussing projects.
 
 - **EXPERIENCE VISUALS**:
   - If asked about work history, jobs, specific companies, or professional experience, output '[[SHOW_EXPERIENCE:WORK]]'.

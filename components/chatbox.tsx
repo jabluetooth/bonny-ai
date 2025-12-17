@@ -164,9 +164,9 @@ export function Chatbox() {
                                         )}
 
                                         {/* Message Content Column (Bubble + Component) */}
-                                        <div className={`flex flex-col gap-2 max-w-[85%] min-w-0 ${msg.role === "user" ? "items-end" : "items-start"}`}>
+                                        <div className={`flex flex-col gap-2 w-full min-w-0 ${msg.role === "user" ? "items-end" : "items-start"}`}>
                                             <div
-                                                className={`rounded-[20px] px-5 py-2.5 text-[15px] shadow-sm leading-relaxed break-words whitespace-pre-wrap [word-break:break-word] min-w-0 overflow-hidden ${msg.role === "user"
+                                                className={`rounded-[20px] px-5 py-2.5 text-[15px] shadow-sm leading-relaxed break-words whitespace-pre-wrap [word-break:break-word] min-w-0 max-w-[85%] overflow-hidden ${msg.role === "user"
                                                     ? "bg-[#0084ff] text-white rounded-br-none" // Messenger Blue
                                                     : "bg-muted text-foreground rounded-bl-none" // Messenger Gray
                                                     }`}
