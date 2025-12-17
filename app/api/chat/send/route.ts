@@ -169,7 +169,13 @@ export async function POST(req: Request) {
         else if (intent === 'QUERY_EXPERIENCE') {
             aiResponse = "[[SHOW_EXPERIENCE:WORK]] Here is my professional experience.";
         }
-        else if (intent === 'QUERY_ABOUT_ME' || intent === 'QUERY_INTERESTS' || intent === 'QUERY_VISION') {
+        else if (intent === 'QUERY_INTERESTS') {
+            aiResponse = "[[SHOW_INTERESTS]] Here are my interests and hobbies! 📸";
+        }
+        else if (intent === 'QUERY_VISION') {
+            aiResponse = "[[SHOW_VISION]] Here is my vision for the future! 🔮";
+        }
+        else if (intent === 'QUERY_ABOUT_ME') {
             aiResponse = `Here is a bit about me:\n\n${formatList(context.about, 'title', 'content')}`;
         }
 

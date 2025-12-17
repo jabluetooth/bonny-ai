@@ -70,7 +70,7 @@ export function BackgroundCards() {
                     "top-32 right-[20%] -rotate-2"
                 ].map((pos, i) => (
                     <DraggableCardBody key={i} className={cn("absolute z-10", pos, "pointer-events-none opacity-50 grayscale")}>
-                        <div className="w-full h-full relative rounded-xl overflow-hidden bg-slate-900 border border-white/10 shadow-2xl">
+                        <div className="w-full h-full relative rounded-xl overflow-hidden bg-slate-900 shadow-2xl">
                             <Skeleton className="h-full w-full bg-slate-800" />
                         </div>
                     </DraggableCardBody>

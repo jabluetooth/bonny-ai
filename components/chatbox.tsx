@@ -11,6 +11,8 @@ import { WelcomeModal } from "./welcome-modal";
 import { SkillsSection } from "@/components/skills-section";
 import { ProjectsSection } from "@/components/projects-section";
 import { AboutSection } from "@/components/about-section";
+import { InterestsSection } from "@/components/interests-section";
+import { VisionSection } from "@/components/vision-section";
 
 import { ExperiencesSection } from "@/components/experiences-section";
 import { TypingAnimation } from "@/components/ui/typing-animation";
@@ -49,6 +51,8 @@ export function Chatbox() {
         const showAllSkills = content.includes("[[SHOW_SKILLS]]");
         const showProjects = content.includes("[[SHOW_PROJECTS]]");
         const showAbout = content.includes("[[SHOW_ABOUT]]");
+        const showInterests = content.includes("[[SHOW_INTERESTS]]");
+        const showVision = content.includes("[[SHOW_VISION]]");
         // Fallback for old tag or if specific tag missing, though API now sends specific
         const showExperiences = !!experienceMatch || content.includes("[[SHOW_EXPERIENCE]]");
 
@@ -60,12 +64,12 @@ export function Chatbox() {
         let cleanContent = content.replace(/\[\[SKILL:\s*.*?\]\]/, "");
         cleanContent = cleanContent.replace(/\[\[CATEGORY:\s*.*?\]\]/, "");
         cleanContent = cleanContent.replace(/\[\[SHOW_EXPERIENCE:\s*.*?\]\]/, "");
-        cleanContent = cleanContent.replace("[[SHOW_SKILLS]]", "").replace("[[SHOW_PROJECTS]]", "").replace("[[SHOW_EXPERIENCE]]", "").replace("[[SHOW_ABOUT]]", "").trim();
+        cleanContent = cleanContent.replace("[[SHOW_SKILLS]]", "").replace("[[SHOW_PROJECTS]]", "").replace("[[SHOW_EXPERIENCE]]", "").replace("[[SHOW_ABOUT]]", "").replace("[[SHOW_INTERESTS]]", "").replace("[[SHOW_VISION]]", "").trim();
 
         // Show skills if tag exists OR context keywords found (heuristic fallback)
         const showSkills = !!highlightSkill || !!highlightCategory || showAllSkills;
 
-        return { cleanContent, highlightSkill, highlightCategory, showSkills, showProjects, showExperiences, experienceCategory, showAbout };
+        return { cleanContent, highlightSkill, highlightCategory, showSkills, showProjects, showExperiences, experienceCategory, showAbout, showInterests, showVision };
     };
 
     const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -142,7 +146,7 @@ export function Chatbox() {
                         <div className="flex flex-col flex-1 justify-end gap-6 pb-12 px-4">
                             {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
                             {messages.map((msg: any, i) => {
-                                const { cleanContent, highlightSkill, highlightCategory, showSkills, showProjects, showExperiences, experienceCategory, showAbout } = getMessageData(msg.content);
+                                const { cleanContent, highlightSkill, highlightCategory, showSkills, showProjects, showExperiences, experienceCategory, showAbout, showInterests, showVision } = getMessageData(msg.content);
 
                                 const isLatestBotMessage = msg.role === 'bot' && i === messages.length - 1;
                                 const messageId = msg.id || i;
@@ -277,6 +281,36 @@ export function Chatbox() {
                                                             className="mt-1 w-full grid grid-cols-1 min-w-0 rounded-xl bg-background/50 backdrop-blur-sm overflow-visible py-4"
                                                         >
                                                             <AboutSection />
+                                                        </motion.div>
+                                                    )}
+
+                                                    {/* 6. Interests Section (Triggered by Tag) */}
+                                                    {msg.role === 'bot' && showInterests && (
+                                                        <motion.div
+                                                            initial={{ opacity: 0, scale: 0 }}
+                                                            animate={{ opacity: 1, scale: 1 }}
+                                                            transition={{
+                                                                duration: 0.4,
+                                                                scale: { type: "spring", visualDuration: 0.4, bounce: 0.20 },
+                                                            }}
+                                                            className="mt-1 w-full grid grid-cols-1 min-w-0 rounded-xl bg-background/50 backdrop-blur-sm overflow-visible py-4"
+                                                        >
+                                                            <InterestsSection />
+                                                        </motion.div>
+                                                    )}
+
+                                                    {/* 7. Vision Section (Triggered by Tag) */}
+                                                    {msg.role === 'bot' && showVision && (
+                                                        <motion.div
+                                                            initial={{ opacity: 0, scale: 0 }}
+                                                            animate={{ opacity: 1, scale: 1 }}
+                                                            transition={{
+                                                                duration: 0.4,
+                                                                scale: { type: "spring", visualDuration: 0.4, bounce: 0.20 },
+                                                            }}
+                                                            className="mt-1 w-full grid grid-cols-1 min-w-0 rounded-xl bg-background/50 backdrop-blur-sm overflow-visible py-4"
+                                                        >
+                                                            <VisionSection />
                                                         </motion.div>
                                                     )}
                                                 </>
