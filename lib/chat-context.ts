@@ -23,8 +23,11 @@ export async function getContextForIntent(
     };
 
     if (intent === ChatIntents.ABOUT_ME) {
-        const { data: about } = await supabase.from('about').select('*');
-        context.about = minifyData(about || [], ['title', 'bio', 'content', 'description']);
+        const { data: profiles } = await supabase.from('author_profiles').select('*').eq('is_active', true).limit(1);
+        context.about = (profiles || []).map((p: any) => ({
+            title: p.title,
+            content: p.description
+        }));
     }
     else if (intent === ChatIntents.WORK || intent === ChatIntents.EDUCATION) {
         const { data: experience } = await supabase.from('experience').select('*');
@@ -40,8 +43,11 @@ export async function getContextForIntent(
         context.categories = Array.from(new Set(skills?.map((s: any) => s.category?.title).filter(Boolean))) || [];
     }
     else if (intent === ChatIntents.INTERESTS || intent === ChatIntents.VISION) {
-        const { data: about } = await supabase.from('about').select('*');
-        context.about = minifyData(about || [], ['title', 'content', 'description']);
+        const { data: profiles } = await supabase.from('author_profiles').select('*').eq('is_active', true).limit(1);
+        context.about = (profiles || []).map((p: any) => ({
+            title: p.title,
+            content: p.description
+        }));
     }
     else {
         // FALLBACK: Fetch everything minified (General Chat)

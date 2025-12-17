@@ -1,41 +1,91 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { DraggableCardBody, DraggableCardContainer } from "@/components/ui/draggable-card";
 import { cn } from "@/lib/utils";
+import { Skeleton } from "@/components/ui/skeleton";
+
+// Removed interface from here, it should be inferred or defined separately if used in multiple places.
+// For now keeping local interface but removing data array.
 
 interface BackgroundCardProps {
+    id?: string;
     title: string;
     description: string;
     image: string;
     date: string;
+    className?: string;
 }
 
-const backgroundData: BackgroundCardProps[] = [
-    {
-        title: "Early Beginnings",
-        date: "2018 - 2020",
-        description: "Started my journey exploring computer science fundamentals. Fascinated by algorithms and the potential of software to solve real-world problems. Built my first static websites and simple games.",
-        image: "https://images.unsplash.com/photo-1517694712202-14dd9538aa97?q=80&w=600&auto=format&fit=crop",
-    },
-    {
-        title: "University Years",
-        date: "2020 - 2024",
-        description: "Deep dived into Full Stack Development and AI. Participated in multiple hackathons, leading teams to victory. Specialized in React ecosystem and Python for data science.",
-        image: "https://images.unsplash.com/photo-1523240795612-9a054b0db644?q=80&w=600&auto=format&fit=crop",
-    },
-    {
-        title: "Professional Era",
-        date: "2024 - Present",
-        description: "Currently working as a Senior Frontend Engineer. Focusing on building scalable web applications and integrating agents into user interfaces. Passionate about UI/UX and performance optimization.",
-        image: "https://images.unsplash.com/photo-1498050108023-c5249f4df085?q=80&w=600&auto=format&fit=crop",
-    }
-];
+
+
 
 export function BackgroundCards() {
+    const [cards, setCards] = useState<BackgroundCardProps[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchCards = async () => {
+            try {
+                const res = await fetch('/api/about/background');
+                const json = await res.json();
+
+                if (json.data) {
+                    // Map DB snake_case to component expected props if needed, or just use what we assume
+                    // DB: date_range, class_name
+                    // Component used: date, className
+                    const mapped = json.data.map((item: any) => ({
+                        id: item.id,
+                        title: item.title,
+                        description: item.description,
+                        image: item.image,
+                        date: item.date_range, // Mapping DB column to prop
+                        className: item.class_name // Mapping DB column to prop
+                    }));
+                    setCards(mapped);
+                }
+            } catch (error) {
+                console.error("Failed to fetch background cards:", error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchCards();
+    }, []);
+
+    if (loading) {
+        return (
+            <DraggableCardContainer className="py-20 min-h-[500px] overflow-hidden">
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-0">
+                    <h1 className="text-[120px] font-black text-slate-800/30 dark:text-slate-100/10 tracking-widest uppercase text-center select-none leading-none blur-sm">
+                        Back<br />ground
+                    </h1>
+                </div>
+                {/* Skeleton Cards */}
+                {[
+                    "top-20 left-[20%] -rotate-6",
+                    "top-10 left-[45%] rotate-3",
+                    "top-32 right-[20%] -rotate-2"
+                ].map((pos, i) => (
+                    <DraggableCardBody key={i} className={cn("absolute z-10", pos, "pointer-events-none opacity-50 grayscale")}>
+                        <div className="w-full h-full relative rounded-xl overflow-hidden bg-slate-900 border border-white/10 shadow-2xl">
+                            <Skeleton className="h-full w-full bg-slate-800" />
+                        </div>
+                    </DraggableCardBody>
+                ))}
+            </DraggableCardContainer>
+        )
+    }
+
+    // Fallback if no data (e.g. table empty)
+    if (cards.length === 0) {
+        return <div className="py-20 text-center text-muted-foreground">No background info found.</div>;
+    }
+
     return (
-        <DraggableCardContainer className="py-20">
+        <DraggableCardContainer className="py-20 min-h-[500px] overflow-hidden">
             {/* Background Text */}
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-0">
                 <h1 className="text-[120px] font-black text-slate-800/30 dark:text-slate-100/10 tracking-widest uppercase text-center select-none leading-none blur-sm">
@@ -43,19 +93,14 @@ export function BackgroundCards() {
                 </h1>
             </div>
 
-            {/* Stacked Cards - Reverse order to stack properly */}
-            {[...backgroundData].reverse().map((item, index) => {
-                // Reverse index to calculate offset correctly
-                const realIndex = backgroundData.length - 1 - index;
-                // Add slight random rotation for the "messy stack" look
-                const randomRotate = (realIndex % 2 === 0 ? 1 : -1) * (realIndex * 2);
-
+            {/* Scattered Cards */}
+            {cards.map((item, index) => {
                 return (
                     <DraggableCardBody
-                        key={item.title}
+                        key={item.id || index} // Use ID if available
                         className={cn(
-                            "z-[10]",
-                            // Additional styling/rotation
+                            "absolute z-[10]",
+                            item.className
                         )}
                     >
                         {/* We preserve the 'Flip' logic INSIDE the draggable body */}
