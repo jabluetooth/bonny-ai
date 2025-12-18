@@ -174,17 +174,7 @@ export function PortfolioNavbar() {
                                                 <AuthorCard />
                                             </NavigationMenuLink>
                                         </li>
-                                        <ListItem title="Background" onClick={async () => {
-                                            if (!conversationId) {
-                                                await startChat("Guest")
-                                            }
-                                            addMessage({ role: 'user', content: "What is your professional background?" })
-                                            setNavValue("")
-                                            setTimeout(() => {
-                                                // Trigger logic is handled by chat intent if passed, but visual update here
-                                                sendMessage("What is your professional background?", ChatIntents.BACKGROUND)
-                                            }, 100)
-                                        }}>
+                                        <ListItem title="Background" onClick={() => handleNavClick("What is your professional background?", ChatIntents.BACKGROUND)}>
                                             My journey and career path.
                                         </ListItem>
                                         <ListItem title="Interests" onClick={() => handleNavClick("What are your interests outside of work?", ChatIntents.INTERESTS)}>
