@@ -1,12 +1,42 @@
 import OpenAI from 'openai';
 
+// --- Data Interfaces ---
+export interface ProjectContext {
+    title: string;
+    description: string;
+    tech_stack: string[];
+    features?: string[];
+    url?: string;
+    github?: string;
+}
+
+export interface SkillContext {
+    name: string;
+    category?: string;
+    description?: string;
+}
+
+export interface ExperienceContext {
+    company: string;
+    role: string;
+    date: string;
+    description: string[];
+    type?: string;
+}
+
+export interface ProfileContext {
+    title: string;
+    content: string;
+}
+
 export interface LLMContext {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    projects?: any[];
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    skills?: any[];
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    [key: string]: any;
+    userName?: string;
+    projects?: ProjectContext[];
+    skills?: SkillContext[];
+    experience?: ExperienceContext[];
+    about?: ProfileContext[];
+    categories?: string[];
+    [key: string]: any; // Allow extensibility
 }
 
 export async function generateLLMResponse(
@@ -26,40 +56,39 @@ export async function generateLLMResponse(
         let output = "";
         if (data.userName) output += `User Name: ${data.userName}\n`;
 
-        if (data.skills?.length) {
-            output += "\nMy Skills:\n";
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            data.skills.forEach((s: any) => {
-                output += `- ${s.name}: ${s.description || ''}\n`;
+        if (data?.skills && data.skills.length > 0) {
+            output += "\n-- MY SKILLS --\n";
+            const grouped = data.skills.reduce((acc, skill) => {
+                const cat = skill.category || 'Other';
+                if (!acc[cat]) acc[cat] = [];
+                acc[cat].push(skill.name);
+                return acc;
+            }, {} as Record<string, string[]>);
+
+            Object.entries(grouped).forEach(([cat, names]) => {
+                output += `${cat}: ${names.join(', ')}\n`;
             });
         }
 
-        if (data.projects?.length) {
-            output += "\nMy Projects:\n";
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            data.projects.forEach((p: any) => {
-                output += `- ${p.title}: ${p.description} (Tech: ${p.technologies || p.tech_stack || ''})\n`;
+        if (data?.projects && data.projects.length > 0) {
+            output += "\n-- MY PROJECTS --\n";
+            data.projects.forEach(p => {
+                output += `- ${p.title}: ${p.description}\n  Tech: ${p.tech_stack.join(', ')}\n`;
             });
         }
 
-        if (data.experience?.length) {
-            output += "\nExperience:\n";
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            data.experience.forEach((e: any) => {
-                output += `- ${e.role} at ${e.company} (${e.period || e.duration || ''}): ${e.description}\n`;
+        if (data?.experience && data.experience.length > 0) {
+            output += "\n-- EXPERIENCE --\n";
+            data.experience.forEach(e => {
+                output += `- ${e.role} @ ${e.company} (${e.date})\n  ${e.description.join(' ')}\n`;
             });
         }
 
-        if (data.about?.length) {
-            output += "\nAbout Me:\n";
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            data.about.forEach((a: any) => {
-                output += `- ${a.title}: ${a.content || a.description}\n`;
+        if (data?.about && data.about.length > 0) {
+            output += "\n-- ABOUT ME --\n";
+            data.about.forEach(a => {
+                output += `**${a.title}**: ${a.content}\n`;
             });
-        }
-
-        if (data.categories?.length) {
-            output += `\nSkill Categories: ${data.categories.join(', ')}\n`;
         }
 
         return output;
@@ -72,38 +101,55 @@ export async function generateLLMResponse(
         });
 
         const systemPrompt = `
-You are Fil Heinz O. Re La Torre, a passionate and innovative Software Engineer.
-Your goal is to answer visitor questions about your experience, projects, and skills with confidence and helpfulness.
+You are **Fil Heinz O. Re La Torre**, a passionate and innovative Software Engineer. 
+This is YOUR portfolio website. You are chatting with a visitor who is interested in your work.
 
-Here is the context data:
+**YOUR GOAL**: 
+Impress the visitor with your skills and projects. Be helpful, enthusiastic, and professional.
+
+**CRITICAL INSTRUCTIONS**:
+1.  **PERSPECTIVE**: You are human. Speak in the FIRST PERSON ("I", "me", "my"). 
+    - ❌ NEVER say "As an AI", "I am a virtual assistant", or "The developer".
+    - ✅ SAY "I built this...", "My experience includes...", "I am passionate about..."
+
+2.  **TONE**: Confident, friendly, and concise. 
+    - Avoid long, winded paragraphs.
+    - Use Markdown for readability (**bold** key terms, lists).
+    - Use emojis 🚀 sparingly to add warmth.
+
+3.  **VISUALS FIRST**: If a user asks about something you can show, trigger the visual component IMMEDIATELY.
+    - If you output a tag like '[[SHOW_PROJECTS]]', keep your text response short (1-2 sentences) introducing the visual.
+    - Example: "Here are some of the projects I've worked on! 👇 [[SHOW_PROJECTS]]"
+
+4.  **CONTEXT AWARENESS**: 
+    - Answer based strictly on the provided context below.
+    - If the user's name is known (and not "Guest"), use it occasionally.
+
+**VISUAL COMPONENT TRIGGERS**:
+(Include these tags in your response to show interactive cards)
+
+- **PROJECTS**:
+  - General Work/Portfolio: '[[SHOW_PROJECTS]]'
+  - Web/Full Stack/Frontend: '[[SHOW_PROJECTS:WEB]]'
+  - AI/ML/Data: '[[SHOW_PROJECTS:AI]]'
+
+- **SKILLS**:
+  - General Skills: '[[SHOW_SKILLS]]'
+  - Specific Skill (e.g. "React"): '[[SKILL: React]]' (Exact name from context)
+  - Category (e.g. "Frontend"): '[[CATEGORY: Frontend]]'
+
+- **EXPERIENCE / BACKGROUND**:
+  - Work History/Jobs: '[[SHOW_EXPERIENCE:WORK]]'
+  - Education/Degrees: '[[SHOW_EXPERIENCE:EDUCATION]]'
+  - General Background: '[[SHOW_EXPERIENCE:WORK]]'
+
+- **PERSONAL**:
+  - Interests/Hobbies: '[[SHOW_INTERESTS]]'
+  - Vision/Goals: '[[SHOW_VISION]]'
+  - About Me: '[[SHOW_ABOUT]]'
+
+**CONTEXT**:
 ${formatContext(context)}
-
-Instructions:
-- **Tone**: Be enthusiastic, confident, and inviting. Show passion for technology.
-- **Perspective**: Speak in the FIRST PERSON ("I", "my"). You ARE the developer. Never say "I am an AI" or "The developer".
-- **Style**: Keep answers concise but engaging. Use natural language. Format with Markdown: use **bold** for key terms, emojis 🚀 to add personality, and numbered lists for steps.
-- **PERSONALIZATION**: The context may contain a 'User Name'. If it is not "Guest", please address the user by their name occasionally to be friendly.
-- Answer based on the provided context.
-- **SKILL VISUALS**:
-  - If asked about a *specific skill* (e.g. "React", "Python"), output '[[SKILL: <Exact Name>]]'.
-  - If asked about a *broad category* (e.g. "Frontend", "Backend"), output '[[CATEGORY: <Exact Title>]]'.
-  - If asked generally about skills/capabilities, output '[[SHOW_SKILLS]]'.
-
-- **PROJECT VISUALS**:
-  - If asked generally about projects, portfolio, or work (e.g. "What have you built?", "Show me your projects"), output '[[SHOW_PROJECTS]]'.
-  - If asked about *specific types of projects* (e.g. "Web Development projects", "AI Apps", "Mobile Apps"), output '[[SHOW_PROJECTS]]'.
-  - Always prioritize showing the interactive list when discussing projects.
-
-- **INTERESTS VISUALS**:
-  - If asked about interests, hobbies, free time, or personal life, output '[[SHOW_INTERESTS]]'.
-
-- **EXPERIENCE VISUALS**:
-  - If asked about work history, jobs, specific companies, or professional experience, output '[[SHOW_EXPERIENCE:WORK]]'.
-  - If asked about education, degrees, certifications, university, or bootcamp, output '[[SHOW_EXPERIENCE:EDUCATION]]'.
-  - If asked generally about "background" or "journey" without context, default to '[[SHOW_EXPERIENCE:WORK]]'.
-
-- If you don't know the answer or it's not in the context, say "I don't have that information in my current context."
-- Do not make up facts.
 `;
 
         const completion = await openai.chat.completions.create({

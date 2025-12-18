@@ -164,11 +164,11 @@ export function PortfolioNavbar() {
                     {/* CENTER: Navigation Menu */}
                     <NavigationMenu value={navValue} onValueChange={setNavValue} className="absolute left-1/2 transform -translate-x-1/2">
                         <NavigationMenuList className="flex items-center justify-center gap-1 bg-background/20 backdrop-blur-xl border border-white/10 shadow-sm rounded-full px-1.5 py-1">
-                            {/* 1. ABOUT */}
+                            {/* 1. ABOUT: Author/Developer, Background, Interests, Vision */}
                             <NavigationMenuItem>
                                 <NavigationMenuTrigger className="bg-transparent hover:bg-primary/10 focus:bg-primary/10 data-[state=open]:bg-primary/10 rounded-full hover:text-primary relative after:absolute after:-top-1 after:left-1/2 after:-translate-x-1/2 after:w-8 after:h-[2px] after:bg-primary after:shadow-[0_0_8px_var(--primary)] after:opacity-0 hover:after:opacity-100 after:transition-all after:duration-300">About</NavigationMenuTrigger>
                                 <NavigationMenuContent>
-                                    <ul className="grid gap-3 p-6 md:w-[400px] lg:w-[500px] lg:grid-cols-[.75fr_1fr]">
+                                    <ul className="grid gap-3 p-6 md:w-[400px] lg:w-[500px] lg:grid-cols-[250px_1fr]">
                                         <li className="row-span-3">
                                             <NavigationMenuLink asChild>
                                                 <AuthorCard />
@@ -181,12 +181,9 @@ export function PortfolioNavbar() {
                                             addMessage({ role: 'user', content: "What is your professional background?" })
                                             setNavValue("")
                                             setTimeout(() => {
-                                                addMessage({
-                                                    role: 'bot',
-                                                    content: "Here is a timeline of my professional journey. You can drag and flip the cards to learn more!",
-                                                    component: <BackgroundCards />
-                                                })
-                                            }, 500)
+                                                // Trigger logic is handled by chat intent if passed, but visual update here
+                                                sendMessage("What is your professional background?", ChatIntents.BACKGROUND)
+                                            }, 100)
                                         }}>
                                             My journey and career path.
                                         </ListItem>
@@ -200,48 +197,48 @@ export function PortfolioNavbar() {
                                 </NavigationMenuContent>
                             </NavigationMenuItem>
 
-                            {/* 2. PROJECTS */}
+                            {/* 2. PROJECTS: Web Dev, AI & ML */}
                             <NavigationMenuItem>
                                 <NavigationMenuTrigger className="bg-transparent hover:bg-primary/10 focus:bg-primary/10 data-[state=open]:bg-primary/10 rounded-full hover:text-primary relative after:absolute after:-top-1 after:left-1/2 after:-translate-x-1/2 after:w-8 after:h-[2px] after:bg-primary after:shadow-[0_0_8px_var(--primary)] after:opacity-0 hover:after:opacity-100 after:transition-all after:duration-300">Projects</NavigationMenuTrigger>
                                 <NavigationMenuContent>
                                     <ul className="grid w-[400px] gap-3 p-4 md:w-[500px] md:grid-cols-2 lg:w-[600px] ">
-                                        <ListItem title="Web Development" onClick={() => handleNavClick("Show me your web development projects.", ChatIntents.PROJECTS)}>
+                                        <ListItem title="Web Development" onClick={() => handleNavClick("Show me your web development projects.", ChatIntents.PROJECTS_WEB)}>
                                             Full-stack web applications.
                                         </ListItem>
-                                        <ListItem title="AI & ML" onClick={() => handleNavClick("Tell me about your AI and Machine Learning projects.", ChatIntents.PROJECTS)}>
+                                        <ListItem title="AI & ML" onClick={() => handleNavClick("Tell me about your AI and Machine Learning projects.", ChatIntents.PROJECTS_AI)}>
                                             Machine learning models.
                                         </ListItem>
                                     </ul>
                                 </NavigationMenuContent>
                             </NavigationMenuItem>
 
-                            {/* 3. SKILLS */}
+                            {/* 3. SKILLS: Frontend, Backend, Design, Soft skills */}
                             <NavigationMenuItem>
                                 <NavigationMenuTrigger className="bg-transparent hover:bg-primary/10 focus:bg-primary/10 data-[state=open]:bg-primary/10 rounded-full hover:text-primary relative after:absolute after:-top-1 after:left-1/2 after:-translate-x-1/2 after:w-8 after:h-[2px] after:bg-primary after:shadow-[0_0_8px_var(--primary)] after:opacity-0 hover:after:opacity-100 after:transition-all after:duration-300">Skills</NavigationMenuTrigger>
                                 <NavigationMenuContent>
                                     <ul className="grid w-[400px] gap-3 p-4 md:w-[500px] md:grid-cols-2 lg:w-[600px] ">
-                                        <ListItem icon={<Code2 className="w-4 h-4" />} title="Frontend" onClick={() => handleNavClick("What are your Frontend Development skills?", ChatIntents.SKILLS)}>
+                                        <ListItem icon={<Code2 className="w-4 h-4" />} title="Frontend" onClick={() => handleNavClick("What are your Frontend Development skills?", ChatIntents.SKILLS_FRONTEND)}>
                                             React, Next.js, TypeScript.
                                         </ListItem>
-                                        <ListItem icon={<Database className="w-4 h-4" />} title="Backend" onClick={() => handleNavClick("What are your Backend Development skills?", ChatIntents.SKILLS)}>
+                                        <ListItem icon={<Database className="w-4 h-4" />} title="Backend" onClick={() => handleNavClick("What are your Backend Development skills?", ChatIntents.SKILLS_BACKEND)}>
                                             Node.js, PostgreSQL.
                                         </ListItem>
-                                        <ListItem icon={<Palette className="w-4 h-4" />} title="Design" onClick={() => handleNavClick("What are your Design skills?", ChatIntents.SKILLS)}>
+                                        <ListItem icon={<Palette className="w-4 h-4" />} title="Design" onClick={() => handleNavClick("What are your Design skills?", ChatIntents.SKILLS_DESIGN)}>
                                             Tailwind CSS, Figma.
                                         </ListItem>
-                                        <ListItem icon={<Users className="w-4 h-4" />} title="Soft Skills" onClick={() => handleNavClick("What are your Soft Skills?", ChatIntents.SKILLS)}>
+                                        <ListItem icon={<Users className="w-4 h-4" />} title="Soft skills" onClick={() => handleNavClick("What are your Soft Skills?", ChatIntents.SKILLS_SOFT)}>
                                             Teamwork, Communication
                                         </ListItem>
                                     </ul>
                                 </NavigationMenuContent>
                             </NavigationMenuItem>
 
-                            {/* 4. EXPERIENCES */}
+                            {/* 4. EXPERIENCES: Work History, Education */}
                             <NavigationMenuItem>
                                 <NavigationMenuTrigger className="bg-transparent hover:bg-primary/10 focus:bg-primary/10 data-[state=open]:bg-primary/10 rounded-full hover:text-primary relative after:absolute after:-top-1 after:left-1/2 after:-translate-x-1/2 after:w-8 after:h-[2px] after:bg-primary after:shadow-[0_0_8px_var(--primary)] after:opacity-0 hover:after:opacity-100 after:transition-all after:duration-300">Experiences</NavigationMenuTrigger>
                                 <NavigationMenuContent>
                                     <ul className="grid w-[400px] gap-3 p-4 md:w-[500px] md:grid-cols-2 lg:w-[600px] ">
-                                        <ListItem title="Work History" onClick={() => handleNavClick("Tell me about your work history.", ChatIntents.WORK)}>
+                                        <ListItem title="Work History" onClick={() => handleNavClick("Tell me about your work history.", ChatIntents.WORK_HISTORY)}>
                                             Professional roles and companies.
                                         </ListItem>
                                         <ListItem title="Education" onClick={() => handleNavClick("What is your educational background?", ChatIntents.EDUCATION)}>

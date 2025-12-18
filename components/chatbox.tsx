@@ -47,9 +47,10 @@ export function Chatbox() {
         const skillMatch = content.match(/\[\[SKILL:\s*(.*?)\]\]/);
         const categoryMatch = content.match(/\[\[CATEGORY:\s*(.*?)\]\]/);
         const experienceMatch = content.match(/\[\[SHOW_EXPERIENCE:\s*(.*?)\]\]/);
+        const projectMatch = content.match(/\[\[SHOW_PROJECTS:\s*(.*?)\]\]/);
 
         const showAllSkills = content.includes("[[SHOW_SKILLS]]");
-        const showProjects = content.includes("[[SHOW_PROJECTS]]");
+        const showProjects = !!projectMatch || content.includes("[[SHOW_PROJECTS]]");
         const showAbout = content.includes("[[SHOW_ABOUT]]");
         const showInterests = content.includes("[[SHOW_INTERESTS]]");
         const showVision = content.includes("[[SHOW_VISION]]");
@@ -59,17 +60,19 @@ export function Chatbox() {
         const highlightSkill = skillMatch ? skillMatch[1] : undefined;
         const highlightCategory = categoryMatch ? categoryMatch[1] : undefined;
         const experienceCategory = experienceMatch ? experienceMatch[1].toLowerCase() : undefined;
+        const projectCategory = projectMatch ? projectMatch[1].toLowerCase() : undefined;
 
         // Clean the tag out of the displayed text (remove all types of tags)
         let cleanContent = content.replace(/\[\[SKILL:\s*.*?\]\]/, "");
         cleanContent = cleanContent.replace(/\[\[CATEGORY:\s*.*?\]\]/, "");
         cleanContent = cleanContent.replace(/\[\[SHOW_EXPERIENCE:\s*.*?\]\]/, "");
+        cleanContent = cleanContent.replace(/\[\[SHOW_PROJECTS:\s*.*?\]\]/, "");
         cleanContent = cleanContent.replace("[[SHOW_SKILLS]]", "").replace("[[SHOW_PROJECTS]]", "").replace("[[SHOW_EXPERIENCE]]", "").replace("[[SHOW_ABOUT]]", "").replace("[[SHOW_INTERESTS]]", "").replace("[[SHOW_VISION]]", "").trim();
 
         // Show skills if tag exists OR context keywords found (heuristic fallback)
         const showSkills = !!highlightSkill || !!highlightCategory || showAllSkills;
 
-        return { cleanContent, highlightSkill, highlightCategory, showSkills, showProjects, showExperiences, experienceCategory, showAbout, showInterests, showVision };
+        return { cleanContent, highlightSkill, highlightCategory, showSkills, showProjects, projectCategory, showExperiences, experienceCategory, showAbout, showInterests, showVision };
     };
 
     const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -146,7 +149,7 @@ export function Chatbox() {
                         <div className="flex flex-col flex-1 justify-end gap-6 pb-12 px-4">
                             {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
                             {messages.map((msg: any, i) => {
-                                const { cleanContent, highlightSkill, highlightCategory, showSkills, showProjects, showExperiences, experienceCategory, showAbout, showInterests, showVision } = getMessageData(msg.content);
+                                const { cleanContent, highlightSkill, highlightCategory, showSkills, showProjects, projectCategory, showExperiences, experienceCategory, showAbout, showInterests, showVision } = getMessageData(msg.content);
 
                                 const isLatestBotMessage = msg.role === 'bot' && i === messages.length - 1;
                                 const messageId = msg.id || i;
@@ -237,20 +240,7 @@ export function Chatbox() {
                                                             }}
                                                             className="mt-1 w-full grid grid-cols-1 min-w-0 overflow-hidden rounded-xl bg-background/50 backdrop-blur-sm"
                                                         >
-                                                            {(() => {
-                                                                // Detect intent from the PREVIOUS user message
-                                                                const prevMsg = messages[i - 1];
-                                                                let category = undefined;
-                                                                if (prevMsg && prevMsg.role === 'user') {
-                                                                    const text = prevMsg.content.toLowerCase();
-                                                                    if (text.includes('web') || text.includes('frontend') || text.includes('backend') || text.includes('fullstack')) {
-                                                                        category = 'web';
-                                                                    } else if (text.includes('ai') || text.includes('machine') || text.includes('learning') || text.includes('intelligence') || text.includes('ml')) {
-                                                                        category = 'ai';
-                                                                    }
-                                                                }
-                                                                return <ProjectsSection category={category} />;
-                                                            })()}
+                                                            <ProjectsSection category={projectCategory} />
                                                         </motion.div>
                                                     )}
 

@@ -14,7 +14,14 @@ export async function GET(request: Request) {
 
     const { data: projects, error } = await supabase
         .from('projects')
-        .select('*')
+        .select(`
+            *,
+            project_skills (
+                skills (
+                    name
+                )
+            )
+        `)
         .order('created_at', { ascending: false });
 
     if (error) {
@@ -25,7 +32,14 @@ export async function GET(request: Request) {
     console.log('[API] Projects Found:', projects?.length);
 
     // FALLBACK: If DB is empty, use Mock Data so the UI isn't broken.
-    let sourceData = projects;
+    let sourceData: any[] = projects || [];
+
+    // Transform relation to string array for frontend compatibility
+    sourceData = sourceData.map(p => ({
+        ...p,
+        tech_stack: p.project_skills?.map((ps: any) => ps.skills?.name) || []
+    }));
+
     if (!sourceData || sourceData.length === 0) {
         console.log('[API] DB Empty. Using Mock Data fallback.');
         sourceData = [
