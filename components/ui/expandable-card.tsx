@@ -262,7 +262,7 @@ export function ExpandableCardDemo({ projects }: { projects: Project[] }) {
             <ul className="max-w-6xl mx-auto w-full gap-4 flex flex-col">
                 {projects.map((project, index) => (
                     <ProjectListItem
-                        key={project.title}
+                        key={`${project.title}-${index}`}
                         project={project}
                         id={id}
                         onSelect={() => setActive(project)}

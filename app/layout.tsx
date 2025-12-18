@@ -3,6 +3,7 @@ import { Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { ChatProvider } from "@/components/chat-provider";
 import { Toaster } from "@/components/ui/sonner";
+import FluidCursor from "@/components/ui/fluid-cursor";
 
 const inter = Inter({
   variable: "--font-sans",
@@ -30,6 +31,7 @@ export default function RootLayout({
         className={`${inter.variable} ${jetbrainsMono.variable} antialiased`}
       >
         <ChatProvider>
+          <FluidCursor />
           {children}
           <Toaster />
         </ChatProvider>

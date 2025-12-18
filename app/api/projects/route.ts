@@ -156,11 +156,7 @@ export async function GET(request: Request) {
         if (mappedProjects.length === 0) return NextResponse.json([]);
 
         // Ensure enough items for looping (e.g. at least 6)
-        let loopedProjects = [...mappedProjects];
-        while (loopedProjects.length < 6) {
-            loopedProjects = [...loopedProjects, ...mappedProjects];
-        }
-        return NextResponse.json(loopedProjects);
+        return NextResponse.json(mappedProjects);
     }
 
     return NextResponse.json([]);

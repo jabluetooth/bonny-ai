@@ -47,7 +47,8 @@ export async function getContextForIntent(
 
     // 1. ABOUT / VISION / INTERESTS
     if (intent === ChatIntents.ABOUT_ME || intent === ChatIntents.VISION || intent === ChatIntents.INTERESTS || intent === ChatIntents.BACKGROUND) {
-        const { data } = await supabase.from('author_profiles').select('*').eq('is_active', true);
+        // Limit to 1 to prevent duplicate "About Me" entries if DB has multiple rows
+        const { data } = await supabase.from('author_profiles').select('*').eq('is_active', true).limit(1);
         context.about = mapProfile(data || []);
 
         // If background, also fetch experience

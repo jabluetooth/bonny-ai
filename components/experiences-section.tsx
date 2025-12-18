@@ -178,15 +178,15 @@ function ExperienceCard({ experience, index }: { experience: Experience; index: 
                     <h3 className="text-xl font-bold text-gray-900 leading-tight mb-2">{experience.company}</h3>
 
                     <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-gray-600 mb-4">
-                        <div className="flex items-center gap-1 font-medium text-gray-500 uppercase tracking-wide">
+                        <div className="flex items-center gap-1 font-medium uppercase tracking-wide">
                             <Calendar className="w-3.5 h-3.5" />
                             <span>{experience.date}</span>
                         </div>
-                        <div className="flex items-center gap-1">
+                        <div className="flex items-center gap-1 font-medium">
                             <MapPin className="w-3.5 h-3.5" />
                             <span>{experience.location}</span>
                         </div>
-                        <div className="flex items-center gap-1">
+                        <div className="flex items-center gap-1 font-medium">
                             <Briefcase className="w-3.5 h-3.5" />
                             <span>{experience.type}</span>
                         </div>
@@ -212,7 +212,7 @@ function ExperienceCard({ experience, index }: { experience: Experience; index: 
                         <Badge
                             key={tech}
                             variant="secondary"
-                            className="bg-gray-200 hover:bg-gray-300 text-gray-800 border-gray-300 font-normal px-3 py-1 text-xs"
+                            className="bg-gray-200 hover:bg-gray-300 text-gray-900 border-gray-300 font-bold px-3 py-1 text-xs"
                         >
                             {tech}
                         </Badge>

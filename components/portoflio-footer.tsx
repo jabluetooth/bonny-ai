@@ -22,7 +22,7 @@ export async function SiteFooter() {
     }
 
     return (
-        <footer className="w-full py-4 border-t bg-background/50 backdrop-blur-sm mt-auto">
+        <footer className="w-full py-4 bg-background/50 backdrop-blur-sm mt-auto">
             <div className="max-w-6xl mx-auto flex items-center justify-between px-4">
                 {/* Bottom Left: Number of visits */}
                 <div>

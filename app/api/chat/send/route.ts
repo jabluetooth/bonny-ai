@@ -176,7 +176,7 @@ export async function POST(req: Request) {
             aiResponse = "[[SHOW_VISION]] Here is my vision for the future! 🔮";
         }
         else if (intent === 'QUERY_ABOUT_ME') {
-            aiResponse = `Here is a bit about me:\n\n${formatList(context.about, 'title', 'content')}`;
+            aiResponse = `[[SHOW_ABOUT]] Here is a bit about me:\n\n${formatList(context.about || [], 'title', 'content')}`;
         }
 
         // If no static response, use LLM

@@ -174,8 +174,8 @@ export function Chatbox() {
                                         <div className={`flex flex-col gap-2 w-full min-w-0 ${msg.role === "user" ? "items-end" : "items-start"}`}>
                                             <div
                                                 className={`rounded-[20px] px-5 py-2.5 text-[15px] shadow-sm leading-relaxed break-words whitespace-pre-wrap [word-break:break-word] min-w-0 max-w-[85%] overflow-hidden ${msg.role === "user"
-                                                    ? "bg-[#0084ff] text-white rounded-br-none" // Messenger Blue
-                                                    : "bg-muted text-foreground rounded-bl-none" // Messenger Gray
+                                                    ? "bg-gradient-to-br from-blue-600/90 to-blue-600/70 backdrop-blur-md border border-blue-400/30 shadow-xl text-white rounded-br-none" // Darker 3D Glass Blue
+                                                    : "bg-gradient-to-br from-muted/80 to-muted/40 backdrop-blur-md border border-white/10 shadow-xl text-foreground rounded-bl-none" // 3D Glass Gray
                                                     }`}
                                             >
                                                 {shouldAnimate ? (
@@ -327,10 +327,10 @@ export function Chatbox() {
                             <div ref={messagesEndRef} />
                         </div>
                     </ScrollArea>
-                </div>
+                </div >
 
                 {/* Input Area - Wide & Clean */}
-                <div className="w-full">
+                < div className="w-full" >
                     <form
                         onSubmit={(e) => {
                             e.preventDefault();
@@ -389,8 +389,8 @@ export function Chatbox() {
                             </>
                         )}
                     </form>
-                </div>
-            </div>
+                </div >
+            </div >
         </>
     );
 }
