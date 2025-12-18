@@ -21,7 +21,11 @@ export async function GET() {
             return NextResponse.json({ error: error.message }, { status: 500 });
         }
 
-        return NextResponse.json({ data });
+        return NextResponse.json({ data }, {
+            headers: {
+                'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=59',
+            },
+        });
     } catch (err) {
         console.error("Internal Server Error:", err);
         return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });

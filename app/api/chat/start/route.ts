@@ -51,21 +51,15 @@ export async function POST(req: Request) {
         }
     } catch (e) { /* ignore invalid json */ }
 
-    // 2. Upsert User into public.users table (Tracking)
-    // We use upsert to ensure we don't fail if they already exist
-    const { error: userError } = await supabase
+    // 2. Parallel: Upsert User & Search Conversation
+    const upsertUserPromise = supabase
         .from('users')
         .upsert({
             id: user.id,
             ...(name ? { name } : {})
         }, { onConflict: 'id' });
 
-    if (userError) {
-        console.error('Error creating/updating user:', userError);
-    }
-
-    // 3. Search for existing conversation
-    const { data: existingConvo } = await supabase
+    const findConversationPromise = supabase
         .from('conversations')
         .select('id')
         .eq('user_id', user.id)
@@ -73,7 +67,13 @@ export async function POST(req: Request) {
         .limit(1)
         .single();
 
-    let conversationId = existingConvo?.id;
+    const [userResult, convoResult] = await Promise.all([upsertUserPromise, findConversationPromise]);
+
+    if (userResult.error) {
+        console.error('Error creating/updating user:', userResult.error);
+    }
+
+    let conversationId = convoResult.data?.id;
     let messages: any[] = [];
 
     if (conversationId) {
