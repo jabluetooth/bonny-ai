@@ -7,37 +7,29 @@ import { UsersIcon } from 'lucide-react'
 
 export function VisitorCounter({ initialCount }: { initialCount: number }) {
     const [count, setCount] = useState(initialCount)
-    const supabase = createClient()
 
     useEffect(() => {
-        // Update local count if initial changes
-        setTimeout(() => setCount(initialCount), 0)
-
-        // Subscribe to INSERT/DELETE events on 'users' table
-        // Note: usage of this subscription depends on RLS policies allowing the user to see these events.
-        const channel = supabase
-            .channel('realtime-users-count')
-            .on(
-                'postgres_changes',
-                {
-                    event: '*',
-                    schema: 'public',
-                    table: 'users',
-                },
-                (payload) => {
-                    if (payload.eventType === 'INSERT') {
-                        setCount((prev) => prev + 1)
-                    } else if (payload.eventType === 'DELETE') {
-                        setCount((prev) => Math.max(0, prev - 1))
-                    }
+        // Initial sync
+        const fetchCount = async () => {
+            try {
+                const res = await fetch('/api/stats');
+                if (res.ok) {
+                    const data = await res.json();
+                    setCount(data.count);
                 }
-            )
-            .subscribe()
+            } catch (error) {
+                console.error("Failed to fetch stats", error);
+            }
+        };
 
-        return () => {
-            supabase.removeChannel(channel)
-        }
-    }, [initialCount, supabase])
+        // Poll every 5 seconds
+        const interval = setInterval(fetchCount, 5000);
+
+        // Fetch immediately on mount to sync up
+        fetchCount();
+
+        return () => clearInterval(interval);
+    }, []);
 
     return (
         <Pill className="h-7 text-xs">
