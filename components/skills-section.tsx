@@ -57,11 +57,16 @@ export function SkillsSection({ highlightSkill, highlightCategory }: { highlight
     // Filter categories logic
     const filteredCategories = (() => {
         if (highlightSkill) {
-            // Strict skill filter
-            return categories.map(cat => ({
+            // 1. Try Strict skill filter
+            const skillFiltered = categories.map(cat => ({
                 ...cat,
                 skills: cat.skills.filter((s: any) => s.name.toLowerCase() === highlightSkill.toLowerCase())
             })).filter(cat => cat.skills.length > 0);
+
+            if (skillFiltered.length > 0) return skillFiltered;
+
+            // 2. Fallback: Try as Category filter (if LLM confused SKILL with CATEGORY)
+            return categories.filter(cat => cat.title.toLowerCase().includes(highlightSkill.toLowerCase()));
         }
         if (highlightCategory) {
             // Loose category filter (e.g. "Frontend" matches "Frontend Development")
@@ -78,9 +83,7 @@ export function SkillsSection({ highlightSkill, highlightCategory }: { highlight
         sendMessage(`What are your ${title} skills?`);
     };
 
-    const handleSkillClick = (skillName: string) => {
-        sendMessage(`Tell me about your experience with ${skillName}.`);
-    };
+
 
     if (isLoading) {
         return (
@@ -165,14 +168,9 @@ export function SkillsSection({ highlightSkill, highlightCategory }: { highlight
                             {group.skills.map((skill: any) => (
                                 <span
                                     key={skill.name}
-                                    title={`Ask about ${skill.name}`}
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        handleSkillClick(skill.name);
-                                    }}
                                     className={cn(
-                                        "px-3 py-1.5 text-xs font-medium rounded-xl shadow-sm border transition-all cursor-pointer whitespace-normal h-auto text-left max-w-full leading-snug break-words",
-                                        "bg-zinc-900 text-white border-zinc-800 hover:bg-zinc-800 hover:scale-105 active:scale-95 dark:bg-white dark:text-zinc-900",
+                                        "px-3 py-1.5 text-xs font-medium rounded-xl border whitespace-normal h-auto text-left max-w-full leading-snug break-words",
+                                        "bg-zinc-900 text-white border-zinc-800 dark:bg-white dark:text-zinc-900",
                                         // Highlight skill if match
                                         highlightSkill && "ring-2 ring-primary/50"
                                     )}

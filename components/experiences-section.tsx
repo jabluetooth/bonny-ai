@@ -209,13 +209,15 @@ function ExperienceCard({ experience, index }: { experience: Experience; index: 
                 {/* Tech Stack Tags */}
                 <div className="mt-8 flex flex-wrap gap-2">
                     {experience.tech_stack.map((tech) => (
-                        <Badge
+                        <span
                             key={tech}
-                            variant="secondary"
-                            className="bg-gray-200 hover:bg-gray-300 text-gray-900 border-gray-300 font-bold px-3 py-1 text-xs"
+                            className={cn(
+                                "px-3 py-1.5 text-xs font-medium rounded-xl border whitespace-normal h-auto text-left max-w-full leading-snug break-words",
+                                "bg-zinc-900 text-white border-zinc-800 dark:bg-white dark:text-zinc-900"
+                            )}
                         >
                             {tech}
-                        </Badge>
+                        </span>
                     ))}
                 </div>
             </div>

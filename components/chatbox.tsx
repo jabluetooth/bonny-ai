@@ -44,18 +44,18 @@ export function Chatbox() {
 
     // Helper to parse content for skill tags
     const getMessageData = (content: string) => {
-        const skillMatch = content.match(/\[\[SKILL:\s*(.*?)\]\]/);
-        const categoryMatch = content.match(/\[\[CATEGORY:\s*(.*?)\]\]/);
-        const experienceMatch = content.match(/\[\[SHOW_EXPERIENCE:\s*(.*?)\]\]/);
-        const projectMatch = content.match(/\[\[SHOW_PROJECTS:\s*(.*?)\]\]/);
+        const skillMatch = content.match(/\[\[(?:SHOW_)?SKILL:\s*(.*?)\]\]/);
+        const categoryMatch = content.match(/\[\[(?:SHOW_)?CATEGORY:\s*(.*?)\]\]/);
+        const experienceMatch = content.match(/\[\[(?:SHOW_)?EXPERIENCE:\s*(.*?)\]\]/);
+        const projectMatch = content.match(/\[\[(?:SHOW_)?PROJECTS:\s*(.*?)\]\]/);
 
-        const showAllSkills = content.includes("[[SHOW_SKILLS]]");
-        const showProjects = !!projectMatch || content.includes("[[SHOW_PROJECTS]]");
-        const showAbout = content.includes("[[SHOW_ABOUT]]");
-        const showInterests = content.includes("[[SHOW_INTERESTS]]");
-        const showVision = content.includes("[[SHOW_VISION]]");
+        const showAllSkills = /\[\[(?:SHOW_)?SKILLS\]\]/.test(content);
+        const showProjects = !!projectMatch || /\[\[(?:SHOW_)?PROJECTS\]\]/.test(content);
+        const showAbout = /\[\[(?:SHOW_)?ABOUT\]\]/.test(content);
+        const showInterests = /\[\[(?:SHOW_)?INTERESTS\]\]/.test(content);
+        const showVision = /\[\[(?:SHOW_)?VISION\]\]/.test(content);
         // Fallback for old tag or if specific tag missing, though API now sends specific
-        const showExperiences = !!experienceMatch || content.includes("[[SHOW_EXPERIENCE]]");
+        const showExperiences = !!experienceMatch || /\[\[(?:SHOW_)?EXPERIENCE\]\]/.test(content);
 
         const highlightSkill = skillMatch ? skillMatch[1] : undefined;
         const highlightCategory = categoryMatch ? categoryMatch[1] : undefined;
@@ -63,11 +63,18 @@ export function Chatbox() {
         const projectCategory = projectMatch ? projectMatch[1].toLowerCase() : undefined;
 
         // Clean the tag out of the displayed text (remove all types of tags)
-        let cleanContent = content.replace(/\[\[SKILL:\s*.*?\]\]/, "");
-        cleanContent = cleanContent.replace(/\[\[CATEGORY:\s*.*?\]\]/, "");
-        cleanContent = cleanContent.replace(/\[\[SHOW_EXPERIENCE:\s*.*?\]\]/, "");
-        cleanContent = cleanContent.replace(/\[\[SHOW_PROJECTS:\s*.*?\]\]/, "");
-        cleanContent = cleanContent.replace("[[SHOW_SKILLS]]", "").replace("[[SHOW_PROJECTS]]", "").replace("[[SHOW_EXPERIENCE]]", "").replace("[[SHOW_ABOUT]]", "").replace("[[SHOW_INTERESTS]]", "").replace("[[SHOW_VISION]]", "").trim();
+        let cleanContent = content.replace(/\[\[(?:SHOW_)?SKILL:\s*.*?\]\]/g, "");
+        cleanContent = cleanContent.replace(/\[\[(?:SHOW_)?CATEGORY:\s*.*?\]\]/g, "");
+        cleanContent = cleanContent.replace(/\[\[(?:SHOW_)?EXPERIENCE:\s*.*?\]\]/g, "");
+        cleanContent = cleanContent.replace(/\[\[(?:SHOW_)?PROJECTS:\s*.*?\]\]/g, "");
+        cleanContent = cleanContent
+            .replace(/\[\[(?:SHOW_)?SKILLS\]\]/g, "")
+            .replace(/\[\[(?:SHOW_)?PROJECTS\]\]/g, "")
+            .replace(/\[\[(?:SHOW_)?EXPERIENCE\]\]/g, "")
+            .replace(/\[\[(?:SHOW_)?ABOUT\]\]/g, "")
+            .replace(/\[\[(?:SHOW_)?INTERESTS\]\]/g, "")
+            .replace(/\[\[(?:SHOW_)?VISION\]\]/g, "")
+            .trim();
 
         // Show skills if tag exists OR context keywords found (heuristic fallback)
         const showSkills = !!highlightSkill || !!highlightCategory || showAllSkills;

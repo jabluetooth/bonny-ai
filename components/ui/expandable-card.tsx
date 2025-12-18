@@ -1,5 +1,6 @@
 "use strict";
 import React, { useEffect, useId, useRef, useState } from "react";
+import { cn } from "@/lib/utils";
 import { createPortal } from "react-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { useOutsideClick } from "@/hooks/use-outside-click";
@@ -65,7 +66,7 @@ const ProjectDetails = ({
 
                     {/* Image Section */}
                     <div
-                        className="w-full h-60 lg:h-60 sm:rounded-tr-lg sm:rounded-tl-lg overflow-hidden"
+                        className="w-full h-80 lg:h-96 sm:rounded-tr-lg sm:rounded-tl-lg overflow-hidden"
                     >
                         <img
                             width={600}
@@ -89,7 +90,7 @@ const ProjectDetails = ({
                                     href={active.project_url}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="px-4 py-2 text-sm rounded-full font-bold bg-green-500 hover:bg-green-600 text-white flex items-center gap-2"
+                                    className="px-4 py-2 text-sm rounded-full font-bold bg-gray-100 text-zinc-900 hover:bg-zinc-900 hover:text-white transition-colors flex items-center gap-2 dark:bg-zinc-800 dark:text-white dark:hover:bg-white dark:hover:text-zinc-900"
                                 >
                                     Checkout
                                     <ExternalLink className="w-3 h-3" />
@@ -120,9 +121,15 @@ const ProjectDetails = ({
                                     <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Tech Stack</h4>
                                     <div className="flex flex-wrap gap-2">
                                         {active.tech_stack?.map((tech) => (
-                                            <Badge key={tech} variant="secondary">
+                                            <span
+                                                key={tech}
+                                                className={cn(
+                                                    "px-3 py-1.5 text-xs font-medium rounded-xl border whitespace-normal h-auto text-left max-w-full leading-snug break-words",
+                                                    "bg-zinc-900 text-white border-zinc-800 dark:bg-white dark:text-zinc-900"
+                                                )}
+                                            >
                                                 {tech}
-                                            </Badge>
+                                            </span>
                                         ))}
                                     </div>
                                 </div>
@@ -200,7 +207,7 @@ const ProjectListItem = ({
             </div>
 
             <button
-                className="ml-auto px-4 py-2 text-sm rounded-full font-bold bg-gray-100 hover:bg-green-500 hover:text-white text-black transition-colors"
+                className="ml-auto px-4 py-2 text-sm rounded-full font-bold bg-gray-100 text-zinc-900 hover:bg-zinc-900 hover:text-white transition-colors dark:bg-zinc-800 dark:text-white dark:hover:bg-white dark:hover:text-zinc-900"
                 onClick={(e) => {
                     e.stopPropagation();
                     if (project.project_url) {
