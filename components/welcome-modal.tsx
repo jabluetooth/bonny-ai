@@ -74,12 +74,10 @@ export function WelcomeModal() {
         return () => clearTimeout(timer)
     }, [conversationId, isLoading, setIsWelcomeOpen])
 
-    // If connected, close
-    useEffect(() => {
-        if (conversationId) {
-            setIsWelcomeOpen(false)
-        }
-    }, [conversationId, setIsWelcomeOpen])
+    // (Removed auto-close effect)
+    // We do NOT want to close the modal just because a conversationId exists,
+    // because now we generate one automatically for every visitor.
+    // The modal should only close when the user explicitly interacts (Start/Skip).
 
     const handleStartWithName = async () => {
         if (!name.trim()) return

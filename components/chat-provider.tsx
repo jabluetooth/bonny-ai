@@ -7,12 +7,12 @@ interface ChatContextType {
     conversationId: string | null
     userId: string | null
     messages: { role: 'user' | 'bot', content: string, component?: ReactNode }[]
-    sendMessage: (content: string, intent?: string) => Promise<void>
+    sendMessage: (content: string, intent?: string, activeId?: string) => Promise<void>
     addMessage: (message: { role: 'user' | 'bot', content: string, component?: ReactNode }) => void
     isLoading: boolean
     userName: string | null
     setUserName: (name: string) => void
-    startChat: (name?: string) => Promise<void>
+    startChat: (name?: string) => Promise<string | null>
     isWelcomeOpen: boolean
     setIsWelcomeOpen: (open: boolean) => void
     welcomePlaceholder: string
@@ -28,7 +28,7 @@ const ChatContext = createContext<ChatContextType>({
     isLoading: false,
     userName: null,
     setUserName: () => { },
-    startChat: async () => { },
+    startChat: async () => { return null },
     isWelcomeOpen: false,
     setIsWelcomeOpen: () => { },
     welcomePlaceholder: "|",
@@ -47,29 +47,35 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     const [supabase] = useState(() => createClient())
 
     // Expose startChat for manual initialization
-    const startChat = async (name?: string) => {
+    const startChat = async (name?: string, forceReset: boolean = true): Promise<string | null> => {
         try {
-            setIsLoading(true)
-            // Clear previous state immediately to prevent "flashing" old data
-            setMessages([])
-            setConversationId(null)
-            setUserId(null)
+            // Only set loading if we are resetting or don't have an ID
+            if (forceReset || !conversationId) setIsLoading(true)
 
-            // 1. Force New Session (User wanted to start fresh)
-            // We sign out to ensure we get a fresh Anonymous ID each time 'startChat' is explicitly called.
-            const { data: { session: existingSession } } = await supabase.auth.getSession()
-            if (existingSession) {
-                await supabase.auth.signOut()
+            if (forceReset) {
+                // Clear previous state immediately to prevent "flashing" old data
+                setMessages([])
+                setConversationId(null)
+                setUserId(null)
+
+                // 1. Force New Session (User wanted to start fresh)
+                const { data: { session: existingSession } } = await supabase.auth.getSession()
+                if (existingSession) {
+                    await supabase.auth.signOut()
+                }
             }
 
-            // 2. Create New Anonymous Auth
-            const { error: authError } = await supabase.auth.signInAnonymously()
-            if (authError) {
-                console.error("ChatProvider: Auth error", authError)
-                return
+            // 2. Ensure Auth (Anonymous)
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session) {
+                const { error: authError } = await supabase.auth.signInAnonymously()
+                if (authError) {
+                    console.error("ChatProvider: Auth error", authError)
+                    return null
+                }
             }
 
-            // 3. Start Session (Pass name if provided)
+            // 3. Start/Resume Session
             const res = await fetch('/api/chat/start', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -78,7 +84,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
 
             if (!res.ok) {
                 console.error("ChatProvider: Failed to start chat session")
-                return
+                return null
             }
             const data = await res.json()
             setConversationId(data.conversationId)
@@ -95,24 +101,55 @@ export function ChatProvider({ children }: { children: ReactNode }) {
                 }
             }
 
-            if (data.messages) {
+            if (data.messages && data.messages.length > 0) {
+                // If resuming, we might want to keep existing messages if we have them? 
+                // But for now, trusting the backend history is safer for sync.
                 setMessages(data.messages)
             }
             console.log("ChatProvider: Session started (or recovered)", data.conversationId)
+            return data.conversationId
 
         } catch (err) {
             console.error("ChatProvider: Initialization error", err)
+            return null
         } finally {
             setIsLoading(false)
         }
     }
 
+    // Auto-init on mount to track visitor
+    useEffect(() => {
+        let mounted = true;
+
+        const init = async () => {
+            // Check if we already have a session/convo to avoid double-init if StrictMode is on
+            const { data: { session } } = await supabase.auth.getSession();
+            if (session) {
+                // We have a session, just ensure backend knows/syncs
+                if (mounted && !conversationId) {
+                    await startChat(undefined, false); // Resume, don't reset
+                }
+            } else {
+                // User is new -> Start fresh (implicitly registers visitor)
+                if (mounted && !conversationId) {
+                    await startChat(undefined, false);
+                }
+            }
+        };
+
+        init();
+
+        return () => { mounted = false };
+    }, []); // Run once on mount
+
     const addMessage = (message: { role: 'user' | 'bot', content: string, component?: ReactNode }) => {
         setMessages(prev => [...prev, message])
     }
 
-    const sendMessage = async (content: string, intent?: string) => {
-        if (!conversationId) {
+    const sendMessage = async (content: string, intent?: string, activeId?: string) => {
+        const currentId = activeId || conversationId;
+
+        if (!currentId) {
             console.error("ChatProvider: No active conversation")
             return
         }
@@ -123,11 +160,26 @@ export function ChatProvider({ children }: { children: ReactNode }) {
         setIsLoading(true)
 
         try {
-            const res = await fetch('/api/chat/send', {
+            let res = await fetch('/api/chat/send', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ conversationId, content, intent })
+                body: JSON.stringify({ conversationId: currentId, content, intent })
             })
+
+            // Retry Logic for 401 (Expired/Invalid Session)
+            if (res.status === 401) {
+                console.log("ChatProvider: Session expired, refreshing...");
+                const newId = await startChat(); // Refresh session
+                if (newId) {
+                    // Retry send with new ID
+                    res = await fetch('/api/chat/send', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ conversationId: newId, content, intent })
+                    })
+                }
+            }
+
             const data = await res.json()
 
             if (res.ok) {

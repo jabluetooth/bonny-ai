@@ -126,22 +126,26 @@ export async function POST(req: Request) {
         };
 
         // Deterministic Responses based on Intent
-        if (intent === 'QUERY_PROJECTS') {
+        // Normalize intent to handle variants (e.g. QUERY_PROJECTS vs QUERY_PROJECTS_WEB)
+        const isProjectIntent = intent?.startsWith('QUERY_PROJECTS');
+        const isSkillIntent = intent?.startsWith('QUERY_SKILLS');
+
+        if (isProjectIntent) {
             const lowerContent = content.toLowerCase();
             const name = context.userName || "Guest";
 
-            if (lowerContent.includes('web')) {
+            if (lowerContent.includes('web') || intent === 'QUERY_PROJECTS_WEB') {
                 const webVars = [
                     "[[SHOW_PROJECTS]] Here are my **Web Development** projects{{name}}! 🌐",
                     "[[SHOW_PROJECTS]] I've built some exciting things for the web. Check them out{{name}} 👇",
                     "[[SHOW_PROJECTS]] Exploring the full stack is my passion. Here are my web projects! 💻"
                 ];
                 aiResponse = pickVariation(webVars, name);
-            } else if (lowerContent.includes('ai') || lowerContent.includes('machine learning')) {
+            } else if (lowerContent.includes('ai') || lowerContent.includes('machine learning') || intent === 'QUERY_PROJECTS_AI') {
                 const aiVars = [
                     "[[SHOW_PROJECTS]] Check out my **AI & Machine Learning** innovations{{name}}! 🤖",
                     "[[SHOW_PROJECTS]] Here's how I'm using AI to solve problems. Take a look{{name}}!",
-                    "[[SHOW_PROJECTS]] Diving into the future with AI & ML. Here are my projects 🧠"
+                    "[[SHOW_PROJECTS]] Diving into the future with AI & ML. Here are projects 🧠"
                 ];
                 aiResponse = pickVariation(aiVars, name);
             } else {
@@ -153,12 +157,19 @@ export async function POST(req: Request) {
                 aiResponse = pickVariation(genVars, name);
             }
         }
-        else if (intent === 'QUERY_SKILLS') {
+        else if (isSkillIntent) {
             const lowerContent = content.toLowerCase();
-            if (lowerContent.includes('frontend')) aiResponse = "[[CATEGORY: Frontend Development]] Here are my Frontend skills.";
-            else if (lowerContent.includes('backend')) aiResponse = "[[CATEGORY: Backend Development]] Here are my Backend skills.";
-            else if (lowerContent.includes('design')) aiResponse = "[[CATEGORY: Design]] I love creating beautiful UIs.";
-            else aiResponse = "[[SHOW_SKILLS]] Here are my technical skills.";
+            // Check specific intents OR content keywords
+            if (intent === 'QUERY_SKILLS_FRONTEND' || lowerContent.includes('frontend'))
+                aiResponse = "[[CATEGORY: Frontend Development]] Here are my Frontend skills.";
+            else if (intent === 'QUERY_SKILLS_BACKEND' || lowerContent.includes('backend'))
+                aiResponse = "[[CATEGORY: Backend Development]] Here are my Backend skills.";
+            else if (intent === 'QUERY_SKILLS_DESIGN' || lowerContent.includes('design'))
+                aiResponse = "[[CATEGORY: Design]] I love creating beautiful UIs.";
+            else if (intent === 'QUERY_SKILLS_SOFT' || lowerContent.includes('soft'))
+                aiResponse = "[[CATEGORY: Soft Skills]] Here are my key soft skills.";
+            else
+                aiResponse = "[[SHOW_SKILLS]] Here are my technical skills.";
         }
         else if (intent === 'QUERY_WORK') {
             aiResponse = "[[SHOW_EXPERIENCE:WORK]] Here is my professional work history.";
@@ -177,6 +188,9 @@ export async function POST(req: Request) {
         }
         else if (intent === 'QUERY_ABOUT_ME') {
             aiResponse = `[[SHOW_ABOUT]] Here is a bit about me:\n\n${formatList(context.about || [], 'title', 'content')}`;
+        }
+        else if (intent === 'QUERY_BACKGROUND') {
+            aiResponse = "[[SHOW_BACKGROUND]] Here is a visual overview of my journey! 🗺️";
         }
 
         // If no static response, use LLM

@@ -47,9 +47,16 @@ export async function getContextForIntent(
 
     // 1. ABOUT / VISION / INTERESTS
     if (intent === ChatIntents.ABOUT_ME || intent === ChatIntents.VISION || intent === ChatIntents.INTERESTS || intent === ChatIntents.BACKGROUND) {
-        // Limit to 1 to prevent duplicate "About Me" entries if DB has multiple rows
-        const { data } = await supabase.from('author_profiles').select('*').eq('is_active', true).limit(1);
-        context.about = mapProfile(data || []);
+        // Try active profile first
+        let { data } = await supabase.from('author_profiles').select('*').eq('is_active', true).maybeSingle();
+
+        // Fallback: If no active profile found, take the first one available
+        if (!data) {
+            const { data: fallbackData } = await supabase.from('author_profiles').select('*').limit(1).maybeSingle();
+            data = fallbackData;
+        }
+
+        context.about = mapProfile(data ? [data] : []);
 
         // If background, also fetch experience
         if (intent === ChatIntents.BACKGROUND) {

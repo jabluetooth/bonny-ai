@@ -19,6 +19,7 @@ import { TypingAnimation } from "@/components/ui/typing-animation";
 import { BorderBeam } from "@/components/ui/border-beam";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { BackgroundCards } from "@/components/background-cards";
 
 export function Chatbox() {
     const { conversationId, sendMessage, messages, isLoading, welcomePlaceholder, isWelcomeOpen, isChatDisabled } = useChat();
@@ -54,6 +55,7 @@ export function Chatbox() {
         const showAbout = /\[\[(?:SHOW_)?ABOUT\]\]/.test(content);
         const showInterests = /\[\[(?:SHOW_)?INTERESTS\]\]/.test(content);
         const showVision = /\[\[(?:SHOW_)?VISION\]\]/.test(content);
+        const showBackground = /\[\[(?:SHOW_)?BACKGROUND\]\]/.test(content);
         // Fallback for old tag or if specific tag missing, though API now sends specific
         const showExperiences = !!experienceMatch || /\[\[(?:SHOW_)?EXPERIENCE\]\]/.test(content);
 
@@ -74,12 +76,13 @@ export function Chatbox() {
             .replace(/\[\[(?:SHOW_)?ABOUT\]\]/g, "")
             .replace(/\[\[(?:SHOW_)?INTERESTS\]\]/g, "")
             .replace(/\[\[(?:SHOW_)?VISION\]\]/g, "")
+            .replace(/\[\[(?:SHOW_)?BACKGROUND\]\]/g, "")
             .trim();
 
         // Show skills if tag exists OR context keywords found (heuristic fallback)
         const showSkills = !!highlightSkill || !!highlightCategory || showAllSkills;
 
-        return { cleanContent, highlightSkill, highlightCategory, showSkills, showProjects, projectCategory, showExperiences, experienceCategory, showAbout, showInterests, showVision };
+        return { cleanContent, highlightSkill, highlightCategory, showSkills, showProjects, projectCategory, showExperiences, experienceCategory, showAbout, showInterests, showVision, showBackground };
     };
 
     const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -156,7 +159,7 @@ export function Chatbox() {
                         <div className="flex flex-col flex-1 justify-end gap-6 pb-12 px-4">
                             {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
                             {messages.map((msg: any, i) => {
-                                const { cleanContent, highlightSkill, highlightCategory, showSkills, showProjects, projectCategory, showExperiences, experienceCategory, showAbout, showInterests, showVision } = getMessageData(msg.content);
+                                const { cleanContent, highlightSkill, highlightCategory, showSkills, showProjects, projectCategory, showExperiences, experienceCategory, showAbout, showInterests, showVision, showBackground } = getMessageData(msg.content);
 
                                 const isLatestBotMessage = msg.role === 'bot' && i === messages.length - 1;
                                 const messageId = msg.id || i;
@@ -308,6 +311,21 @@ export function Chatbox() {
                                                             className="mt-1 w-full grid grid-cols-1 min-w-0 rounded-xl bg-background/50 backdrop-blur-sm overflow-visible py-4"
                                                         >
                                                             <VisionSection />
+                                                        </motion.div>
+                                                    )}
+
+                                                    {/* 8. Background Section (Triggered by Tag) */}
+                                                    {msg.role === 'bot' && showBackground && (
+                                                        <motion.div
+                                                            initial={{ opacity: 0, scale: 0 }}
+                                                            animate={{ opacity: 1, scale: 1 }}
+                                                            transition={{
+                                                                duration: 0.4,
+                                                                scale: { type: "spring", visualDuration: 0.4, bounce: 0.20 },
+                                                            }}
+                                                            className="mt-1 w-full grid grid-cols-1 min-w-0 rounded-xl bg-background/50 backdrop-blur-sm overflow-visible py-4"
+                                                        >
+                                                            <BackgroundCards />
                                                         </motion.div>
                                                     )}
                                                 </>

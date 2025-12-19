@@ -7,13 +7,7 @@ import { useChat } from "@/components/chat-provider"
 import { ChatIntents } from "@/lib/intents"
 import { Skeleton } from "@/components/ui/skeleton"
 import Image from "next/image"
-
-const defaultImages = [
-    "https://images.unsplash.com/photo-1510915228340-29c85a43dcfe?q=80&w=800&auto=format&fit=crop",
-    "https://images.unsplash.com/photo-1587620962725-abab7fe55159?q=80&w=800&auto=format&fit=crop",
-    "https://images.unsplash.com/photo-1629904853716-6c29f60b4321?q=80&w=800&auto=format&fit=crop",
-    "https://images.unsplash.com/photo-1522071820081-009f0129c71c?q=80&w=800&auto=format&fit=crop",
-]
+import { createBrowserClient } from "@supabase/ssr"
 
 interface AuthorProfile {
     title: string;
@@ -24,34 +18,73 @@ interface AuthorProfile {
 export const AuthorCard = React.forwardRef<HTMLAnchorElement, React.ComponentPropsWithoutRef<"a">>(({ className, onClick, ...props }, ref) => {
     const { startChat, sendMessage, conversationId } = useChat()
     const [currentImageIndex, setCurrentImageIndex] = useState(0)
+    const [profile, setProfile] = useState<AuthorProfile | null>(null);
+    const [isLoading, setIsLoading] = useState(true);
 
-    // Hardcoded profile for instant rendering
-    const profile: AuthorProfile = {
-        title: "Author/Developer",
-        description: "Learn more about the creator behind this portfolio.",
-        images: defaultImages
-    };
+    const supabase = createBrowserClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    );
 
-    const images = profile.images;
+    useEffect(() => {
+        async function fetchProfile() {
+            try {
+                const { data, error } = await supabase
+                    .from('author_profiles')
+                    .select('*')
+                    .eq('is_active', true)
+                    .maybeSingle();
+
+                if (data) {
+                    setProfile(data);
+                }
+            } catch (err) {
+                console.error("Error fetching author profile:", err);
+            } finally {
+                setIsLoading(false);
+            }
+        }
+        fetchProfile();
+    }, []);
+
+    const images = profile?.images && profile.images.length > 0
+        ? profile.images
+        : ["https://images.unsplash.com/photo-1510915228340-29c85a43dcfe?q=80&w=800&auto=format&fit=crop"]; // Fallback
 
     useEffect(() => {
         if (images.length <= 1) return;
         const interval = setInterval(() => {
             setCurrentImageIndex((prev) => (prev + 1) % images.length)
-        }, 3000) // Slower rotation
+        }, 3000)
         return () => clearInterval(interval)
     }, [images.length])
 
     const handleNavClick = async (query: string, intent?: string) => {
-        if (!conversationId) {
-            await startChat("Guest")
+        let activeId = conversationId;
+        if (!activeId) {
+            const newId = await startChat("Guest");
+            if (newId) activeId = newId;
         }
-        sendMessage(query, intent)
+        if (activeId) {
+            sendMessage(query, intent, activeId);
+        }
     }
 
     const handleClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
         if (onClick) onClick(e);
         handleNavClick("Tell me about yourself.", ChatIntents.ABOUT_ME);
+    }
+
+    if (isLoading) {
+        return (
+            <div className={cn("flex h-full w-full flex-col justify-end rounded-md bg-muted p-6 relative overflow-hidden", className)}>
+                <Skeleton className="absolute inset-0 w-full h-full" />
+                <div className="relative z-20 space-y-2">
+                    <Skeleton className="h-6 w-32 bg-white/20" />
+                    <Skeleton className="h-4 w-48 bg-white/20" />
+                </div>
+            </div>
+        )
     }
 
     return (

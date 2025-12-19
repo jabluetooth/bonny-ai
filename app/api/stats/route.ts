@@ -1,31 +1,20 @@
 import { NextResponse } from 'next/server';
-import { createServerClient } from '@supabase/ssr';
-import { cookies } from 'next/headers';
+import { createClient } from '@supabase/supabase-js';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET() {
-    const cookieStore = cookies();
+    // SECURITY: Use Service Role Key to bypass RLS for global stats
+    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-    const supabase = createServerClient(
+    if (!serviceRoleKey) {
+        console.error("ERROR: SUPABASE_SERVICE_ROLE_KEY is missing in environment variables.");
+        return NextResponse.json({ error: 'Server misconfiguration: missing service key' }, { status: 500 });
+    }
+
+    const supabase = createClient(
         process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-        {
-            cookies: {
-                getAll() {
-                    return cookieStore.getAll();
-                },
-                setAll(cookiesToSet) {
-                    try {
-                        cookiesToSet.forEach(({ name, value, options }) =>
-                            cookieStore.set(name, value, options)
-                        );
-                    } catch {
-                        // Ignored
-                    }
-                },
-            },
-        }
+        serviceRoleKey
     );
 
     try {
@@ -34,11 +23,13 @@ export async function GET() {
             .select('*', { count: 'exact', head: true });
 
         if (error) {
+            console.error("Stats API Error (Supabase):", error.message);
             return NextResponse.json({ error: error.message }, { status: 500 });
         }
 
         return NextResponse.json({ count: count || 0 });
     } catch (error) {
+        console.error("Stats API Internal Error:", error);
         return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
     }
 }

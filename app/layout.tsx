@@ -5,8 +5,6 @@ import { ChatProvider } from "@/components/chat-provider";
 import { Toaster } from "@/components/ui/sonner";
 import FluidCursor from "@/components/ui/fluid-cursor";
 
-import { DisableDevTools } from "@/components/security/disable-devtools";
-
 const inter = Inter({
   variable: "--font-sans",
   subsets: ["latin"],
@@ -32,7 +30,6 @@ export default function RootLayout({
       <body
         className={`${inter.variable} ${jetbrainsMono.variable} antialiased`}
       >
-        <DisableDevTools />
         <ChatProvider>
           <FluidCursor />
           {children}

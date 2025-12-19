@@ -23,9 +23,14 @@ export async function middleware(request: NextRequest) {
                     response = NextResponse.next({
                         request,
                     });
-                    cookiesToSet.forEach(({ name, value, options }) =>
-                        response.cookies.set(name, value, options)
-                    );
+                    cookiesToSet.forEach(({ name, value, options }) => {
+                        // Force Session Cookie: Remove 'maxAge' and 'expires' so cookie dies on browser close
+                        const sessionOptions = { ...options };
+                        delete sessionOptions.maxAge;
+                        delete sessionOptions.expires;
+
+                        response.cookies.set(name, value, sessionOptions)
+                    });
                 },
             },
         }

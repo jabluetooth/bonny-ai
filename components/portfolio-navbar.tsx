@@ -57,12 +57,17 @@ export function PortfolioNavbar() {
     const prevMsgLength = React.useRef(messages.length)
 
     const handleNavClick = async (query: string, intent?: string) => {
+        let activeId = conversationId;
         // Ensure chat is started
-        if (!conversationId) {
-            await startChat("Guest")
+        if (!activeId) {
+            const newId = await startChat("Guest");
+            if (newId) activeId = newId;
         }
-        sendMessage(query, intent)
-        setNavValue("")
+
+        if (activeId) {
+            sendMessage(query, intent, activeId);
+            setNavValue("");
+        }
     }
 
     const handleSendMessage = async () => {
