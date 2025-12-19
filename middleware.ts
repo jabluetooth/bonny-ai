@@ -33,7 +33,22 @@ export async function middleware(request: NextRequest) {
 
     // This will refresh session if expired - required for Server Components
     // https://supabase.com/docs/guides/auth/server-side/nextjs
-    await supabase.auth.getUser();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    // 🔒 SECURITY: Protect Admin Routes
+    if (request.nextUrl.pathname.startsWith('/admin') && !request.nextUrl.pathname.startsWith('/admin/login')) {
+        if (!user) {
+            // No session? Kick to login
+            return NextResponse.redirect(new URL('/admin/login', request.url));
+        }
+
+        // Optional: Check email match here too for Edge security
+        // Note: Middleware Env vars might behave differently on some platforms, 
+        // but this works in standard Next.js deployments.
+        if (process.env.MY_EMAIL && user.email !== process.env.MY_EMAIL) {
+            return NextResponse.redirect(new URL('/admin/login?error=unauthorized', request.url));
+        }
+    }
 
     return response;
 }
