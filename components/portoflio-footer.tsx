@@ -5,28 +5,14 @@ import { UsersIcon } from 'lucide-react';
 import { VisitorCounter } from './visitor-counter';
 
 export async function SiteFooter() {
-    // connect to supabase to fetch visitor count
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
-    let visitCount = 0
-
-    if (supabaseUrl && supabaseKey) {
-        try {
-            const supabase = createClient(supabaseUrl, supabaseKey)
-            const { count } = await supabase.from('users').select('*', { count: 'exact', head: true })
-            visitCount = count || 0
-        } catch (error) {
-            console.error("Failed to fetch visit count:", error)
-        }
-    }
 
     return (
         <footer className="w-full py-4 bg-background/50 backdrop-blur-sm mt-auto">
             <div className="max-w-6xl mx-auto flex items-center justify-between px-4">
                 {/* Bottom Left: Number of visits */}
                 <div>
-                    <VisitorCounter initialCount={visitCount} />
+                    <VisitorCounter initialCount={0} />
                 </div>
 
                 {/* Bottom Center: Copyright */}

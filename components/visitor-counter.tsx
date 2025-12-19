@@ -34,7 +34,11 @@ export function VisitorCounter({ initialCount }: { initialCount: number }) {
     return (
         <Pill className="h-7 text-xs">
             <PillIcon icon={UsersIcon} />
-            <span className="p-1">{count} users</span>
+            {count === 0 ? (
+                <span className="p-1 px-2 text-muted-foreground">...</span>
+            ) : (
+                <span className="p-1">{count} users</span>
+            )}
         </Pill>
     )
 }

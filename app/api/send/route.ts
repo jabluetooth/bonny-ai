@@ -1,6 +1,8 @@
 import { Resend } from 'resend';
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
+import { createServerClient } from '@supabase/ssr';
+import { cookies } from 'next/headers';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -10,8 +12,45 @@ const sendEmailSchema = z.object({
 });
 
 export async function POST(request: Request) {
+    const cookieStore = cookies();
+
+    // 1. Initialize Supabase for Auth Check
+    const supabase = createServerClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+        {
+            cookies: {
+                getAll() {
+                    return cookieStore.getAll();
+                },
+                setAll(cookiesToSet) {
+                    try {
+                        cookiesToSet.forEach(({ name, value, options }) =>
+                            cookieStore.set(name, value, options)
+                        );
+                    } catch {
+                        // Ignored
+                    }
+                },
+            },
+        }
+    );
+
+    // 2. Authenticate User (Must have session, even anonymous)
+    const {
+        data: { user },
+        error: authError,
+    } = await supabase.auth.getUser();
+
+    if (authError || !user) {
+        return NextResponse.json(
+            { error: 'Unauthorized. Please start a conversation first.' },
+            { status: 401 }
+        );
+    }
+
     try {
-        // 1. Input Validation
+        // 3. Input Validation
         const body = await request.json();
         const result = sendEmailSchema.safeParse(body);
 
@@ -24,12 +63,18 @@ export async function POST(request: Request) {
 
         const { email, message } = result.data;
 
-        // 2. Origin Check (Optional but recommended)
+        // 4. Origin Check (Security Best Practice)
         const origin = request.headers.get('origin');
-        // In production, verify 'origin' matches your domain
-        // if (process.env.NODE_ENV === 'production' && origin && !origin.includes('your-domain.com')) {
-        //     return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
-        // }
+        if (process.env.NODE_ENV === 'production' && origin) {
+            // Allow if matches configured app URL or Vercel deployment
+            const allowedOrigin = process.env.NEXT_PUBLIC_APP_URL;
+            const isVercel = origin.includes('.vercel.app');
+
+            if (allowedOrigin && !origin.startsWith(allowedOrigin) && !isVercel) {
+                console.warn(`[Security] Blocked request from unauthorized origin: ${origin}`);
+                return NextResponse.json({ error: 'Forbidden Origin' }, { status: 403 });
+            }
+        }
 
         const { data, error } = await resend.emails.send({
             from: 'Portfolio Contact <onboarding@resend.dev>',
