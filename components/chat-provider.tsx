@@ -38,7 +38,7 @@ const ChatContext = createContext<ChatContextType>({
 export function ChatProvider({ children }: { children: ReactNode }) {
     const [conversationId, setConversationId] = useState<string | null>(null)
     const [userId, setUserId] = useState<string | null>(null)
-    const [isLoading, setIsLoading] = useState(false)
+    const [isLoading, setIsLoading] = useState(true) // Default to true to prevent flash
     const [userName, setUserName] = useState<string | null>(null)
     const [messages, setMessages] = useState<{ role: 'user' | 'bot', content: string, component?: ReactNode }[]>([])
     const [isChatDisabled, setIsChatDisabled] = useState(false)
@@ -57,8 +57,10 @@ export function ChatProvider({ children }: { children: ReactNode }) {
                 setMessages([])
                 setConversationId(null)
                 setUserId(null)
+            }
 
-                // 1. Force New Session (User wanted to start fresh)
+            // 1. Force New Session (User wanted to start fresh)
+            if (forceReset) {
                 const { data: { session: existingSession } } = await supabase.auth.getSession()
                 if (existingSession) {
                     await supabase.auth.signOut()
@@ -122,18 +124,26 @@ export function ChatProvider({ children }: { children: ReactNode }) {
         let mounted = true;
 
         const init = async () => {
-            // Check if we already have a session/convo to avoid double-init if StrictMode is on
-            const { data: { session } } = await supabase.auth.getSession();
-            if (session) {
-                // We have a session, just ensure backend knows/syncs
-                if (mounted && !conversationId) {
-                    await startChat(undefined, false); // Resume, don't reset
+            try {
+                // Check if we already have a session/convo to avoid double-init if StrictMode is on
+                const { data: { session } } = await supabase.auth.getSession();
+
+                if (session) {
+                    // We have a session, assume user is returning - Resume
+                    if (mounted && !conversationId) {
+                        await startChat(undefined, false); // Resume, don't reset
+                    }
+                } else {
+                    // User is new (No session) -> Do NOT auto-start.
+                    // Verification: We wait for the Welcome Modal to call startChat()
+                    // This creates a "Lazy Init" pattern.
+                    if (mounted) {
+                        setIsLoading(false); // Stop loading so Modal can appear
+                    }
                 }
-            } else {
-                // User is new -> Start fresh (implicitly registers visitor)
-                if (mounted && !conversationId) {
-                    await startChat(undefined, false);
-                }
+            } catch (error) {
+                console.error("ChatProvider: Init error", error);
+                if (mounted) setIsLoading(false);
             }
         };
 

@@ -7,38 +7,34 @@ import { UsersIcon } from 'lucide-react'
 
 export function VisitorCounter({ initialCount }: { initialCount: number }) {
     const [count, setCount] = useState(initialCount)
+    const [supabase] = useState(() => createClient())
 
     useEffect(() => {
-        // Initial sync
-        const fetchCount = async () => {
-            try {
-                const res = await fetch('/api/stats');
-                if (res.ok) {
-                    const data = await res.json();
-                    setCount(data.count);
+        const channel = supabase.channel('online-visitors')
+            .on('presence', { event: 'sync' }, () => {
+                const state = channel.presenceState()
+                // Count unique presence IDs
+                const presentUsers = Object.keys(state).length
+                setCount(presentUsers)
+            })
+            .subscribe(async (status) => {
+                if (status === 'SUBSCRIBED') {
+                    // Track our own presence
+                    await channel.track({ online_at: new Date().toISOString() })
                 }
-            } catch (error) {
-                console.error("Failed to fetch stats", error);
-            }
-        };
+            })
 
-        // Poll every 5 seconds
-        const interval = setInterval(fetchCount, 5000);
-
-        // Fetch immediately on mount to sync up
-        fetchCount();
-
-        return () => clearInterval(interval);
-    }, []);
+        return () => {
+            supabase.removeChannel(channel)
+        }
+    }, [supabase])
 
     return (
         <Pill className="h-7 text-xs">
             <PillIcon icon={UsersIcon} />
-            {count === 0 ? (
-                <span className="p-1 px-2 text-muted-foreground">...</span>
-            ) : (
-                <span className="p-1">{count} users</span>
-            )}
+            <span className="p-1">
+                {count === 0 ? "..." : `${count} online`}
+            </span>
         </Pill>
     )
 }

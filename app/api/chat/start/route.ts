@@ -16,9 +16,12 @@ export async function POST(req: Request) {
                 },
                 setAll(cookiesToSet) {
                     try {
-                        cookiesToSet.forEach(({ name, value, options }) =>
-                            cookieStore.set(name, value, options)
-                        );
+                        cookiesToSet.forEach(({ name, value, options }) => {
+                            const sessionOptions = { ...options };
+                            delete sessionOptions.maxAge;
+                            delete sessionOptions.expires;
+                            cookieStore.set(name, value, sessionOptions);
+                        });
                     } catch {
                         // The `setAll` method was called from a Server Component.
                         // This can be ignored if you have middleware refreshing
@@ -82,7 +85,9 @@ export async function POST(req: Request) {
             .from('messages')
             .select('sender_type, content')
             .eq('conversation_id', conversationId)
-            .order('created_at', { ascending: true });
+            .eq('conversation_id', conversationId)
+            .order('created_at', { ascending: true })
+            .limit(100);
 
         if (history) {
             messages = history.map(msg => ({

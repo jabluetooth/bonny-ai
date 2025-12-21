@@ -55,6 +55,13 @@ export async function middleware(request: NextRequest) {
         }
     }
 
+    // 🚀 CACHING: Prevent caching for authenticated/dynamic routes
+    if (request.nextUrl.pathname.startsWith('/api') || request.nextUrl.pathname.startsWith('/admin')) {
+        response.headers.set("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate");
+        response.headers.set("Pragma", "no-cache");
+        response.headers.set("Expires", "0");
+    }
+
     return response;
 }
 
