@@ -185,7 +185,7 @@ const ProjectListItem = ({
                     <img
                         width={60}
                         height={60}
-                        src={project.image_url || "/placeholder.png"}
+                        src={project.image_url || "https://images.unsplash.com/photo-1550745165-9bc0b252726f?q=80&w=800&auto=format&fit=crop"}
                         alt={project.title}
                         className="h-full w-full object-cover object-top"
                     />

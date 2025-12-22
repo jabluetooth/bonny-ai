@@ -46,7 +46,19 @@ export async function POST(req: Request) {
         // 3. Sanitize Content (XSS Protection)
         const content = xss(rawContent);
 
-        // CHECK LIMIT: Count user messages
+        // 4. Save User Message
+        const { error: msgError } = await supabase.from('messages').insert({
+            conversation_id: conversationId,
+            sender_type: 'user',
+            content,
+        });
+
+        if (msgError) {
+            console.error('Error saving user message:', msgError);
+            return NextResponse.json({ error: 'Failed to save message' }, { status: 500 });
+        }
+
+        // CHECK LIMIT: Count user messages (Checking previously stored messages)
         const { count, error: countError } = await supabase
             .from('messages')
             .select('id', { count: 'exact', head: false })
@@ -59,23 +71,22 @@ export async function POST(req: Request) {
         const MESSAGE_LIMIT = 10;
 
         if (safeCount >= MESSAGE_LIMIT) {
+            const limitMsg = "I'm sorry, you've reached the message limit for this preview. Thank you for chatting!";
+
+            // Persist this final message so it appears on reload
+            await supabase.from('messages').insert({
+                conversation_id: conversationId,
+                sender_type: 'bot',
+                content: limitMsg,
+            });
+
             return NextResponse.json({
                 limitReached: true,
-                reply: "I'm sorry, you've reached the message limit for this preview. Thank you for chatting!"
+                reply: limitMsg
             });
         }
 
-        // 4. Save User Message
-        const { error: msgError } = await supabase.from('messages').insert({
-            conversation_id: conversationId,
-            sender_type: 'user',
-            content,
-        });
 
-        if (msgError) {
-            console.error('Error saving user message:', msgError);
-            return NextResponse.json({ error: 'Failed to save message' }, { status: 500 });
-        }
 
         // Fetch User Profile for Name
         const { data: userProfile } = await supabase

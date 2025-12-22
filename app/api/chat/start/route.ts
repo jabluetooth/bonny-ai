@@ -85,11 +85,11 @@ export async function POST(req: Request) {
             .from('messages')
             .select('sender_type, content')
             .eq('conversation_id', conversationId)
-            .order('created_at', { ascending: true })
-            .limit(5);
+            .order('created_at', { ascending: false })
+            .limit(20);
 
         if (history) {
-            messages = history.map(msg => ({
+            messages = history.reverse().map(msg => ({
                 role: msg.sender_type,
                 content: msg.content
             }));

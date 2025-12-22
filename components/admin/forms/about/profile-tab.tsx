@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { toast } from "sonner"
-import { Loader2, Save } from "lucide-react"
+import { Loader2, Save, Plus, X } from "lucide-react"
 
 export function ProfileTab() {
     const [isLoading, setIsLoading] = useState(true)
@@ -16,7 +16,7 @@ export function ProfileTab() {
 
     const [title, setTitle] = useState("")
     const [description, setDescription] = useState("")
-    const [imageUrl, setImageUrl] = useState("")
+    const [imageUrls, setImageUrls] = useState<string[]>([])
     const [profileId, setProfileId] = useState<string | null>(null)
 
     const supabase = createBrowserClient(
@@ -39,12 +39,35 @@ export function ProfileTab() {
         if (data) {
             setTitle(data.title || "")
             setDescription(data.description || "")
-            if (data.images && data.images.length > 0) {
-                setImageUrl(data.images[0])
+            if (data.images && Array.isArray(data.images)) {
+                setImageUrls(data.images)
+            } else {
+                setImageUrls([])
             }
             setProfileId(data.id)
         }
+
         setIsLoading(false)
+    }
+
+    const addImage = () => setImageUrls([...imageUrls, ""])
+    const removeImage = (index: number) => setImageUrls(imageUrls.filter((_, i) => i !== index))
+    const updateImage = (index: number, value: string) => {
+        const newImages = [...imageUrls]
+        newImages[index] = value
+        setImageUrls(newImages)
+    }
+
+    const DEMO_IMAGES = [
+        "https://images.unsplash.com/photo-1507238691140-d94cf395349c?q=80&w=1000&auto=format&fit=crop", // Tech/Code
+        "https://images.unsplash.com/photo-1544717297-fa95b6ee9643?q=80&w=1000&auto=format&fit=crop", // Workspace
+        "https://images.unsplash.com/photo-1510915228340-29c85a43dcfe?q=80&w=1000&auto=format&fit=crop"  // Coding Dark
+    ]
+
+    const fillStockImages = () => {
+        // Merge current images with demo ones, avoiding duplicates
+        const uniqueImages = Array.from(new Set([...imageUrls.filter(u => u), ...DEMO_IMAGES]))
+        setImageUrls(uniqueImages)
     }
 
     const handleSave = async () => {
@@ -53,7 +76,7 @@ export function ProfileTab() {
             const payload = {
                 title,
                 description,
-                images: imageUrl ? [imageUrl] : [],
+                images: imageUrls.filter(url => url.trim() !== ""),
                 is_active: true,
                 updated_at: new Date().toISOString()
             }
@@ -99,15 +122,34 @@ export function ProfileTab() {
                     <Label htmlFor="description">Bio</Label>
                     <Textarea value={description} onChange={(e) => setDescription(e.target.value)} className="min-h-[150px]" placeholder="Short bio..." />
                 </div>
-                <div className="space-y-2">
-                    <Label htmlFor="image">Profile Image URL</Label>
-                    <div className="flex gap-4">
-                        <Input value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} placeholder="https://..." />
-                        {imageUrl && (
-                            <div className="h-10 w-10 shrink-0 overflow-hidden rounded-md border bg-muted">
-                                <img src={imageUrl} alt="Preview" className="h-full w-full object-cover" />
-                            </div>
-                        )}
+                <div className="space-y-4">
+                    <Label>Profile Images</Label>
+
+                    {imageUrls.map((url, index) => (
+                        <div key={index} className="flex gap-2 items-start">
+                            <Input
+                                value={url}
+                                onChange={(e) => updateImage(index, e.target.value)}
+                                placeholder="https://..."
+                            />
+                            {url && (
+                                <div className="h-10 w-10 shrink-0 overflow-hidden rounded-md border bg-muted">
+                                    <img src={url} alt="Preview" className="h-full w-full object-cover" />
+                                </div>
+                            )}
+                            <Button variant="ghost" size="icon" onClick={() => removeImage(index)}>
+                                <X className="h-4 w-4" />
+                            </Button>
+                        </div>
+                    ))}
+
+                    <div className="flex gap-2">
+                        <Button variant="outline" size="sm" onClick={addImage} className="flex-1">
+                            <Plus className="mr-2 h-4 w-4" /> Add Image URL
+                        </Button>
+                        <Button variant="secondary" size="sm" onClick={fillStockImages} className="flex-1">
+                            <Save className="mr-2 h-4 w-4" /> Use Stock Photos
+                        </Button>
                     </div>
                 </div>
                 <div className="flex justify-end pt-4">

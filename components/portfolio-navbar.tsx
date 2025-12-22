@@ -162,7 +162,7 @@ export function PortfolioNavbar() {
 
                     {/* LEFT: Avatar */}
                     <Avatar onClick={() => handleNavClick("Hello! Tell me about this portfolio.")} className="cursor-pointer hover:scale-105 transition-transform">
-                        <AvatarImage src="/placeholder.png" alt="Profile" />
+                        <AvatarImage src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=200&auto=format&fit=crop" alt="Profile" />
                         <AvatarFallback>🙂</AvatarFallback>
                     </Avatar>
 

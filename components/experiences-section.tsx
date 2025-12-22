@@ -145,7 +145,7 @@ function ExperiencesContent({ container, experiences, category }: { container: H
                     className="absolute left-8 md:left-[35%] transform -translate-x-1/2 -translate-y-1/2 z-20"
                 >
                     <Avatar className="w-10 h-10 border-2 border-white shadow-lg">
-                        <AvatarImage src="/placeholder.png" alt="Traveler" />
+                        <AvatarImage src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=200&auto=format&fit=crop" alt="Traveler" />
                         <AvatarFallback className="bg-blue-600 text-white font-bold">F</AvatarFallback>
                     </Avatar>
                 </motion.div>
