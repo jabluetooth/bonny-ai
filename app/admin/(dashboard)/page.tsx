@@ -1,5 +1,7 @@
 import { AdminAboutForm } from "@/components/admin/forms/about";
 import { AdminProjectsForm } from "@/components/admin/forms/projects-form";
+import { AdminSkillsForm } from "@/components/admin/forms/skills-form";
+import { AdminExperiencesForm } from "@/components/admin/forms/experiences-form";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export default function AdminDashboardPage({
@@ -14,8 +16,8 @@ export default function AdminDashboardPage({
             {view === "dashboard" && <DashboardOverview />}
             {view === "about" && <AdminAboutForm />}
             {view === "projects" && <AdminProjectsForm />}
-            {view === "skills" && <PlaceholderView title="Skills" />}
-            {view === "experiences" && <PlaceholderView title="Experiences" />}
+            {view === "skills" && <AdminSkillsForm />}
+            {view === "experiences" && <AdminExperiencesForm />}
             {view === "chats" && <PlaceholderView title="Chats" />}
             {view === "analytics" && <PlaceholderView title="Analytics" />}
             {view === "settings" && <PlaceholderView title="Settings" />}

@@ -6,22 +6,12 @@ export const dynamic = 'force-dynamic';
 export async function GET() {
     const supabase = createClient();
 
-    // Fetch categories with their skills
+    // Fetch categories with their skills (Relational)
     const { data: categories, error } = await supabase
         .from('skill_categories')
         .select(`
-            id,
-            title,
-            icon_name,
-            sort_order,
-            skills (
-                id,
-                name,
-                description,
-                icon_url,
-                is_highlight,
-                sort_order
-            )
+            *,
+            skills (*)
         `)
         .order('sort_order', { ascending: true });
 
@@ -30,8 +20,7 @@ export async function GET() {
         return NextResponse.json({ error: 'Failed to fetch skills' }, { status: 500 });
     }
 
-    // Sort inner skills (Supabase doesn't always sort nested arrays easily in one go without complex modifiers)
-    // We sort properly in code to be safe.
+    // Prepare response for frontend
     const sortedCategories = categories?.map(cat => ({
         ...cat,
         skills: Array.isArray(cat.skills)

@@ -9,28 +9,15 @@ export async function GET() {
     try {
         const { data: experiences, error } = await supabase
             .from('experiences')
-            .select(`
-                *,
-                experience_skills (
-                    skills (
-                        name
-                    )
-                )
-            `)
-            .order('id', { ascending: true }); // Or order by date if you prefer
+            .select('*')
+            .order('id', { ascending: false });
 
         if (error) {
             console.error('Supabase Error:', error);
             return NextResponse.json({ error: error.message }, { status: 500 });
         }
 
-        // Transform relation to string array for frontend compatibility
-        const mappedExperiences = experiences?.map(e => ({
-            ...e,
-            tech_stack: e.experience_skills?.map((es: any) => es.skills?.name) || []
-        })) || [];
-
-        return NextResponse.json(mappedExperiences);
+        return NextResponse.json(experiences || []);
     } catch (err) {
         console.error('API Error:', err);
         return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
