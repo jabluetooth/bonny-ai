@@ -1,12 +1,12 @@
 "use client"
 
 import { createContext, useContext, useEffect, useState, ReactNode } from "react"
-import { createClient } from "@/lib/supabase-client"
+import { supabase } from "@/lib/supabase-client"
 
 interface ChatContextType {
     conversationId: string | null
     userId: string | null
-    messages: { role: 'user' | 'bot', content: string, component?: ReactNode }[]
+    messages: { role: 'user' | 'bot' | 'admin', content: string, component?: ReactNode, id?: string }[]
     sendMessage: (content: string, intent?: string, activeId?: string) => Promise<void>
     addMessage: (message: { role: 'user' | 'bot', content: string, component?: ReactNode }) => void
     isLoading: boolean
@@ -17,6 +17,7 @@ interface ChatContextType {
     setIsWelcomeOpen: (open: boolean) => void
     welcomePlaceholder: string
     isChatDisabled: boolean
+    isAdminMode: boolean
 }
 
 const ChatContext = createContext<ChatContextType>({
@@ -32,19 +33,28 @@ const ChatContext = createContext<ChatContextType>({
     isWelcomeOpen: false,
     setIsWelcomeOpen: () => { },
     welcomePlaceholder: "|",
-    isChatDisabled: false
+    isChatDisabled: false,
+    isAdminMode: false
 })
 
 export function ChatProvider({ children }: { children: ReactNode }) {
     const [conversationId, setConversationId] = useState<string | null>(null)
     const [userId, setUserId] = useState<string | null>(null)
+    const [messages, setMessages] = useState<{ role: 'user' | 'bot' | 'admin', content: string, component?: ReactNode, id?: string }[]>([])
     const [isLoading, setIsLoading] = useState(true) // Default to true to prevent flash
     const [userName, setUserName] = useState<string | null>(null)
-    const [messages, setMessages] = useState<{ role: 'user' | 'bot', content: string, component?: ReactNode }[]>([])
     const [isChatDisabled, setIsChatDisabled] = useState(false)
+    const [isAdminMode, setIsAdminMode] = useState(false)
 
-    // Create client once
-    const [supabase] = useState(() => createClient())
+    // --- Typing Animation Logic (Lifted State) ---
+    const [isWelcomeOpen, setIsWelcomeOpen] = useState(false)
+    const [welcomePlaceholder, setWelcomePlaceholder] = useState("|")
+    const [phraseIndex, setPhraseIndex] = useState(0)
+    const [charIndex, setCharIndex] = useState(0)
+    const [isDeleting, setIsDeleting] = useState(false)
+    const [isPausing, setIsPausing] = useState(false)
+
+    // Use singleton directly (removed state)
 
     // Expose startChat for manual initialization
     const startChat = async (name?: string, forceReset: boolean = true): Promise<string | null> => {
@@ -57,6 +67,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
                 setMessages([])
                 setConversationId(null)
                 setUserId(null)
+                setIsAdminMode(false)
             }
 
             // 1. Force New Session (User wanted to start fresh)
@@ -91,6 +102,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
             const data = await res.json()
             setConversationId(data.conversationId)
             setUserId(data.userId)
+            setIsAdminMode(data.isAdminMode || false)
 
             // Set name locally if we just provided it
             if (name) {
@@ -104,8 +116,6 @@ export function ChatProvider({ children }: { children: ReactNode }) {
             }
 
             if (data.messages && data.messages.length > 0) {
-                // If resuming, we might want to keep existing messages if we have them? 
-                // But for now, trusting the backend history is safer for sync.
                 setMessages(data.messages)
             }
             console.log("ChatProvider: Session started (or recovered)", data.conversationId)
@@ -135,8 +145,6 @@ export function ChatProvider({ children }: { children: ReactNode }) {
                     }
                 } else {
                     // User is new (No session) -> Do NOT auto-start.
-                    // Verification: We wait for the Welcome Modal to call startChat()
-                    // This creates a "Lazy Init" pattern.
                     if (mounted) {
                         setIsLoading(false); // Stop loading so Modal can appear
                     }
@@ -156,6 +164,102 @@ export function ChatProvider({ children }: { children: ReactNode }) {
         setMessages(prev => [...prev, message])
     }
 
+    // Realtime Listener for Admin Messages & Status
+    useEffect(() => {
+        if (!conversationId) return
+
+        const channel = supabase
+            .channel(`conversation:${conversationId}`)
+            .on(
+                'postgres_changes',
+                {
+                    event: 'INSERT',
+                    schema: 'public',
+                    table: 'messages',
+                    filter: `conversation_id=eq.${conversationId}`
+                },
+                (payload) => {
+                    const newMsg = payload.new as any
+                    // Prevent duplicates (if we sent it ourselves)
+                    // We only want to auto-add if it's from 'admin' 
+                    if (newMsg.sender_type === 'admin') {
+                        setMessages((prev) => {
+                            // Dedupe check just in case
+                            if (prev.some(m => (m as any).id === newMsg.id)) return prev
+
+                            return [...prev, {
+                                role: 'admin',
+                                content: newMsg.content,
+                                id: newMsg.id
+                            } as any]
+                        })
+                    }
+                }
+            )
+            .on(
+                'postgres_changes',
+                {
+                    event: 'UPDATE',
+                    schema: 'public',
+                    table: 'conversations',
+                    filter: `id=eq.${conversationId}`
+                },
+                (payload) => {
+                    const newConvo = payload.new as any
+                    // Sync Admin Mode instantly
+                    // If assigned_admin_id is present (truthy), admin mode is ON
+                    // If null/empty, admin mode is OFF
+                    setIsAdminMode(!!newConvo.assigned_admin_id)
+                }
+            )
+            .subscribe()
+
+        return () => {
+            supabase.removeChannel(channel)
+        }
+    }, [conversationId, supabase])
+
+    // Presence Tracking (Global Room)
+    useEffect(() => {
+        if (!conversationId) return
+
+        // Dedicated 'room:chat-presence' to avoid conflicts with other components
+        const channel = supabase.channel('room:chat-presence', {
+            config: {
+                presence: {
+                    key: conversationId,
+                },
+            },
+        })
+
+        channel.on('presence', { event: 'sync' }, () => {
+            // We just track our own presence
+        })
+
+        channel.subscribe(async (status) => {
+            if (status === 'SUBSCRIBED') {
+                console.log("Visitor Subscribed, Initial Track:", conversationId)
+                await channel.track({
+                    online_at: new Date().toISOString(),
+                    conversationId: conversationId
+                })
+            }
+        })
+
+        // Keep-Alive: Database Heartbeat (Robust)
+        const keepAlive = setInterval(async () => {
+            await supabase
+                .from('conversations')
+                .update({ last_seen_at: new Date().toISOString() })
+                .eq('id', conversationId)
+        }, 10000) // Update DB every 10s
+
+        return () => {
+            clearInterval(keepAlive)
+            supabase.removeChannel(channel)
+        }
+    }, [conversationId, supabase])
+
     const sendMessage = async (content: string, intent?: string, activeId?: string) => {
         const currentId = activeId || conversationId;
 
@@ -165,9 +269,14 @@ export function ChatProvider({ children }: { children: ReactNode }) {
         }
         if (!content.trim()) return
 
-        // Optimistic UI
-        setMessages(prev => [...prev, { role: 'user', content }])
-        setIsLoading(true)
+        // Optimistic UI for user message
+        const optimisticId = Date.now().toString()
+        setMessages(prev => [...prev, { role: 'user', content, id: optimisticId } as any])
+
+        // ONLY show loading if NOT in admin mode
+        if (!isAdminMode) {
+            setIsLoading(true)
+        }
 
         try {
             let res = await fetch('/api/chat/send', {
@@ -196,7 +305,16 @@ export function ChatProvider({ children }: { children: ReactNode }) {
                 if (data.limitReached) {
                     setIsChatDisabled(true)
                 }
-                setMessages(prev => [...prev, { role: 'bot', content: data.reply }])
+
+                // If the backend says manual_mode, update our local state
+                if (data.status === 'manual_mode') {
+                    setIsAdminMode(true)
+                }
+
+                // Determine if we should add bot reply
+                if (data.reply) {
+                    setMessages(prev => [...prev, { role: 'bot', content: data.reply }])
+                }
             } else {
                 console.error("ChatProvider: Send error", data.error)
                 setMessages(prev => [...prev, { role: 'bot', content: "Error: Could not send message." }])
@@ -209,15 +327,6 @@ export function ChatProvider({ children }: { children: ReactNode }) {
             setIsLoading(false)
         }
     }
-
-    const [isWelcomeOpen, setIsWelcomeOpen] = useState(false)
-
-    // --- Typing Animation Logic (Lifted State) ---
-    const [welcomePlaceholder, setWelcomePlaceholder] = useState("|")
-    const [phraseIndex, setPhraseIndex] = useState(0)
-    const [charIndex, setCharIndex] = useState(0)
-    const [isDeleting, setIsDeleting] = useState(false)
-    const [isPausing, setIsPausing] = useState(false)
 
     const phrases = [
         "welcome to bonny ai",
@@ -277,7 +386,8 @@ export function ChatProvider({ children }: { children: ReactNode }) {
             isWelcomeOpen,
             setIsWelcomeOpen,
             welcomePlaceholder,
-            isChatDisabled
+            isChatDisabled,
+            isAdminMode
         }}>
             {children}
         </ChatContext.Provider>

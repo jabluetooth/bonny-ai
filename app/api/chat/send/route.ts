@@ -58,6 +58,19 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: 'Failed to save message' }, { status: 500 });
         }
 
+        // CHECK ADMIN STATUS: If admin has taken over, DO NOT Auto-Reply
+        // We need to fetch the conversation status first (or we could have done it earlier)
+        const { data: convStatus } = await supabase
+            .from('conversations')
+            .select('assigned_admin_id')
+            .eq('id', conversationId)
+            .single();
+
+        if (convStatus?.assigned_admin_id) {
+            // Admin is controlling. Just acknowledge receipt.
+            return NextResponse.json({ reply: null, status: 'manual_mode' });
+        }
+
         // CHECK LIMIT: Count user messages (Checking previously stored messages)
         const { count, error: countError } = await supabase
             .from('messages')

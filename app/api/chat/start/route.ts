@@ -64,7 +64,7 @@ export async function POST(req: Request) {
 
     const findConversationPromise = supabase
         .from('conversations')
-        .select('id')
+        .select('id, assigned_admin_id') // Fetch admin status
         .eq('user_id', user.id)
         .order('created_at', { ascending: false })
         .limit(1)
@@ -77,10 +77,11 @@ export async function POST(req: Request) {
     }
 
     let conversationId = convoResult.data?.id;
+    let assignedAdminId = convoResult.data?.assigned_admin_id; // Capture existing status
     let messages: any[] = [];
 
     if (conversationId) {
-        // Fetch history
+        // Fetch history (unchanged)
         const { data: history } = await supabase
             .from('messages')
             .select('sender_type, content')
@@ -99,7 +100,7 @@ export async function POST(req: Request) {
         const { data: convo, error: convoError } = await supabase
             .from('conversations')
             .insert({ user_id: user.id })
-            .select('id')
+            .select('id, assigned_admin_id') // Select admin status too (null by default)
             .single();
 
         if (convoError) {
@@ -107,11 +108,13 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: 'Failed to start conversation' }, { status: 500 });
         }
         conversationId = convo.id;
+        assignedAdminId = convo.assigned_admin_id;
     }
 
     return NextResponse.json({
         conversationId,
         userId: user.id,
-        messages // Return history
+        isAdminMode: !!assignedAdminId, // Boolean flag for frontend
+        messages
     });
 }

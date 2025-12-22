@@ -162,6 +162,9 @@ export function Chatbox() {
                                 const { cleanContent, highlightSkill, highlightCategory, showSkills, showProjects, projectCategory, showExperiences, experienceCategory, showAbout, showInterests, showVision, showBackground } = getMessageData(msg.content);
 
                                 const isLatestBotMessage = msg.role === 'bot' && i === messages.length - 1;
+                                const isAdmin = msg.role === 'admin' || (msg as any).sender_type === 'admin';
+                                const isUser = msg.role === 'user';
+
                                 const messageId = msg.id || i;
                                 const hasTyped = typedMessages.has(messageId);
                                 const shouldAnimate = isLatestBotMessage && !hasTyped;
@@ -171,7 +174,7 @@ export function Chatbox() {
                                 const showAboutHeuristic = prevMsg && prevMsg.role === 'user' && prevMsg.content.includes("Tell me about yourself");
 
                                 return (
-                                    <div key={msg.id || i} className={`flex gap-3 w-full mb-6 min-w-0 ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
+                                    <div key={msg.id || i} className={`flex gap-3 w-full mb-6 min-w-0 ${isUser ? "justify-end" : "justify-start"}`}>
                                         {/* Bot Avatar (Only for bot) */}
                                         {msg.role === "bot" && (
                                             <Avatar className="h-8 w-8 shrink-0 border border-border/30 shadow-sm">
@@ -179,13 +182,16 @@ export function Chatbox() {
                                                 <AvatarFallback className="bg-primary/10 text-primary"><Bot size={14} /></AvatarFallback>
                                             </Avatar>
                                         )}
+                                        {/* Admin Avatar fallback or distinctive icon could go here, for now keeping it simple */}
 
                                         {/* Message Content Column (Bubble + Component) */}
-                                        <div className={`flex flex-col gap-2 w-full min-w-0 ${msg.role === "user" ? "items-end" : "items-start"}`}>
+                                        <div className={`flex flex-col gap-2 w-full min-w-0 ${isUser ? "items-end" : "items-start"}`}>
                                             <div
-                                                className={`rounded-[20px] px-5 py-2.5 text-[15px] shadow-sm leading-relaxed break-words whitespace-pre-wrap [word-break:break-word] min-w-0 max-w-[85%] overflow-hidden ${msg.role === "user"
-                                                    ? "bg-gradient-to-br from-blue-600/90 to-blue-600/70 backdrop-blur-md border border-blue-400/30 shadow-xl text-white rounded-br-none" // Darker 3D Glass Blue
-                                                    : "bg-gradient-to-br from-muted/80 to-muted/40 backdrop-blur-md border border-white/10 shadow-xl text-foreground rounded-bl-none" // 3D Glass Gray
+                                                className={`rounded-[20px] px-5 py-2.5 text-[15px] shadow-sm leading-relaxed break-words whitespace-pre-wrap [word-break:break-word] min-w-0 max-w-[85%] overflow-hidden ${isUser
+                                                    ? "bg-gradient-to-br from-blue-600/90 to-blue-600/70 backdrop-blur-md border border-blue-400/30 shadow-xl text-white rounded-br-none"
+                                                    : isAdmin
+                                                        ? "bg-gradient-to-br from-red-600/90 to-red-600/70 backdrop-blur-md border border-red-400/30 shadow-xl text-white rounded-bl-none" // Admin Red
+                                                        : "bg-gradient-to-br from-muted/80 to-muted/40 backdrop-blur-md border border-white/10 shadow-xl text-foreground rounded-bl-none"
                                                     }`}
                                             >
                                                 {shouldAnimate ? (
