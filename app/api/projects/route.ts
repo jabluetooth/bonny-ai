@@ -1,16 +1,15 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { createClient } from '@/lib/supabase-server';
+
+export const dynamic = 'force-dynamic';
 
 export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const categoryQuery = searchParams.get('category')?.toLowerCase();
 
-    const supabase = createClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-    );
+    const supabase = createClient();
 
-    console.log('[API] Check connection:', process.env.NEXT_PUBLIC_SUPABASE_URL ? 'URL Found' : 'URL Missing');
+    console.log('[API] Check connection: Using Server Client');
 
     const { data: projects, error } = await supabase
         .from('projects')

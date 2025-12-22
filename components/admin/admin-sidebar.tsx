@@ -16,7 +16,7 @@ import {
     GalleryVerticalEnd
 } from "lucide-react"
 import Link from "next/link"
-import { usePathname } from "next/navigation"
+import { usePathname, useSearchParams } from "next/navigation"
 
 import {
     Sidebar,
@@ -37,43 +37,51 @@ const data = {
         {
             title: "Dashboard",
             url: "/admin",
+            view: "dashboard",
             icon: LayoutDashboard,
         },
         {
             title: "About",
-            url: "/admin/about",
+            url: "/admin?view=about",
+            view: "about",
             icon: User,
         },
         {
             title: "Projects",
-            url: "/admin/projects",
+            url: "/admin?view=projects",
+            view: "projects",
             icon: Briefcase,
         },
         {
             title: "Skills",
-            url: "/admin/skills",
+            url: "/admin?view=skills",
+            view: "skills",
             icon: Code,
         },
         {
             title: "Experiences",
-            url: "/admin/experiences",
+            url: "/admin?view=experiences",
+            view: "experiences",
             icon: Clock,
         },
     ],
     navDigital: [
         {
             title: "Chats",
-            url: "/admin/chats",
+            url: "/admin?view=chats",
+            view: "chats",
             icon: MessageSquare,
         },
         {
             title: "Analytics",
-            url: "/admin/analytics",
+            url: "/admin?view=analytics",
+            view: "analytics",
             icon: BarChart3,
         },
         {
             title: "Settings",
-            url: "/admin/settings",
+            url: "/admin?view=settings",
+            view: "settings",
             icon: Settings,
         },
     ]
@@ -81,6 +89,8 @@ const data = {
 
 export function AdminSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     const pathname = usePathname()
+    const searchParams = useSearchParams()
+    const currentView = searchParams.get("view") || "dashboard"
 
     return (
         <Sidebar collapsible="icon" {...props}>
@@ -88,7 +98,7 @@ export function AdminSidebar({ ...props }: React.ComponentProps<typeof Sidebar>)
                 <SidebarMenu>
                     <SidebarMenuItem>
                         <SidebarMenuButton size="lg" asChild className="group-data-[collapsible=icon]:justify-center">
-                            <Link href="/">
+                            <Link href="/admin">
                                 <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
                                     <Command className="size-4" />
                                 </div>
@@ -110,7 +120,7 @@ export function AdminSidebar({ ...props }: React.ComponentProps<typeof Sidebar>)
                                 <SidebarMenuItem key={item.title}>
                                     <SidebarMenuButton
                                         asChild
-                                        isActive={pathname === item.url}
+                                        isActive={currentView === item.view}
                                         tooltip={item.title}
                                     >
                                         <Link href={item.url}>
@@ -132,7 +142,7 @@ export function AdminSidebar({ ...props }: React.ComponentProps<typeof Sidebar>)
                                 <SidebarMenuItem key={item.title}>
                                     <SidebarMenuButton
                                         asChild
-                                        isActive={pathname === item.url}
+                                        isActive={currentView === item.view}
                                         tooltip={item.title}
                                     >
                                         <Link href={item.url}>

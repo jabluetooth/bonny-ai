@@ -1,10 +1,11 @@
-import { createClient } from '@/lib/supabase-client';
+import { createClient } from '@/lib/supabase-server';
 import { NextResponse } from 'next/server';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET() {
     const supabase = createClient();
+    console.log("API: Fetching vision cards...");
 
     try {
         const { data, error } = await supabase

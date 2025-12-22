@@ -28,8 +28,10 @@ export function BackgroundCards() {
     useEffect(() => {
         const fetchCards = async () => {
             try {
-                const res = await fetch('/api/about/background');
+                // Cache bust to ensure fresh data
+                const res = await fetch(`/api/about/background?t=${new Date().getTime()}`);
                 const json = await res.json();
+                console.log("Background Cards Data:", json);
 
                 if (json.data) {
                     // Map DB snake_case to component expected props if needed, or just use what we assume

@@ -1,8 +1,11 @@
-import { createClient } from '@/lib/supabase-client';
+import { createClient } from '@/lib/supabase-server';
 import { NextResponse } from 'next/server';
+
+export const dynamic = 'force-dynamic';
 
 export async function GET() {
     const supabase = createClient();
+    console.log("API: Fetching author profile...");
 
     try {
         const { data, error } = await supabase
@@ -21,11 +24,7 @@ export async function GET() {
             return NextResponse.json({ error: error.message }, { status: 500 });
         }
 
-        return NextResponse.json({ data }, {
-            headers: {
-                'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=59',
-            },
-        });
+        return NextResponse.json({ data });
     } catch (err) {
         console.error("Internal Server Error:", err);
         return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
