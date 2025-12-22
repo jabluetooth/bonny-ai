@@ -1,6 +1,9 @@
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { AdminSidebar } from "@/components/admin/admin-sidebar";
+import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { Separator } from "@/components/ui/separator";
 
 export default async function AdminLayout({
     children,
@@ -45,16 +48,20 @@ export default async function AdminLayout({
     }
 
     return (
-        <div className="flex min-h-screen flex-col bg-muted/40">
-            <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6">
-                <h1 className="text-lg font-semibold">Admin Dashboard</h1>
-                <div className="ml-auto flex items-center gap-2">
-                    <span className="text-xs text-muted-foreground">{user.email}</span>
+        <SidebarProvider>
+            <AdminSidebar />
+            <SidebarInset>
+                <header className="flex h-16 shrink-0 items-center gap-2 border-b transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
+                    <div className="flex items-center gap-2 px-4">
+                        <SidebarTrigger className="-ml-1" />
+                        <Separator orientation="vertical" className="mr-2 h-4" />
+                        <span className="text-sm font-medium">Dashboard</span>
+                    </div>
+                </header>
+                <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
+                    {children}
                 </div>
-            </header>
-            <main className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8">
-                {children}
-            </main>
-        </div>
+            </SidebarInset>
+        </SidebarProvider>
     );
 }
