@@ -1,4 +1,5 @@
 import { AdminAboutForm } from "@/components/admin/forms/about";
+import { AdminProjectsForm } from "@/components/admin/forms/projects-form";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export default function AdminDashboardPage({
@@ -12,7 +13,7 @@ export default function AdminDashboardPage({
         <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
             {view === "dashboard" && <DashboardOverview />}
             {view === "about" && <AdminAboutForm />}
-            {view === "projects" && <PlaceholderView title="Projects" />}
+            {view === "projects" && <AdminProjectsForm />}
             {view === "skills" && <PlaceholderView title="Skills" />}
             {view === "experiences" && <PlaceholderView title="Experiences" />}
             {view === "chats" && <PlaceholderView title="Chats" />}

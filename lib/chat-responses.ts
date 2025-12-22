@@ -17,16 +17,16 @@ const handleProjects = (intent: string | undefined, content: string, context: an
 
     if (lowerContent.includes('web') || intent === 'QUERY_PROJECTS_WEB') {
         const webVars = [
-            "[[SHOW_PROJECTS]] Here are my **Web Development** projects{{name}}! 🌐",
-            "[[SHOW_PROJECTS]] I've built some exciting things for the web. Check them out{{name}} 👇",
-            "[[SHOW_PROJECTS]] Exploring the full stack is my passion. Here are my web projects! 💻"
+            "[[PROJECTS: Web Development]] Here are my **Web Development** projects{{name}}! 🌐",
+            "[[PROJECTS: Web Development]] I've built some exciting things for the web. Check them out{{name}} 👇",
+            "[[PROJECTS: Web Development]] Exploring the full stack is my passion. Here are my web projects! 💻"
         ];
         return pickVariation(webVars, name);
     } else if (lowerContent.includes('ai') || lowerContent.includes('machine learning') || intent === 'QUERY_PROJECTS_AI') {
         const aiVars = [
-            "[[SHOW_PROJECTS]] Check out my **AI & Machine Learning** innovations{{name}}! 🤖",
-            "[[SHOW_PROJECTS]] Here's how I'm using AI to solve problems. Take a look{{name}}!",
-            "[[SHOW_PROJECTS]] Diving into the future with AI & ML. Here are projects 🧠"
+            "[[PROJECTS: AI & ML]] Check out my **AI & Machine Learning** innovations{{name}}! 🤖",
+            "[[PROJECTS: AI & ML]] Here's how I'm using AI to solve problems. Take a look{{name}}!",
+            "[[PROJECTS: AI & ML]] Diving into the future with AI & ML. Here are projects 🧠"
         ];
         return pickVariation(aiVars, name);
     } else {

@@ -68,7 +68,7 @@ export async function POST(req: Request) {
         if (countError) console.error('Error counting messages:', countError);
 
         const safeCount = count ?? 0;
-        const MESSAGE_LIMIT = 10;
+        const MESSAGE_LIMIT = 100;
 
         if (safeCount >= MESSAGE_LIMIT) {
             const limitMsg = "I'm sorry, you've reached the message limit for this preview. Thank you for chatting!";
