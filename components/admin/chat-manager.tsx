@@ -5,7 +5,7 @@ import { createBrowserClient } from "@supabase/ssr" // Still needed for TakeOver
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Loader2, Send, Play, Pause, RefreshCcw } from "lucide-react"
+import { Loader2, Send, Play, Pause, RefreshCcw, ArrowLeft } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
 import { format } from "date-fns"
@@ -28,8 +28,31 @@ interface Message {
     created_at: string
 }
 
+import { useAdminSettings } from "@/hooks/use-admin-settings"
+
 export function ChatManager() {
-    const { conversations, isLoading, refresh, onlineUsers } = useAdminChat()
+    const { soundEnabled, notificationsEnabled } = useAdminSettings()
+
+    const { conversations, isLoading, refresh, onlineUsers } = useAdminChat({
+        onNewMessage: (msg) => {
+            // Only notify for USER messages
+            if (msg.sender_type === 'user') {
+                if (soundEnabled) {
+                    // Try to play sound - requires /notification.mp3 in public folder
+                    const audio = new Audio("/notification.mp3")
+                    audio.play().catch(e => console.log("Audio play failed:", e))
+                }
+
+                if (notificationsEnabled && Notification.permission === "granted") {
+                    new Notification("New Message", {
+                        body: msg.content,
+                        icon: "/bot-avatar.png",
+                        tag: "new-message"
+                    })
+                }
+            }
+        }
+    })
 
     // Local UI State
     const [selectedId, setSelectedId] = useState<string | null>(null)
@@ -58,10 +81,14 @@ export function ChatManager() {
         })
         .slice(0, 10)
 
+    // Mobile Responsive Logic
+    // On mobile (hidden by default on md), we show List if !selectedId, and Chat if selectedId.
+    // On desktop (md:flex), we show both side-by-side.
+
     return (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 h-[600px]">
-            {/* List */}
-            <Card className="col-span-1 flex flex-col h-full">
+        <div className="flex flex-col md:grid md:grid-cols-3 gap-4 h-[calc(100vh-200px)] min-h-[500px]">
+            {/* List - Hidden on mobile if chat is selected */}
+            <Card className={cn("col-span-1 flex flex-col h-full", selectedId ? "hidden md:flex" : "flex")}>
                 <CardHeader className="py-3 px-4 border-b">
                     <CardTitle className="text-sm font-medium flex items-center justify-between">
                         <div className="flex flex-col">
@@ -119,11 +146,16 @@ export function ChatManager() {
                 </div>
             </Card >
 
-            {/* Chat Window */}
-            < Card className="col-span-1 md:col-span-2 flex flex-col h-full overflow-hidden" >
+            {/* Chat Window - Hidden on mobile if NO chat selected */}
+            < Card className={cn("col-span-1 md:col-span-2 flex-col h-full overflow-hidden", !selectedId ? "hidden md:flex" : "flex")} >
                 {
                     selectedConv ? (
-                        <ActiveChatWindow conversation={selectedConv} supabase={supabase} refresh={refresh} />
+                        <ActiveChatWindow
+                            conversation={selectedConv}
+                            supabase={supabase}
+                            refresh={refresh}
+                            onBack={() => setSelectedId(null)}
+                        />
                     ) : (
                         <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
                             <p>Select a conversation to monitor</p>
@@ -135,7 +167,17 @@ export function ChatManager() {
     )
 }
 
-function ActiveChatWindow({ conversation, supabase, refresh }: { conversation: Conversation, supabase: any, refresh: () => void }) {
+function ActiveChatWindow({
+    conversation,
+    supabase,
+    refresh,
+    onBack
+}: {
+    conversation: Conversation,
+    supabase: any,
+    refresh: () => void,
+    onBack: () => void
+}) {
     const [input, setInput] = useState("")
     const [isSending, setIsSending] = useState(false)
     const logsRef = useRef<HTMLDivElement>(null)
@@ -195,6 +237,9 @@ function ActiveChatWindow({ conversation, supabase, refresh }: { conversation: C
         <>
             <div className="p-3 border-b flex items-center justify-between bg-muted/20">
                 <div className="flex items-center gap-2">
+                    <Button variant="ghost" size="icon" className="h-8 w-8 md:hidden -ml-2" onClick={onBack}>
+                        <ArrowLeft className="h-4 w-4" />
+                    </Button>
                     <span className="font-semibold">Visitor {conversation.id.slice(0, 6)}</span>
                     {conversation.assigned_admin_id ?
                         <Badge variant="destructive" className="gap-1"><Pause className="w-3 h-3" /> Bot Paused</Badge> :

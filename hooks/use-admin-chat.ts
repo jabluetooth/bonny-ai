@@ -20,7 +20,11 @@ export interface Message {
     created_at: string
 }
 
-export function useAdminChat() {
+interface UseAdminChatOptions {
+    onNewMessage?: (msg: Message) => void
+}
+
+export function useAdminChat({ onNewMessage }: UseAdminChatOptions = {}) {
     const [conversations, setConversations] = useState<Conversation[]>([])
     const [isLoading, setIsLoading] = useState(true)
     const [isInitialLoad, setIsInitialLoad] = useState(true)
@@ -125,6 +129,11 @@ export function useAdminChat() {
                     table: 'messages'
                 },
                 (payload) => {
+                    // Trigger callback if provided
+                    if (onNewMessage) {
+                        onNewMessage(payload.new as Message)
+                    }
+
                     // When a new message arrives, we DO need to refetch to get the full conversation structure
                     fetchConversations(false)
                 }

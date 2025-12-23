@@ -16,12 +16,12 @@ export async function SiteFooter() {
                 </div>
 
                 {/* Bottom Center: Copyright */}
-                <div className="text-xs text-muted-foreground absolute left-1/2 -translate-x-1/2">
+                <div className="text-xs text-muted-foreground md:absolute md:left-1/2 md:-translate-x-1/2">
                     &copy; {new Date().getFullYear()} <b>Bonny AI</b>
                 </div>
 
                 {/* Bottom Right: Online Status */}
-                <div className="flex items-center">
+                <div className="hidden md:flex items-center">
                     <Status status="online" className="px-2 py-0.5 h-6">
                         <StatusIndicator />
                         <StatusLabel className="text-xs">Online</StatusLabel>

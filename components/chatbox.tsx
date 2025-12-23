@@ -380,7 +380,10 @@ export function Chatbox() {
                             spellCheck={false}
                             value={input}
                             onChange={(e) => setInput(e.target.value)}
-                            onFocus={() => setIsInputFocused(true)}
+                            onFocus={() => {
+                                setIsInputFocused(true);
+                                setTimeout(scrollToBottom, 300); // Delay for keyboard animation
+                            }}
                             onBlur={() => setIsInputFocused(false)}
                             placeholder={isChatDisabled ? "Message limit reached." : "Type a message..."}
                             className="w-full h-14 pl-6 pr-16 rounded-full shadow-md border-border/40 bg-background/80 backdrop-blur-md focus-visible:ring-1 focus-visible:ring-primary/30 transition-shadow hover:shadow-lg text-lg relative z-10"

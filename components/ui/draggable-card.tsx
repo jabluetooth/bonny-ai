@@ -165,7 +165,7 @@ export const DraggableCardBody = ({
             onMouseMove={handleMouseMove}
             onMouseLeave={handleMouseLeave}
             className={cn(
-                "absolute h-96 w-80 rounded-md cursor-grab active:cursor-grabbing",
+                "absolute h-80 sm:h-96 w-[75vw] sm:w-80 rounded-md cursor-grab active:cursor-grabbing",
                 className,
             )}
         >

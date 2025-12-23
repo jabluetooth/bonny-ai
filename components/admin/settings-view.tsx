@@ -1,5 +1,7 @@
 "use client"
 
+import { useAdminSettings } from "@/hooks/use-admin-settings"
+
 import { useState, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -16,20 +18,19 @@ export function SettingsView() {
     const [isLoading, setIsLoading] = useState(false)
 
     // --- Settings State ---
-    const [soundEnabled, setSoundEnabled] = useState(true)
-    const [notificationsEnabled, setNotificationsEnabled] = useState(false)
+    const {
+        soundEnabled,
+        setSoundEnabled,
+        notificationsEnabled,
+        setNotificationsEnabled
+    } = useAdminSettings()
+
+    // System Prompt State
     const [systemPrompt, setSystemPrompt] = useState(`You are Fil Heinz O. Re La Torre, a passionate and innovative Software Engineer.
 This is YOUR portfolio website. You are chatting with a visitor who is interested in your work.
 
 YOUR GOAL:
 Impress the visitor with your skills and projects. Be helpful, enthusiastic, and professional.`)
-
-    // Check Notification Permission on load
-    useEffect(() => {
-        if (typeof window !== "undefined" && "Notification" in window) {
-            setNotificationsEnabled(Notification.permission === "granted")
-        }
-    }, [])
 
     const handleSavePrompt = () => {
         setIsLoading(true)
@@ -38,23 +39,6 @@ Impress the visitor with your skills and projects. Be helpful, enthusiastic, and
             setIsLoading(false)
             toast.success("AI Persona updated successfully!")
         }, 800)
-    }
-
-    const toggleNotifications = async () => {
-        if (!notificationsEnabled) {
-            const permission = await Notification.requestPermission()
-            if (permission === "granted") {
-                setNotificationsEnabled(true)
-                toast.success("Browser notifications enabled")
-                new Notification("Test Notification", { body: "Notifications are working!" })
-            } else {
-                toast.error("Permission denied. Check browser settings.")
-            }
-        } else {
-            // Just local disable, can't revoke permission programmatically
-            setNotificationsEnabled(false)
-            toast.info("Notifications disabled")
-        }
     }
 
     const handleSignOut = async () => {
@@ -142,7 +126,7 @@ Impress the visitor with your skills and projects. Be helpful, enthusiastic, and
                                     <span>Browser Notifications</span>
                                     <span className="font-normal text-xs text-muted-foreground">Show a popup bubble on your desktop.</span>
                                 </Label>
-                                <Switch id="browser-notifs" checked={notificationsEnabled} onCheckedChange={toggleNotifications} />
+                                <Switch id="browser-notifs" checked={notificationsEnabled} onCheckedChange={setNotificationsEnabled} />
                             </div>
                         </CardContent>
                     </Card>
