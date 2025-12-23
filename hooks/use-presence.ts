@@ -4,50 +4,38 @@ import { useEffect, useState } from "react"
 import { supabase } from "@/lib/supabase-client"
 
 export function usePresence() {
-    const [onlineUsers, setOnlineUsers] = useState<Map<string, Date>>(new Map())
-    const [status, setStatus] = useState<string>("DISCONNECTED")
-
-    // Use singleton directly (no useState needed for client itself)
+    // We only care about the Set of online conversation IDs
+    const [onlineUsers, setOnlineUsers] = useState<Set<string>>(new Set())
 
     useEffect(() => {
-        // Dedicated channel for Chat Presence (Isolated from Visitor Counter)
         const channel = supabase.channel('room:chat-presence')
 
-        channel.on('presence', { event: 'sync' }, () => {
-            const newState = channel.presenceState()
-            console.log("Chat Presence Sync:", newState) // DEBUG
+        const updateState = () => {
+            const state = channel.presenceState()
+            const onlineIds = new Set<string>()
 
-            const newUsers = new Map<string, Date>()
-            const now = new Date()
-
-            // 1. Check Payload
-            Object.values(newState).forEach((presences: any) => {
+            Object.values(state).forEach((presences: any) => {
                 presences.forEach((p: any) => {
+                    // Robustly check for conversationId in the payload
                     if (p.conversationId) {
-                        // Use the online_at from payload if available, else now
-                        const time = p.online_at ? new Date(p.online_at) : now
-                        newUsers.set(p.conversationId, time)
+                        onlineIds.add(p.conversationId)
                     }
                 })
             })
+            // console.log("Presence Update:", Array.from(onlineIds)) // Debug only
+            setOnlineUsers(onlineIds)
+        }
 
-            // 2. Check Keys (Fallback)
-            Object.keys(newState).forEach(key => {
-                if (key.length > 30 && !newUsers.has(key)) {
-                    newUsers.set(key, now)
-                }
-            })
-            setOnlineUsers(newUsers)
-        })
-            .subscribe((state) => {
-                setStatus(state)
-            })
+        channel
+            .on('presence', { event: 'sync' }, updateState)
+            .on('presence', { event: 'join' }, updateState)
+            .on('presence', { event: 'leave' }, updateState)
+            .subscribe()
 
         return () => {
             supabase.removeChannel(channel)
         }
-    }, [supabase])
+    }, [])
 
-    return { onlineUsers, status }
+    return { onlineUsers }
 }
-

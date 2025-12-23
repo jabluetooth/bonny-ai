@@ -86,7 +86,6 @@ export function ChatManager() {
                                             {isOnline && (
                                                 <div className="flex items-center gap-1">
                                                     <span className="h-2 w-2 rounded-full bg-green-500 animate-pulse shadow-[0_0_8px_rgba(34,197,94,0.6)]" />
-                                                    {conv.last_seen_at && <span className="text-[10px] text-muted-foreground">{format(new Date(conv.last_seen_at), 'HH:mm:ss')}</span>}
                                                 </div>
                                             )}
                                         </div>

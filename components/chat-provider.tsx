@@ -1,6 +1,6 @@
 "use client"
 
-import { createContext, useContext, useEffect, useState, ReactNode } from "react"
+import { createContext, useContext, useEffect, useState, useRef, ReactNode } from "react"
 import { supabase } from "@/lib/supabase-client"
 
 interface ChatContextType {
@@ -227,7 +227,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
         const channel = supabase.channel('room:chat-presence', {
             config: {
                 presence: {
-                    key: conversationId,
+                    key: conversationId, // Use convo ID as the unique presence key
                 },
             },
         })
@@ -237,14 +237,11 @@ export function ChatProvider({ children }: { children: ReactNode }) {
         })
 
         channel.subscribe(async (status) => {
-            console.log("Visitor: Presence Channel Status:", status) // DEBUG
             if (status === 'SUBSCRIBED') {
-                console.log("Visitor: Subscribed, Tracking Presence for:", conversationId)
                 await channel.track({
                     online_at: new Date().toISOString(),
                     conversationId: conversationId
                 })
-                console.log("Visitor: Tracking Initiated") // DEBUG
             }
         })
 
@@ -267,8 +264,14 @@ export function ChatProvider({ children }: { children: ReactNode }) {
         if (!conversationId) return
 
         const handleUnload = () => {
-            // Synchronous cleanup if possible, or beacon. 
-            // Supabase disconnect is usually fast enough if triggered here.
+            // 1. Explicitly untrack presence (sends 'leave')
+            const channel = supabase.channel('room:chat-presence')
+            channel.untrack().then(() => {
+                // 2. Kill socket connection
+                supabase.removeAllChannels()
+            })
+
+            // Backup: Fire and forget remove if untrack hangs
             supabase.removeAllChannels()
         }
 

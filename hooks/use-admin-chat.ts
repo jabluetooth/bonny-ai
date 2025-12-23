@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState, useCallback, useRef } from "react"
+import { useEffect, useState, useCallback } from "react"
 import { supabase } from "@/lib/supabase-client"
 
 export interface Conversation {
@@ -58,7 +58,7 @@ export function useAdminChat() {
                 )
             `)
             .order('updated_at', { ascending: false })
-            .limit(50) // Increased limit for better visibility
+            .limit(50)
 
         if (data) {
             const processed = processConversations(data)
@@ -74,42 +74,41 @@ export function useAdminChat() {
         fetchConversations(true)
 
         // Presence Subscription (Global Room)
-        console.log("Admin: Initializing Presence Channel room:chat-presence")
+        // Reverting to the logic that was verified as working in commit 4d86c940
+        // Presence Subscription (Global Room)
+        // Aggressive Full Sync Strategy: On ANY event, recalc from scratch.
         const presenceChannel = supabase.channel('room:chat-presence')
-            .on('presence', { event: 'sync' }, () => {
-                const newState = presenceChannel.presenceState()
-                console.log("Admin: Presence Sync Event", newState) // DEBUG
-                const onlineIds = new Set<string>()
 
-                // key is the conversationId (as set in chat-provider)
-                Object.keys(newState).forEach(key => {
-                    if (newState[key] && newState[key].length > 0) {
-                        onlineIds.add(key)
-                    }
-                })
+        const updateOnlineUsers = () => {
+            const newState = presenceChannel.presenceState()
+            const onlineIds = new Set<string>()
 
-                console.log("Admin: Calculated Online IDs", Array.from(onlineIds)) // DEBUG
-                setOnlineUsers(onlineIds)
+            // Robust check: Look at both keys AND payloads
+            Object.entries(newState).forEach(([key, presences]) => {
+                // 1. If the key itself looks like a conversation ID (UUID)
+                if (key && key.length > 20) {
+                    onlineIds.add(key)
+                }
+
+                // 2. Deep scan of payloads (in case key is random)
+                if (Array.isArray(presences)) {
+                    presences.forEach((p: any) => {
+                        if (p.conversationId) {
+                            onlineIds.add(p.conversationId)
+                        }
+                    })
+                }
             })
-            .on('presence', { event: 'join' }, ({ key, newPresences }) => {
-                console.log('Admin: Presence Join', key, newPresences) // DEBUG
-                setOnlineUsers(prev => {
-                    const next = new Set(prev)
-                    next.add(key)
-                    return next
-                })
-            })
-            .on('presence', { event: 'leave' }, ({ key, leftPresences }) => {
-                console.log('Admin: Presence Leave', key, leftPresences) // DEBUG
-                setOnlineUsers(prev => {
-                    const next = new Set(prev)
-                    next.delete(key)
-                    return next
-                })
-            })
-            .subscribe((status) => {
-                console.log("Admin: Presence Channel Status:", status) // DEBUG
-            })
+
+            // console.log("Admin: Computed Online IDs", Array.from(onlineIds))
+            setOnlineUsers(onlineIds)
+        }
+
+        presenceChannel
+            .on('presence', { event: 'sync' }, updateOnlineUsers)
+            .on('presence', { event: 'join' }, updateOnlineUsers)
+            .on('presence', { event: 'leave' }, updateOnlineUsers)
+            .subscribe()
 
         // Real-time Subscription for DB changes
         const dbChannel = supabase
@@ -123,8 +122,6 @@ export function useAdminChat() {
                 },
                 (payload) => {
                     // When a new message arrives, we DO need to refetch to get the full conversation structure
-                    // Or we could optimistically add it, but fetching is safer for message integrity
-                    // We don't show loading here to prevent flicker
                     fetchConversations(false)
                 }
             )
@@ -137,36 +134,27 @@ export function useAdminChat() {
                 },
                 (payload) => {
                     // SEAMLESS UPDATE: Do NOT refetch.
-                    // This handles the 10s heartbeat (last_seen_at) without reloading the page.
                     const updatedConv = payload.new as Conversation
 
                     setConversations(prev => {
-                        // Update the specific conversation in the list
-                        const newList = prev.map(c =>
+                        return prev.map(c =>
                             c.id === updatedConv.id ? { ...c, ...updatedConv } : c
                         )
-                        // Optional: Re-sort if needed, but for simple status updates (heartbeat) we might want to keep order stable
-                        // to prevent items jumping around while reading.
-                        return newList
                     })
                 }
             )
             .subscribe()
 
-        // Backup Polling (Slow - 60s) just to sync up any missed events
-        const pollInterval = setInterval(() => fetchConversations(false), 60000)
-
         return () => {
             supabase.removeChannel(presenceChannel)
             supabase.removeChannel(dbChannel)
-            clearInterval(pollInterval)
         }
     }, [fetchConversations])
 
     return {
         conversations,
         onlineUsers,
-        isLoading: isInitialLoad ? isLoading : false, // Only show loading on first load
+        isLoading: isInitialLoad ? isLoading : false,
         refresh: () => fetchConversations(true)
     }
 }
