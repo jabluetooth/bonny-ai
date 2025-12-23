@@ -13,7 +13,7 @@ export default function AdminDashboardPage({
     const view = searchParams.view || "dashboard";
 
     return (
-        <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
+        <div className="flex flex-1 flex-col gap-4 p-4 pt-6">
             {view === "dashboard" && <DashboardOverview />}
             {view === "about" && <AdminAboutForm />}
             {view === "projects" && <AdminProjectsForm />}

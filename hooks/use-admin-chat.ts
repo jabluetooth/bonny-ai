@@ -25,6 +25,8 @@ export function useAdminChat() {
     const [isLoading, setIsLoading] = useState(true)
     const [isInitialLoad, setIsInitialLoad] = useState(true)
 
+    const [onlineUsers, setOnlineUsers] = useState<Set<string>>(new Set())
+
     // Process and sort conversations
     // Memoized to prevent unnecessary recalculations if called internally
     const processConversations = useCallback((raw: any[]): Conversation[] => {
@@ -71,8 +73,46 @@ export function useAdminChat() {
         // Initial Fetch
         fetchConversations(true)
 
-        // Real-time Subscription
-        const channel = supabase
+        // Presence Subscription (Global Room)
+        console.log("Admin: Initializing Presence Channel room:chat-presence")
+        const presenceChannel = supabase.channel('room:chat-presence')
+            .on('presence', { event: 'sync' }, () => {
+                const newState = presenceChannel.presenceState()
+                console.log("Admin: Presence Sync Event", newState) // DEBUG
+                const onlineIds = new Set<string>()
+
+                // key is the conversationId (as set in chat-provider)
+                Object.keys(newState).forEach(key => {
+                    if (newState[key] && newState[key].length > 0) {
+                        onlineIds.add(key)
+                    }
+                })
+
+                console.log("Admin: Calculated Online IDs", Array.from(onlineIds)) // DEBUG
+                setOnlineUsers(onlineIds)
+            })
+            .on('presence', { event: 'join' }, ({ key, newPresences }) => {
+                console.log('Admin: Presence Join', key, newPresences) // DEBUG
+                setOnlineUsers(prev => {
+                    const next = new Set(prev)
+                    next.add(key)
+                    return next
+                })
+            })
+            .on('presence', { event: 'leave' }, ({ key, leftPresences }) => {
+                console.log('Admin: Presence Leave', key, leftPresences) // DEBUG
+                setOnlineUsers(prev => {
+                    const next = new Set(prev)
+                    next.delete(key)
+                    return next
+                })
+            })
+            .subscribe((status) => {
+                console.log("Admin: Presence Channel Status:", status) // DEBUG
+            })
+
+        // Real-time Subscription for DB changes
+        const dbChannel = supabase
             .channel('admin-chat-manager')
             .on(
                 'postgres_changes',
@@ -117,13 +157,15 @@ export function useAdminChat() {
         const pollInterval = setInterval(() => fetchConversations(false), 60000)
 
         return () => {
-            supabase.removeChannel(channel)
+            supabase.removeChannel(presenceChannel)
+            supabase.removeChannel(dbChannel)
             clearInterval(pollInterval)
         }
     }, [fetchConversations])
 
     return {
         conversations,
+        onlineUsers,
         isLoading: isInitialLoad ? isLoading : false, // Only show loading on first load
         refresh: () => fetchConversations(true)
     }

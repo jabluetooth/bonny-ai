@@ -9,7 +9,10 @@ export const supabase = createBrowserClient(
             // Force session cookie (expire on browser close)
             maxAge: null,
             expires: null
-        } as any
+        } as any,
+        realtime: {
+            timeout: 30000 // Increase timeout to 30s
+        }
     }
 );
 

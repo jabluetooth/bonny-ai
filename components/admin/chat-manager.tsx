@@ -29,7 +29,7 @@ interface Message {
 }
 
 export function ChatManager() {
-    const { conversations, isLoading, refresh } = useAdminChat()
+    const { conversations, isLoading, refresh, onlineUsers } = useAdminChat()
 
     // Local UI State
     const [selectedId, setSelectedId] = useState<string | null>(null)
@@ -44,14 +44,8 @@ export function ChatManager() {
 
     const selectedConv = conversations.find(c => c.id === selectedId)
 
-    // Helper to check if online (active in last 2 minutes)
-    const isUserOnline = (lastSeen?: string) => {
-        if (!lastSeen) return false
-        const diff = new Date().getTime() - new Date(lastSeen).getTime()
-        return diff < 2 * 60 * 1000 // 2 minutes
-    }
-
-    const onlineCount = conversations.filter(c => isUserOnline(c.last_seen_at)).length
+    // Calculate online count directly from the real-time set
+    const onlineCount = conversations.filter(c => onlineUsers.has(c.id)).length
 
     return (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 h-[600px]">
@@ -65,9 +59,6 @@ export function ChatManager() {
                                 {onlineCount} Online Now
                             </span>
                         </div>
-                        <Button variant="ghost" size="icon" onClick={() => refresh()} className="h-6 w-6">
-                            <RefreshCcw className="h-3 w-3" />
-                        </Button>
                     </CardTitle>
                 </CardHeader>
                 <div className="flex-1 overflow-y-auto">
@@ -76,7 +67,7 @@ export function ChatManager() {
                     ) : (
                         <div className="divide-y">
                             {conversations.map((conv) => {
-                                const isOnline = isUserOnline(conv.last_seen_at)
+                                const isOnline = onlineUsers.has(conv.id)
                                 const lastMsg = conv.messages && conv.messages.length > 0 ? conv.messages[conv.messages.length - 1] : null
                                 return (
                                     <div

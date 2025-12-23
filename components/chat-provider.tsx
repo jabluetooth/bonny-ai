@@ -237,12 +237,14 @@ export function ChatProvider({ children }: { children: ReactNode }) {
         })
 
         channel.subscribe(async (status) => {
+            console.log("Visitor: Presence Channel Status:", status) // DEBUG
             if (status === 'SUBSCRIBED') {
-                console.log("Visitor Subscribed, Initial Track:", conversationId)
+                console.log("Visitor: Subscribed, Tracking Presence for:", conversationId)
                 await channel.track({
                     online_at: new Date().toISOString(),
                     conversationId: conversationId
                 })
+                console.log("Visitor: Tracking Initiated") // DEBUG
             }
         })
 
@@ -259,6 +261,20 @@ export function ChatProvider({ children }: { children: ReactNode }) {
             supabase.removeChannel(channel)
         }
     }, [conversationId, supabase])
+
+    // Aggressive Cleanup on Tab Close (Instant Offline)
+    useEffect(() => {
+        if (!conversationId) return
+
+        const handleUnload = () => {
+            // Synchronous cleanup if possible, or beacon. 
+            // Supabase disconnect is usually fast enough if triggered here.
+            supabase.removeAllChannels()
+        }
+
+        window.addEventListener('beforeunload', handleUnload)
+        return () => window.removeEventListener('beforeunload', handleUnload)
+    }, [conversationId])
 
     const sendMessage = async (content: string, intent?: string, activeId?: string) => {
         const currentId = activeId || conversationId;
