@@ -75,7 +75,7 @@ export async function getContextForIntent(
 
     // 3. PROJECTS
     else if (intent === ChatIntents.PROJECTS_WEB || intent === ChatIntents.PROJECTS_AI || intent === ChatIntents.PROJECTS_ALL) {
-        let query = supabase.from('projects').select('*, project_skills(skills(name))').order('created_at', { ascending: false });
+        const query = supabase.from('projects').select('*, project_skills(skills(name))').order('created_at', { ascending: false });
         // NOTE: In a real app we might filter DB side, but for small portfolio, mapping is fine.
 
         const { data } = await query;
@@ -92,7 +92,7 @@ export async function getContextForIntent(
     // 4. SKILLS
     else if (intent?.startsWith('QUERY_SKILLS')) {
         const { data } = await supabase.from('skills').select('*, category:skill_categories(title)');
-        let skills = data || [];
+        const skills = data || [];
 
         // Filter if specific category requested to save tokens? 
         // Or just send all so it knows adjacent skills. Sending all is usually better for small datasets.

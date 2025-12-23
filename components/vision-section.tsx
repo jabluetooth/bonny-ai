@@ -31,7 +31,7 @@ export function VisionSection() {
     if (isLoading) return null;
 
     return (
-        <div className="h-[30rem] rounded-md flex flex-col antialiased bg-white dark:bg-black dark:bg-grid-white/[0.05] items-center justify-center relative overflow-hidden">
+        <>
             <InfiniteMovingCards
                 items={topRow}
                 direction="right"
@@ -44,6 +44,6 @@ export function VisionSection() {
                 speed="slow"
                 className="-my-2"
             />
-        </div>
+        </>
     );
 }

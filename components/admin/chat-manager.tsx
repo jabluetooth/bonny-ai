@@ -47,6 +47,17 @@ export function ChatManager() {
     // Calculate online count directly from the real-time set
     const onlineCount = conversations.filter(c => onlineUsers.has(c.id)).length
 
+    // Sort and limit conversations
+    const displayConversations = [...conversations]
+        .sort((a, b) => {
+            const aOnline = onlineUsers.has(a.id)
+            const bOnline = onlineUsers.has(b.id)
+            if (aOnline && !bOnline) return -1
+            if (!aOnline && bOnline) return 1
+            return 0 // Keep original sort (by date)
+        })
+        .slice(0, 10)
+
     return (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 h-[600px]">
             {/* List */}
@@ -66,7 +77,7 @@ export function ChatManager() {
                         <div className="p-4 text-center text-sm text-muted-foreground">Loading...</div>
                     ) : (
                         <div className="divide-y">
-                            {conversations.map((conv) => {
+                            {displayConversations.map((conv) => {
                                 const isOnline = onlineUsers.has(conv.id)
                                 const lastMsg = conv.messages && conv.messages.length > 0 ? conv.messages[conv.messages.length - 1] : null
                                 return (
