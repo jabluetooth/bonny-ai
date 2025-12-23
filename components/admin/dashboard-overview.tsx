@@ -174,10 +174,10 @@ export function DashboardOverview() {
             </div>
 
             {/* ROW 3: Feeds (Aligned Top) */}
-            <div className="grid gap-4 md:grid-cols-7 flex-1 min-h-[400px]">
+            <div className="grid gap-4 md:grid-cols-2 flex-1 min-h-[400px]">
 
-                {/* Live Visitor Feed (4/7) */}
-                <Card className="md:col-span-4 flex flex-col overflow-hidden">
+                {/* Live Visitor Feed (1/2) */}
+                <Card className="flex flex-col overflow-hidden">
                     <CardHeader>
                         <CardTitle>Live Visitor View</CardTitle>
                     </CardHeader>
@@ -219,8 +219,8 @@ export function DashboardOverview() {
                     </CardContent>
                 </Card>
 
-                {/* Recent Activity (3/7) - Wider & Aligned */}
-                <Card className="md:col-span-3 flex flex-col overflow-hidden">
+                {/* Recent Activity (1/2) - Wider & Aligned */}
+                <Card className="flex flex-col overflow-hidden">
                     <CardHeader>
                         <CardTitle className="text-sm font-medium flex items-center gap-2">
                             <Clock className="h-4 w-4" /> Recent Activity
