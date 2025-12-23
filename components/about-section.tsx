@@ -17,15 +17,27 @@ export function AboutSection() {
     const [profile, setProfile] = useState<AuthorProfile | null>(null);
     const [isLoading, setIsLoading] = useState(true);
 
+    const [currentImageIndex, setCurrentImageIndex] = useState(0);
+
     const supabase = createBrowserClient(
         process.env.NEXT_PUBLIC_SUPABASE_URL!,
         process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
     );
 
     useEffect(() => {
+        if (!profile?.images || profile.images.length <= 1) return;
+
+        const interval = setInterval(() => {
+            setCurrentImageIndex((prev) => (prev + 1) % profile.images.length);
+        }, 2000); // 2 second animation duration
+
+        return () => clearInterval(interval);
+    }, [profile?.images]);
+
+    useEffect(() => {
         async function fetchProfile() {
             try {
-                const { data, error } = await supabase
+                const { data } = await supabase
                     .from('author_profiles')
                     .select('*')
                     .eq('is_active', true)
@@ -130,7 +142,12 @@ export function AboutSection() {
                             rotateY={-10}
                             className="w-full h-full rounded-xl flex items-center justify-center shadow-lg overflow-hidden bg-muted"
                         >
-                            <img src={profile.images[0]} alt="Profile" className="w-full h-full object-cover" />
+                            <img
+                                src={profile.images[currentImageIndex]}
+                                alt="Profile"
+                                className="w-full h-full object-cover transition-opacity duration-500"
+                                key={currentImageIndex} // Key ensures re-render with animation
+                            />
                         </CardItem>
                     </div>
                 )}
