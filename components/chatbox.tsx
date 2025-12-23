@@ -314,7 +314,7 @@ export function Chatbox() {
                                                                 duration: 0.4,
                                                                 scale: { type: "spring", visualDuration: 0.4, bounce: 0.20 },
                                                             }}
-                                                            className="mt-1 w-full grid grid-cols-1 min-w-0 rounded-xl bg-background/50 backdrop-blur-sm overflow-visible py-4"
+                                                            className="mt-1 w-full grid grid-cols-1 min-w-0"
                                                         >
                                                             <VisionSection />
                                                         </motion.div>

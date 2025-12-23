@@ -17,7 +17,7 @@ interface VisionCard {
     quote: string
     name: string
     title: string
-    row_position: "top" | "bottom"
+    image_url?: string
 }
 
 export function VisionTab() {
@@ -46,7 +46,7 @@ export function VisionTab() {
 
     const openCreateDialog = () => {
         setEditingItem(null)
-        setFormData({ quote: "", name: "", title: "", row_position: "top" })
+        setFormData({ quote: "", name: "", title: "", image_url: "" })
         setIsDialogOpen(true)
     }
 
@@ -103,7 +103,7 @@ export function VisionTab() {
                         <TableRow>
                             <TableHead>Quote</TableHead>
                             <TableHead>Author</TableHead>
-                            <TableHead>Row</TableHead>
+                            <TableHead>Image</TableHead>
                             <TableHead className="text-right">Actions</TableHead>
                         </TableRow>
                     </TableHeader>
@@ -112,7 +112,7 @@ export function VisionTab() {
                             <TableRow key={item.id}>
                                 <TableCell className="font-medium truncate max-w-[200px]">{item.quote}</TableCell>
                                 <TableCell>{item.name}</TableCell>
-                                <TableCell className="capitalize">{item.row_position}</TableCell>
+                                <TableCell className="truncate max-w-[150px]">{item.image_url || "-"}</TableCell>
                                 <TableCell className="text-right space-x-2">
                                     <Button variant="ghost" size="icon" onClick={() => openEditDialog(item)}><Pencil className="h-4 w-4" /></Button>
                                     <Button variant="ghost" size="icon" className="text-destructive" onClick={() => handleDelete(item.id)}><Trash2 className="h-4 w-4" /></Button>
@@ -145,16 +145,8 @@ export function VisionTab() {
                             </div>
                         </div>
                         <div className="grid gap-2">
-                            <Label>Row Position</Label>
-                            <Select value={formData.row_position} onValueChange={(val: any) => setFormData({ ...formData, row_position: val })}>
-                                <SelectTrigger>
-                                    <SelectValue placeholder="Select Row" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="top">Top Row</SelectItem>
-                                    <SelectItem value="bottom">Bottom Row</SelectItem>
-                                </SelectContent>
-                            </Select>
+                            <Label>Image URL (Optional)</Label>
+                            <Input value={formData.image_url || ""} onChange={e => setFormData({ ...formData, image_url: e.target.value })} placeholder="https://..." />
                         </div>
                     </div>
                     <DialogFooter>
