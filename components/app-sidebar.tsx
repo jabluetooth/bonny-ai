@@ -155,12 +155,12 @@ export function AppSidebar({ onNavClick, ...props }: AppSidebarProps) {
                             </SidebarMenuItem>
                         </Collapsible>
 
-                        {/* Timeline Group */}
+                        {/* Experiences Group */}
                         <Collapsible defaultOpen className="group/collapsible">
                             <SidebarMenuItem>
                                 <CollapsibleTrigger asChild>
                                     <SidebarMenuButton>
-                                        <span>Timeline</span>
+                                        <span>Experiences</span>
                                         <ChevronDown className="ml-auto transition-transform group-data-[state=open]/collapsible:rotate-180" />
                                     </SidebarMenuButton>
                                 </CollapsibleTrigger>
