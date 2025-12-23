@@ -5,6 +5,10 @@ import { AdminExperiencesForm } from "@/components/admin/forms/experiences-form"
 import { ChatManager } from "@/components/admin/chat-manager";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
+import { DashboardOverview } from "@/components/admin/dashboard-overview";
+import { AnalyticsView } from "@/components/admin/analytics-view";
+import { SettingsView } from "@/components/admin/settings-view";
+
 export default function AdminDashboardPage({
     searchParams,
 }: {
@@ -20,47 +24,10 @@ export default function AdminDashboardPage({
             {view === "skills" && <AdminSkillsForm />}
             {view === "experiences" && <AdminExperiencesForm />}
             {view === "chats" && <ChatManager />}
-            {view === "analytics" && <PlaceholderView title="Analytics" />}
-            {view === "settings" && <PlaceholderView title="Settings" />}
+            {view === "analytics" && <AnalyticsView />}
+            {view === "settings" && <SettingsView />}
         </div>
     );
-}
-
-function DashboardOverview() {
-    return (
-        <div className="grid auto-rows-min gap-4 md:grid-cols-3">
-            <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Total Visitors</CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <div className="text-2xl font-bold">12,345</div>
-                    <p className="text-xs text-muted-foreground">+20.1% from last month</p>
-                </CardContent>
-            </Card>
-            <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Active Chats</CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <div className="text-2xl font-bold">+573</div>
-                    <p className="text-xs text-muted-foreground">+201 since last hour</p>
-                </CardContent>
-            </Card>
-            <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">System Status</CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <div className="text-2xl font-bold text-green-500">Normal</div>
-                    <p className="text-xs text-muted-foreground">All systems operational</p>
-                </CardContent>
-            </Card>
-            <div className="min-h-[100vh] flex-1 rounded-xl bg-muted/50 md:min-h-min md:col-span-3 p-6 flex items-center justify-center text-muted-foreground">
-                <p>Welcome to the dashboard. Select an item from the sidebar to manage content.</p>
-            </div>
-        </div>
-    )
 }
 
 function PlaceholderView({ title }: { title: string }) {

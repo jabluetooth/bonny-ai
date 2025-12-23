@@ -26,6 +26,7 @@ export function useAdminChat() {
     const [isInitialLoad, setIsInitialLoad] = useState(true)
 
     const [onlineUsers, setOnlineUsers] = useState<Set<string>>(new Set())
+    const [userLocations, setUserLocations] = useState<Map<string, string>>(new Map()) // NEW: Store locations
 
     // Process and sort conversations
     // Memoized to prevent unnecessary recalculations if called internally
@@ -58,7 +59,7 @@ export function useAdminChat() {
                 )
             `)
             .order('updated_at', { ascending: false })
-            .limit(50)
+        // .limit(50) - Removed per user request
 
         if (data) {
             const processed = processConversations(data)
@@ -74,14 +75,13 @@ export function useAdminChat() {
         fetchConversations(true)
 
         // Presence Subscription (Global Room)
-        // Reverting to the logic that was verified as working in commit 4d86c940
-        // Presence Subscription (Global Room)
         // Aggressive Full Sync Strategy: On ANY event, recalc from scratch.
         const presenceChannel = supabase.channel('room:chat-presence')
 
         const updateOnlineUsers = () => {
             const newState = presenceChannel.presenceState()
             const onlineIds = new Set<string>()
+            const locations = new Map<string, string>() // NEW: Temp map
 
             // Robust check: Look at both keys AND payloads
             Object.entries(newState).forEach(([key, presences]) => {
@@ -95,13 +95,17 @@ export function useAdminChat() {
                     presences.forEach((p: any) => {
                         if (p.conversationId) {
                             onlineIds.add(p.conversationId)
+                            // NEW: Capture location
+                            if (p.location) {
+                                locations.set(p.conversationId, p.location)
+                            }
                         }
                     })
                 }
             })
 
-            // console.log("Admin: Computed Online IDs", Array.from(onlineIds))
             setOnlineUsers(onlineIds)
+            setUserLocations(locations) // NEW: Update state
         }
 
         presenceChannel
@@ -154,6 +158,7 @@ export function useAdminChat() {
     return {
         conversations,
         onlineUsers,
+        userLocations, // NEW
         isLoading: isInitialLoad ? isLoading : false,
         refresh: () => fetchConversations(true)
     }

@@ -31,6 +31,7 @@ import {
     SidebarRail,
     SidebarFooter
 } from "@/components/ui/sidebar"
+import { createBrowserClient } from "@supabase/ssr"
 
 const data = {
     navMain: [
@@ -159,11 +160,22 @@ export function AdminSidebar({ ...props }: React.ComponentProps<typeof Sidebar>)
             <SidebarFooter>
                 <SidebarMenu>
                     <SidebarMenuItem>
-                        <SidebarMenuButton asChild tooltip="Logout">
-                            <Link href="/api/auth/signout">
+                        <SidebarMenuButton
+                            asChild
+                            tooltip="Logout"
+                            className="bg-red-500/10 text-red-600 hover:bg-red-500/20 hover:text-red-700 dark:text-red-400 dark:hover:bg-red-900/40"
+                        >
+                            <button onClick={async () => {
+                                const supabase = createBrowserClient(
+                                    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+                                    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+                                )
+                                await supabase.auth.signOut()
+                                window.location.href = '/'
+                            }}>
                                 <LogOut />
                                 <span>Logout</span>
-                            </Link>
+                            </button>
                         </SidebarMenuButton>
                     </SidebarMenuItem>
                 </SidebarMenu>
