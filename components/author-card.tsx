@@ -58,7 +58,7 @@ export const AuthorCard = React.forwardRef<HTMLAnchorElement, React.ComponentPro
 
         const interval = setInterval(() => {
             setCurrentImageIndex((prev) => (prev + 1) % images.length)
-        }, 3000)
+        }, 7000); // 7 seconds per image
         return () => clearInterval(interval)
     }, [images])
 

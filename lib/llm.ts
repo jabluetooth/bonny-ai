@@ -87,7 +87,7 @@ export async function generateLLMResponse(
         if (data?.about && data.about.length > 0) {
             output += "\n-- ABOUT ME --\n";
             data.about.forEach(a => {
-                output += `**${a.title}**: ${a.content}\n`;
+                output += `${a.content}\n`;
             });
         }
 
@@ -126,6 +126,10 @@ Impress the visitor with your skills and projects. Be helpful, enthusiastic, and
     - If the user asks for **Skills**, definitely show '[[SHOW_SKILLS]]' or specific '[[SKILL: ...]]'. Do NOT show Projects unless explicitly asked.
     - If the user asks for **Experience/Work**, show '[[SHOW_EXPERIENCE:WORK]]'.
     - If the user asks for **Projects**, show '[[SHOW_PROJECTS]]'.
+
+11. **NO TITLES**: 
+    - ❌ Do NOT start your response with a header/title like "**About Me**" or "### Background". 
+    - ✅ Start directly with the conversational content.
 
 **VISUAL COMPONENT TRIGGERS**:
 (Only output ONE major visual type per response unless asked for both)

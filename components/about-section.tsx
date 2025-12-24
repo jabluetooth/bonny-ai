@@ -29,7 +29,7 @@ export function AboutSection() {
 
         const interval = setInterval(() => {
             setCurrentImageIndex((prev) => (prev + 1) % profile.images.length);
-        }, 2000); // 2 second animation duration
+        }, 2000); // 2 seconds per image
 
         return () => clearInterval(interval);
     }, [profile?.images]);
