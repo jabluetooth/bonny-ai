@@ -87,7 +87,7 @@ export async function POST(req: Request) {
             .select('sender_type, content')
             .eq('conversation_id', conversationId)
             .order('created_at', { ascending: false })
-            .limit(20);
+            .limit(10);
 
         if (history) {
             messages = history.reverse().map(msg => ({
