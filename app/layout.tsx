@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
-import { Inter, JetBrains_Mono } from "next/font/google";
+import { Outfit, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { ChatProvider } from "@/components/chat-provider";
 import { Toaster } from "@/components/ui/sonner";
 import FluidCursor from "@/components/ui/fluid-cursor";
 
-const inter = Inter({
+const outfit = Outfit({
   variable: "--font-sans",
   subsets: ["latin"],
 });
@@ -28,7 +28,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${inter.variable} ${jetbrainsMono.variable} antialiased`}
+        className={`${outfit.variable} ${jetbrainsMono.variable} font-sans antialiased`}
       >
         <ChatProvider>
           <FluidCursor />

@@ -91,7 +91,7 @@ export function BackgroundCards() {
             {/* Background Text */}
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-0">
                 <h1 className="text-[120px] font-black text-slate-800/30 dark:text-slate-100/10 tracking-widest uppercase text-center select-none leading-none blur-sm">
-                    Back<br />ground
+                    Bonny-Ai
                 </h1>
             </div>
 

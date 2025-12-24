@@ -9,6 +9,7 @@ import {
     GraduationCap,
     Palette,
     User,
+    Users,
     ChevronDown,
 } from "lucide-react"
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
@@ -54,9 +55,9 @@ export function AppSidebar({ onNavClick, ...props }: AppSidebarProps) {
                     </Avatar>
                     <div className="flex flex-col items-start gap-0.5">
                         <span className="font-semibold text-sm tracking-tight">Bonny-ai</span>
-                        <Status status="online" className="px-1.5 py-0 h-5">
-                            <StatusIndicator className="w-1.5 h-1.5" />
-                            <StatusLabel className="text-[10px]">Online</StatusLabel>
+                        <Status status="online" className="px-2 py-0.5 h-auto min-h-[1.25rem]">
+                            <StatusIndicator className="w-2 h-2" />
+                            <StatusLabel className="text-[10px] font-medium text-muted-foreground/80">Online</StatusLabel>
                         </Status>
                     </div>
                 </div>
@@ -148,6 +149,18 @@ export function AppSidebar({ onNavClick, ...props }: AppSidebarProps) {
                                             <SidebarMenuSubButton onClick={() => onNavClick("What are your Backend Development skills?", ChatIntents.SKILLS_BACKEND)}>
                                                 <Database />
                                                 <span>Backend</span>
+                                            </SidebarMenuSubButton>
+                                        </SidebarMenuSubItem>
+                                        <SidebarMenuSubItem>
+                                            <SidebarMenuSubButton onClick={() => onNavClick("What are your Design skills?", ChatIntents.SKILLS_DESIGN)}>
+                                                <Palette />
+                                                <span>Design</span>
+                                            </SidebarMenuSubButton>
+                                        </SidebarMenuSubItem>
+                                        <SidebarMenuSubItem>
+                                            <SidebarMenuSubButton onClick={() => onNavClick("What are your Soft Skills?", ChatIntents.SKILLS_SOFT)}>
+                                                <Users />
+                                                <span>Soft Skills</span>
                                             </SidebarMenuSubButton>
                                         </SidebarMenuSubItem>
                                     </SidebarMenuSub>
