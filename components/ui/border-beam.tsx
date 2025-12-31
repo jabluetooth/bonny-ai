@@ -1,54 +1,117 @@
-"use client";
+"use client"
 
-import { cn } from "@/lib/utils";
+import { motion, MotionStyle, Transition } from "motion/react"
+
+import { cn } from "@/lib/utils"
 
 interface BorderBeamProps {
-    className?: string;
-    size?: number;
-    duration?: number;
-    borderWidth?: number;
-    anchor?: number;
-    colorFrom?: string;
-    colorTo?: string;
-    delay?: number;
-    radius?: number;
+    /**
+     * The size of the border beam.
+     */
+    size?: number
+    /**
+     * The duration of the border beam.
+     */
+    duration?: number
+    /**
+     * The delay of the border beam.
+     */
+    delay?: number
+    /**
+     * The color of the border beam from.
+     */
+    colorFrom?: string
+    /**
+     * The color of the border beam to.
+     */
+    colorTo?: string
+    /**
+     * The motion transition of the border beam.
+     */
+    transition?: Transition
+    /**
+     * The class name of the border beam.
+     */
+    className?: string
+    /**
+     * The style of the border beam.
+     */
+    style?: React.CSSProperties
+    /**
+     * Whether to reverse the animation direction.
+     */
+    reverse?: boolean
+    /**
+     * The initial offset position (0-100).
+     */
+    initialOffset?: number
+    /**
+     * The border width of the beam.
+     */
+    borderWidth?: number
+    /**
+     * The corner radius of the beam path.
+     */
+    radius?: number
 }
 
-export function BorderBeam({
+export const BorderBeam = ({
     className,
-    size = 200,
-    duration = 15,
-    anchor = 90,
-    borderWidth = 1.5,
+    size = 50,
+    delay = 0,
+    duration = 6,
     colorFrom = "#ffaa40",
     colorTo = "#9c40ff",
-    delay = 0,
+    transition,
+    style,
+    reverse = false,
+    initialOffset = 0,
+    borderWidth = 1,
     radius = 0,
-}: BorderBeamProps) {
+}: BorderBeamProps) => {
     return (
         <div
+            className={cn(
+                "pointer-events-none absolute inset-0 border-transparent [mask-image:linear-gradient(white,white),linear-gradient(white,white)] [mask-composite:exclude] [mask-clip:padding-box,border-box]",
+                className
+            )}
             style={
                 {
-                    "--size": size,
-                    "--duration": duration,
-                    "--anchor": anchor,
-                    "--border-width": borderWidth,
-                    "--color-from": colorFrom,
-                    "--color-to": colorTo,
-                    "--delay": `-${delay}s`,
-                    "--radius": radius,
+                    borderWidth: borderWidth,
+                    borderRadius: `${radius}px`, // Explicitly set radius to match path
+                    "--border-beam-width": `${borderWidth}px`,
                 } as React.CSSProperties
             }
-            className={cn(
-                "pointer-events-none absolute inset-0 rounded-[inherit] [border:calc(var(--border-width)*1px)_solid_transparent]",
-
-                // Mask styles
-                "![mask-clip:padding-box,border-box] ![mask-composite:intersect] [mask:linear-gradient(transparent,transparent),linear-gradient(white,white)]",
-
-                // Pseudo-element for the beam animation
-                "after:absolute after:aspect-square after:w-[calc(var(--size)*1px)] after:[animation:border-beam_calc(var(--duration)*1s)_infinite_linear] after:[animation-delay:var(--delay)] after:[background:linear-gradient(to_left,var(--color-from),var(--color-to),transparent)] after:[offset-anchor:calc(var(--anchor)*1%)_50%] after:[offset-path:rect(0_auto_auto_0_round_calc(var(--radius)*1px))]",
-                className,
-            )}
-        />
-    );
+        >
+            <motion.div
+                className={cn(
+                    "absolute h-[15px]",
+                    "bg-gradient-to-l from-[var(--color-from)] via-[var(--color-to)] to-transparent"
+                )}
+                style={
+                    {
+                        width: size,
+                        offsetPath: `rect(0 100% 100% 0 round ${radius}px)`, // Explicit dimensions
+                        offsetAnchor: "50% 50%", // explicitly center
+                        "--color-from": colorFrom,
+                        "--color-to": colorTo,
+                        ...style,
+                    } as MotionStyle
+                }
+                initial={{ offsetDistance: `${initialOffset}%` }}
+                animate={{
+                    offsetDistance: reverse
+                        ? [`${100 - initialOffset}%`, `${-initialOffset}%`]
+                        : [`${initialOffset}%`, `${100 + initialOffset}%`],
+                }}
+                transition={{
+                    repeat: Infinity,
+                    ease: "linear",
+                    duration,
+                    delay: -delay,
+                    ...transition,
+                }}
+            />
+        </div>
+    )
 }

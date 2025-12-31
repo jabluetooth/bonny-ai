@@ -46,7 +46,7 @@ export function ChatManager() {
                 if (notificationsEnabled && Notification.permission === "granted") {
                     new Notification("New Message", {
                         body: msg.content,
-                        icon: "/bot-avatar.png",
+                        icon: `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/avatars/bot-avatar.png?t=${Number(Date.now() / 60000).toFixed(0)}`,
                         tag: "new-message"
                     })
                 }

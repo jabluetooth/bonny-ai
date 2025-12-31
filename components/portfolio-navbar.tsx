@@ -175,8 +175,8 @@ export function PortfolioNavbar() {
                         </div>
 
                         <Avatar onClick={() => handleNavClick("Hello! Tell me about this portfolio.")} className="hidden md:flex cursor-pointer hover:scale-105 transition-transform">
-                            <AvatarImage src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=200&auto=format&fit=crop" alt="Profile" />
-                            <AvatarFallback>🙂</AvatarFallback>
+                            <AvatarImage src={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/avatars/admin-avatar.png?t=${Number(Date.now() / 60000).toFixed(0)}`} alt="Profile" />
+                            <AvatarFallback>Ad</AvatarFallback>
                         </Avatar>
                     </div>
 
