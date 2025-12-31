@@ -145,8 +145,8 @@ function ExperiencesContent({ container, experiences, category }: { container: H
                     className="absolute left-8 md:left-[35%] transform -translate-x-1/2 -translate-y-1/2 z-20"
                 >
                     <Avatar className="w-10 h-10 border-2 border-white shadow-lg">
-                        <AvatarImage src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=200&auto=format&fit=crop" alt="Traveler" />
-                        <AvatarFallback className="bg-blue-600 text-white font-bold">F</AvatarFallback>
+                        <AvatarImage src={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/avatars/admin-avatar.png?t=${Number(Date.now() / 60000).toFixed(0)}`} alt="Traveler" />
+                        <AvatarFallback className="bg-blue-600 text-white font-bold">Ad</AvatarFallback>
                     </Avatar>
                 </motion.div>
 
@@ -179,15 +179,15 @@ function ExperienceCard({ experience, index }: { experience: Experience; index: 
 
                     <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-gray-600 mb-4">
                         <div className="flex items-center gap-1 font-medium uppercase tracking-wide">
-                            <Calendar className="w-3.5 h-3.5" />
+                            <Calendar className="w-4 h-4 shrink-0" />
                             <span>{experience.date}</span>
                         </div>
                         <div className="flex items-center gap-1 font-medium">
-                            <MapPin className="w-3.5 h-3.5" />
+                            <MapPin className="w-4 h-4 shrink-0" />
                             <span>{experience.location}</span>
                         </div>
                         <div className="flex items-center gap-1 font-medium">
-                            <Briefcase className="w-3.5 h-3.5" />
+                            <Briefcase className="w-4 h-4 shrink-0" />
                             <span>{experience.type}</span>
                         </div>
                     </div>

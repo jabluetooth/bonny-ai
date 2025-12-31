@@ -176,7 +176,7 @@ export function Chatbox() {
                                         {/* Bot Avatar (Only for bot) */}
                                         {msg.role === "bot" && (
                                             <Avatar className="h-8 w-8 shrink-0 border border-border/30 shadow-sm">
-                                                <AvatarImage src="/bot-avatar.png" />
+                                                <AvatarImage src={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/avatars/bot-avatar.png?t=${Number(Date.now() / 60000).toFixed(0)}`} />
                                                 <AvatarFallback className="bg-primary/10 text-primary"><Bot size={14} /></AvatarFallback>
                                             </Avatar>
                                         )}
@@ -343,6 +343,7 @@ export function Chatbox() {
                             {isLoading && (
                                 <div className="flex gap-3 max-w-[85%] items-end">
                                     <Avatar className="h-8 w-8 shrink-0">
+                                        <AvatarImage src={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/avatars/bot-avatar.png?t=${Number(Date.now() / 60000).toFixed(0)}`} />
                                         <AvatarFallback className="bg-primary/10 text-primary"><Bot size={14} /></AvatarFallback>
                                     </Avatar>
                                     <div className="bg-muted text-foreground rounded-[20px] rounded-bl-none px-5 py-4 flex gap-1 items-center shadow-sm">
