@@ -144,9 +144,9 @@ function ExperiencesContent({ container, experiences, category }: { container: H
                     style={{ top: heightStyle }}
                     className="absolute left-8 md:left-[35%] transform -translate-x-1/2 -translate-y-1/2 z-20"
                 >
-                    <Avatar className="w-10 h-10 border-2 border-white shadow-lg">
-                        <AvatarImage src={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/avatars/admin-avatar.png?t=${Number(Date.now() / 60000).toFixed(0)}`} alt="Traveler" />
-                        <AvatarFallback className="bg-blue-600 text-white font-bold">Ad</AvatarFallback>
+                    <Avatar className="w-10 h-10 rounded-none bg-transparent">
+                        <AvatarImage src="/avatar.png" alt="Traveler" />
+                        <AvatarFallback className="bg-transparent">Ad</AvatarFallback>
                     </Avatar>
                 </motion.div>
 

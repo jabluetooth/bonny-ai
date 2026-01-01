@@ -6,6 +6,7 @@ import { Github, Linkedin, Twitter } from "lucide-react";
 import Link from "next/link";
 import { createBrowserClient } from "@supabase/ssr";
 import { Skeleton } from "@/components/ui/skeleton";
+import TiltedCard from "@/components/ui/tilted-card";
 
 interface AuthorProfile {
     title: string;
@@ -70,7 +71,7 @@ export function AboutSection() {
     if (!profile) {
         return (
             <CardContainer className="inter-var">
-                <CardBody className="bg-gray-50 relative group/card dark:hover:shadow-2xl dark:hover:shadow-emerald-500/[0.1] dark:bg-black dark:border-white/[0.2] border-black/[0.1] w-auto sm:w-[40rem] h-auto rounded-xl p-6 border flex flex-col sm:flex-row gap-6 items-center">
+                <CardBody className="relative group/card w-auto sm:w-[40rem] h-auto p-6 flex flex-col sm:flex-row gap-6 items-center">
                     <div className="flex-1">
                         <CardItem translateZ="50" className="text-4xl font-bold text-neutral-800 dark:text-white mb-2">
                             I'm Fil, a <br />
@@ -96,7 +97,7 @@ export function AboutSection() {
 
     return (
         <CardContainer className="inter-var">
-            <CardBody className="bg-gray-50 relative group/card dark:hover:shadow-2xl dark:hover:shadow-emerald-500/[0.1] dark:bg-black dark:border-white/[0.2] border-black/[0.1] w-auto sm:w-[40rem] h-auto rounded-xl p-6 border flex flex-col sm:flex-row gap-6 items-center">
+            <CardBody className="relative group/card w-auto sm:w-[40rem] h-auto p-6 flex flex-col sm:flex-row gap-6 items-center">
 
                 {/* Dynamic Content */}
                 <div className="flex-1">
@@ -136,19 +137,27 @@ export function AboutSection() {
                 {/* Right Column: Image */}
                 {profile.images && profile.images.length > 0 && (
                     <div className="w-32 h-32 sm:w-40 sm:h-40 shrink-0">
-                        <CardItem
-                            translateZ="80"
-                            rotateX={10}
-                            rotateY={-10}
-                            className="w-full h-full rounded-xl flex items-center justify-center shadow-lg overflow-hidden bg-muted"
-                        >
-                            <img
-                                src={profile.images[currentImageIndex]}
-                                alt="Profile"
-                                className="w-full h-full object-cover transition-opacity duration-500"
-                                key={currentImageIndex} // Key ensures re-render with animation
-                            />
-                        </CardItem>
+                        <TiltedCard
+                            imageSrc={
+                                <img
+                                    src={profile.images[currentImageIndex]}
+                                    alt="Profile"
+                                    className="w-full h-full object-cover transition-opacity duration-500 rounded-xl"
+                                    key={currentImageIndex}
+                                />
+                            }
+                            altText="Profile"
+                            captionText={profile.title || "Author"}
+                            containerHeight="100%"
+                            containerWidth="100%"
+                            imageHeight="100%"
+                            imageWidth="100%"
+                            rotateAmplitude={14}
+                            scaleOnHover={1.15}
+                            showMobileWarning={false}
+                            showTooltip={true}
+                            displayOverlayContent={false}
+                        />
                     </div>
                 )}
             </CardBody>

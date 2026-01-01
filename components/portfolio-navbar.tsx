@@ -174,8 +174,8 @@ export function PortfolioNavbar() {
                             <SidebarTrigger className="ml-2 h-9 w-9" />
                         </div>
 
-                        <Avatar onClick={() => handleNavClick("Hello! Tell me about this portfolio.")} className="hidden md:flex cursor-pointer hover:scale-105 transition-transform">
-                            <AvatarImage src={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/avatars/admin-avatar.png?t=${Number(Date.now() / 60000).toFixed(0)}`} alt="Profile" />
+                        <Avatar onClick={() => handleNavClick("Hello! Tell me about this portfolio.")} className="hidden md:flex cursor-pointer hover:scale-105 transition-transform rounded-none bg-transparent">
+                            <AvatarImage src="/avatar.png" alt="Profile" />
                             <AvatarFallback>Ad</AvatarFallback>
                         </Avatar>
                     </div>
