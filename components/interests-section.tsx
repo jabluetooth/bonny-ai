@@ -54,8 +54,6 @@ export function InterestsSection() {
     if (content.length === 0) return null;
 
     return (
-        <div className="w-full">
-            <StickyScroll content={content} />
-        </div>
+        <StickyScroll content={content} />
     );
 }

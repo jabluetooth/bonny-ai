@@ -34,6 +34,15 @@ export function Chatbox() {
     };
 
 
+
+    const loadingVideoRef = useRef<HTMLVideoElement>(null);
+
+    useEffect(() => {
+        if (loadingVideoRef.current) {
+            loadingVideoRef.current.playbackRate = 2.0;
+        }
+    }, [isLoading]);
+
     const handleSend = async () => {
         if (!input.trim()) return;
         const msg = input;
@@ -111,7 +120,8 @@ export function Chatbox() {
         return (
             <>
                 <WelcomeModal />
-                <div className="w-full max-w-lg px-4 animate-in fade-in zoom-in duration-500 slide-in-from-bottom-4">
+
+                <div className="w-full max-w-lg mx-auto px-4 animate-in fade-in zoom-in duration-500 slide-in-from-bottom-4">
                     <form
                         onSubmit={(e) => {
                             e.preventDefault();
@@ -127,7 +137,7 @@ export function Chatbox() {
                             spellCheck={false}
                             value={input}
                             onChange={(e) => setInput(e.target.value)}
-                            placeholder={isChatDisabled ? "Message limit reached." : (isWelcomeOpen ? welcomePlaceholder : "Ask me anything...")}
+                            placeholder={isChatDisabled ? "Message limit reached." : "Ask me anything..."}
                             className="w-full h-14 pl-6 pr-16 rounded-full text-lg shadow-lg border-muted-foreground/20 bg-background focus-visible:ring-1 focus-visible:ring-primary/50 transition-all hover:shadow-xl"
                             disabled={!conversationId || isLoading || isChatDisabled}
                         />
@@ -142,6 +152,7 @@ export function Chatbox() {
                         </Button>
                     </form>
                 </div>
+                {/* Video moved to top */}
             </>
         );
     }
@@ -297,7 +308,7 @@ export function Chatbox() {
                                                                 duration: 0.4,
                                                                 scale: { type: "spring", visualDuration: 0.4, bounce: 0.20 },
                                                             }}
-                                                            className="mt-1 w-full grid grid-cols-1 min-w-0 rounded-xl bg-background/50 backdrop-blur-sm overflow-visible py-4"
+                                                            className="mt-1 w-full grid grid-cols-1 min-w-0"
                                                         >
                                                             <InterestsSection />
                                                         </motion.div>
@@ -344,7 +355,9 @@ export function Chatbox() {
                                 <div className="flex gap-3 max-w-[85%] items-end">
                                     <div className="h-10 w-10 shrink-0 relative overflow-hidden">
                                         <video
-                                            src="/bot-thinking.mov"
+                                            ref={loadingVideoRef}
+                                            src="/ffmpeg/botfinal.webm"
+                                            poster="/bot-avatar.png"
                                             autoPlay
                                             loop
                                             muted
