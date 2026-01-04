@@ -121,6 +121,18 @@ export function Chatbox() {
             <>
                 <WelcomeModal />
 
+                <div className="relative w-full max-w-2xl aspect-video mb-0 translate-y-12 -mb-12">
+                    <video
+                        src="/bot-transparent.webm"
+                        poster="/bot-avatar.png"
+                        autoPlay
+                        loop
+                        muted
+                        playsInline
+                        className="w-full h-full object-contain"
+                    />
+                </div>
+
                 <div className="w-full max-w-lg mx-auto px-4 animate-in fade-in zoom-in duration-500 slide-in-from-bottom-4">
                     <form
                         onSubmit={(e) => {
@@ -152,7 +164,6 @@ export function Chatbox() {
                         </Button>
                     </form>
                 </div>
-                {/* Video moved to top */}
             </>
         );
     }
