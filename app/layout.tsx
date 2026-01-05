@@ -18,6 +18,10 @@ const jetbrainsMono = JetBrains_Mono({
 export const metadata: Metadata = {
   title: "Bonny AI - Smart Portfolio",
   description: "A database-driven AI portfolio application.",
+  icons: {
+    icon: "/avatar.png",
+    apple: "/avatar.png",
+  },
 };
 
 export default function RootLayout({
