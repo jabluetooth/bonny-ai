@@ -25,6 +25,20 @@ export function BackgroundCards() {
     const [cards, setCards] = useState<BackgroundCardProps[]>([]);
     const [loading, setLoading] = useState(true);
 
+    // Get last known count from localStorage, default to 3
+    const getLastKnownCount = (): number => {
+        if (typeof window === "undefined") return 3;
+        const stored = localStorage.getItem("background_cards_count");
+        return stored ? parseInt(stored, 10) : 3;
+    };
+
+    const [skeletonCount, setSkeletonCount] = useState(3);
+
+    useEffect(() => {
+        // Initialize skeleton count from localStorage on mount
+        setSkeletonCount(getLastKnownCount());
+    }, []);
+
     useEffect(() => {
         const fetchCards = async () => {
             try {
@@ -46,6 +60,9 @@ export function BackgroundCards() {
                         className: item.class_name // Mapping DB column to prop
                     }));
                     setCards(mapped);
+
+                    // Save the count to localStorage for next load
+                    localStorage.setItem("background_cards_count", String(mapped.length));
                 }
             } catch (error) {
                 console.error("Failed to fetch background cards:", error);
@@ -57,6 +74,19 @@ export function BackgroundCards() {
         fetchCards();
     }, []);
 
+    // Generate dynamic skeleton positions based on expected card count
+    const generateSkeletonPositions = (count: number): string[] => {
+        const positions = [
+            "top-20 left-[20%] -rotate-6",
+            "top-10 left-[45%] rotate-3",
+            "top-32 right-[20%] -rotate-2",
+            "top-40 left-[10%] rotate-4",
+            "top-16 right-[35%] -rotate-3",
+            "top-28 left-[60%] rotate-2"
+        ];
+        return positions.slice(0, Math.min(count, positions.length));
+    };
+
     if (loading) {
         return (
             <DraggableCardContainer className="py-20 min-h-[500px] overflow-hidden">
@@ -65,12 +95,8 @@ export function BackgroundCards() {
                         Back<br />ground
                     </h1>
                 </div>
-                {/* Skeleton Cards */}
-                {[
-                    "top-20 left-[20%] -rotate-6",
-                    "top-10 left-[45%] rotate-3",
-                    "top-32 right-[20%] -rotate-2"
-                ].map((pos, i) => (
+                {/* Dynamic Skeleton Cards */}
+                {generateSkeletonPositions(skeletonCount).map((pos, i) => (
                     <DraggableCardBody key={i} className={cn("absolute z-10", pos, "pointer-events-none opacity-50 grayscale")}>
                         <div className="w-full h-full relative rounded-xl overflow-hidden bg-slate-900 shadow-2xl">
                             <Skeleton className="h-full w-full bg-slate-800" />
