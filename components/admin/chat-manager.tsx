@@ -1,16 +1,17 @@
 "use client"
 
 import { useEffect, useState, useRef } from "react"
-import { createBrowserClient } from "@supabase/ssr" // Still needed for TakeOver/Resume actions
+import { createBrowserClient } from "@supabase/ssr"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Loader2, Send, Play, Pause, RefreshCcw, ArrowLeft } from "lucide-react"
+import { Loader2, Send, Play, Pause, RefreshCcw, ArrowLeft, Volume2, VolumeX, Bell, BellOff } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
 import { format } from "date-fns"
 import { toast } from "sonner"
 import { useAdminChat } from "@/hooks/use-admin-chat"
+import { useAdminSettings } from "@/hooks/use-admin-settings"
 
 interface Conversation {
     id: string
@@ -26,23 +27,31 @@ interface Message {
     content: string
     sender_type: 'user' | 'bot' | 'admin'
     created_at: string
+    conversation_id?: string // Added for navigation
 }
 
-import { useAdminSettings } from "@/hooks/use-admin-settings"
-
 export function ChatManager() {
-    const { soundEnabled, notificationsEnabled } = useAdminSettings()
+    const {
+        soundEnabled,
+        setSoundEnabled,
+        notificationsEnabled,
+        setNotificationsEnabled
+    } = useAdminSettings()
 
     const { conversations, isLoading, refresh, onlineUsers } = useAdminChat({
         onNewMessage: (msg) => {
             // Only notify for USER messages
             if (msg.sender_type === 'user') {
+                // 1. Toast Notification (Always Visible)
+                toast.info(`Visitor: ${msg.content.substring(0, 30)}${msg.content.length > 30 ? '...' : ''}`)
+
+                // 2. Sound
                 if (soundEnabled) {
-                    // Try to play sound - requires /notification.mp3 in public folder
                     const audio = new Audio("/notification.mp3")
-                    audio.play().catch(e => console.log("Audio play failed:", e))
+                    audio.play().catch(e => console.log("Audio play failed (file missing?):", e))
                 }
 
+                // 3. Browser Notification
                 if (notificationsEnabled && Notification.permission === "granted") {
                     new Notification("New Message", {
                         body: msg.content,
@@ -58,8 +67,7 @@ export function ChatManager() {
     const [selectedId, setSelectedId] = useState<string | null>(null)
     const [msgInput, setMsgInput] = useState("")
 
-    // Supabase Client for Actions (Take Over, Send Message)
-    // We treat this as an "action client"
+    // Supabase Client for Actions
     const [supabase] = useState(() => createBrowserClient(
         process.env.NEXT_PUBLIC_SUPABASE_URL!,
         process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
@@ -81,13 +89,9 @@ export function ChatManager() {
         })
         .slice(0, 10)
 
-    // Mobile Responsive Logic
-    // On mobile (hidden by default on md), we show List if !selectedId, and Chat if selectedId.
-    // On desktop (md:flex), we show both side-by-side.
-
     return (
         <div className="flex flex-col md:grid md:grid-cols-3 gap-4 h-[calc(100vh-200px)] min-h-[500px]">
-            {/* List - Hidden on mobile if chat is selected */}
+            {/* List */}
             <Card className={cn("col-span-1 flex flex-col h-full", selectedId ? "hidden md:flex" : "flex")}>
                 <CardHeader className="py-3 px-4 border-b">
                     <CardTitle className="text-sm font-medium flex items-center justify-between">
@@ -96,6 +100,26 @@ export function ChatManager() {
                             <span className="text-[10px] text-muted-foreground font-normal">
                                 {onlineCount} Online Now
                             </span>
+                        </div>
+                        <div className="flex gap-1">
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-6 w-6"
+                                onClick={() => setSoundEnabled(!soundEnabled)}
+                                title={soundEnabled ? "Mute Sound" : "Enable Sound"}
+                            >
+                                {soundEnabled ? <Volume2 className="h-4 w-4" /> : <VolumeX className="h-4 w-4" />}
+                            </Button>
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-6 w-6"
+                                onClick={() => setNotificationsEnabled(!notificationsEnabled)}
+                                title={notificationsEnabled ? "Disable Desktop Notifications" : "Enable Desktop Notifications"}
+                            >
+                                {notificationsEnabled ? <Bell className="h-4 w-4" /> : <BellOff className="h-4 w-4" />}
+                            </Button>
                         </div>
                     </CardTitle>
                 </CardHeader>
@@ -146,7 +170,7 @@ export function ChatManager() {
                 </div>
             </Card >
 
-            {/* Chat Window - Hidden on mobile if NO chat selected */}
+            {/* Chat Window */}
             < Card className={cn("col-span-1 md:col-span-2 flex-col h-full overflow-hidden", !selectedId ? "hidden md:flex" : "flex")} >
                 {
                     selectedConv ? (

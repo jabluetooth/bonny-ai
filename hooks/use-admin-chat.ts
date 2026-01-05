@@ -1,7 +1,7 @@
 "use client"
 
-import { useEffect, useState, useCallback } from "react"
-import { supabase } from "@/lib/supabase-client"
+import { useEffect, useState, useCallback, useRef } from "react"
+import { createBrowserClient } from "@supabase/ssr"
 
 export interface Conversation {
     id: string
@@ -25,12 +25,24 @@ interface UseAdminChatOptions {
 }
 
 export function useAdminChat({ onNewMessage }: UseAdminChatOptions = {}) {
+    // Isolate Admin connection from main app connection to fix presence conflicts
+    const [supabase] = useState(() => createBrowserClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    ))
+
     const [conversations, setConversations] = useState<Conversation[]>([])
     const [isLoading, setIsLoading] = useState(true)
     const [isInitialLoad, setIsInitialLoad] = useState(true)
 
     const [onlineUsers, setOnlineUsers] = useState<Set<string>>(new Set())
-    const [userLocations, setUserLocations] = useState<Map<string, string>>(new Map()) // NEW: Store locations
+    const [userLocations, setUserLocations] = useState<Map<string, string>>(new Map())
+
+    // Use ref to hold latest callback without breaking effect dependencies
+    const onNewMessageRef = useRef(onNewMessage)
+    useEffect(() => {
+        onNewMessageRef.current = onNewMessage
+    }, [onNewMessage])
 
     // Process and sort conversations
     // Memoized to prevent unnecessary recalculations if called internally
@@ -63,7 +75,6 @@ export function useAdminChat({ onNewMessage }: UseAdminChatOptions = {}) {
                 )
             `)
             .order('updated_at', { ascending: false })
-        // .limit(50) - Removed per user request
 
         if (data) {
             const processed = processConversations(data)
@@ -72,34 +83,28 @@ export function useAdminChat({ onNewMessage }: UseAdminChatOptions = {}) {
 
         if (showLoading) setIsLoading(false)
         setIsInitialLoad(false)
-    }, [processConversations])
+    }, [processConversations, supabase])
 
     useEffect(() => {
         // Initial Fetch
         fetchConversations(true)
 
         // Presence Subscription (Global Room)
-        // Aggressive Full Sync Strategy: On ANY event, recalc from scratch.
         const presenceChannel = supabase.channel('room:chat-presence')
 
         const updateOnlineUsers = () => {
             const newState = presenceChannel.presenceState()
             const onlineIds = new Set<string>()
-            const locations = new Map<string, string>() // NEW: Temp map
+            const locations = new Map<string, string>()
 
-            // Robust check: Look at both keys AND payloads
             Object.entries(newState).forEach(([key, presences]) => {
-                // 1. If the key itself looks like a conversation ID (UUID)
                 if (key && key.length > 20) {
                     onlineIds.add(key)
                 }
-
-                // 2. Deep scan of payloads (in case key is random)
                 if (Array.isArray(presences)) {
                     presences.forEach((p: any) => {
                         if (p.conversationId) {
                             onlineIds.add(p.conversationId)
-                            // NEW: Capture location
                             if (p.location) {
                                 locations.set(p.conversationId, p.location)
                             }
@@ -109,7 +114,7 @@ export function useAdminChat({ onNewMessage }: UseAdminChatOptions = {}) {
             })
 
             setOnlineUsers(onlineIds)
-            setUserLocations(locations) // NEW: Update state
+            setUserLocations(locations)
         }
 
         presenceChannel
@@ -129,12 +134,11 @@ export function useAdminChat({ onNewMessage }: UseAdminChatOptions = {}) {
                     table: 'messages'
                 },
                 (payload) => {
-                    // Trigger callback if provided
-                    if (onNewMessage) {
-                        onNewMessage(payload.new as Message)
+                    // Trigger callback via ref to ensure latest state is used
+                    if (onNewMessageRef.current) {
+                        onNewMessageRef.current(payload.new as Message)
                     }
 
-                    // When a new message arrives, we DO need to refetch to get the full conversation structure
                     fetchConversations(false)
                 }
             )
@@ -146,9 +150,7 @@ export function useAdminChat({ onNewMessage }: UseAdminChatOptions = {}) {
                     table: 'conversations'
                 },
                 (payload) => {
-                    // SEAMLESS UPDATE: Do NOT refetch.
                     const updatedConv = payload.new as Conversation
-
                     setConversations(prev => {
                         return prev.map(c =>
                             c.id === updatedConv.id ? { ...c, ...updatedConv } : c
@@ -162,12 +164,12 @@ export function useAdminChat({ onNewMessage }: UseAdminChatOptions = {}) {
             supabase.removeChannel(presenceChannel)
             supabase.removeChannel(dbChannel)
         }
-    }, [fetchConversations])
+    }, [fetchConversations, supabase])
 
     return {
         conversations,
         onlineUsers,
-        userLocations, // NEW
+        userLocations,
         isLoading: isInitialLoad ? isLoading : false,
         refresh: () => fetchConversations(true)
     }
