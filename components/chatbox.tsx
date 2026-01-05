@@ -130,7 +130,6 @@ export function Chatbox() {
                 <div className="relative w-full max-w-2xl aspect-video mb-0 translate-y-12 -mb-12">
                     <video
                         src="/bot-transparent.webm"
-                        poster="/bot-avatar.png"
                         autoPlay
                         loop
                         muted
