@@ -159,7 +159,7 @@ export function AppSidebar({ onNavClick, ...props }: AppSidebarProps) {
                                             </SidebarMenuSubButton>
                                         </SidebarMenuSubItem>
                                         <SidebarMenuSubItem>
-                                            <SidebarMenuSubButton onClick={() => onNavClick("What are your Other Skills?", ChatIntents.SKILLS_SOFT)}>
+                                            <SidebarMenuSubButton onClick={() => onNavClick("What are your Other Skills?", ChatIntents.SKILLS_OTHER)}>
                                                 <Layers />
                                                 <span>Other</span>
                                             </SidebarMenuSubButton>

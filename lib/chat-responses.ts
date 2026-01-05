@@ -47,8 +47,8 @@ const handleSkills = (intent: string | undefined, content: string) => {
         return "[[CATEGORY: Backend Development]] Here are my Backend skills.";
     if (intent === 'QUERY_SKILLS_DESIGN' || lowerContent.includes('design'))
         return "[[CATEGORY: Design]] I love creating beautiful UIs.";
-    if (intent === 'QUERY_SKILLS_SOFT' || lowerContent.includes('soft'))
-        return "[[CATEGORY: Soft Skills]] Here are my key soft skills.";
+    if (intent === 'QUERY_SKILLS_OTHER' || lowerContent.includes('other'))
+        return "[[CATEGORY: Other]] Here are my other skills.";
 
     return "[[SHOW_SKILLS]] Here are my technical skills.";
 };

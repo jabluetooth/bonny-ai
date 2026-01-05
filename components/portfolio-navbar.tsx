@@ -237,7 +237,7 @@ export function PortfolioNavbar() {
                                             <ListItem icon={<Palette className="w-4 h-4" />} title="Design" onClick={() => handleNavClick("What are your Design skills?", ChatIntents.SKILLS_DESIGN)}>
                                                 Tailwind CSS, Figma.
                                             </ListItem>
-                                            <ListItem icon={<Layers className="w-4 h-4" />} title="Other" onClick={() => handleNavClick("What are your Other Skills?", ChatIntents.SKILLS_SOFT)}>
+                                            <ListItem icon={<Layers className="w-4 h-4" />} title="Other" onClick={() => handleNavClick("What are your Other Skills?", ChatIntents.SKILLS_OTHER)}>
                                                 Teamwork, Communication
                                             </ListItem>
                                         </ul>
