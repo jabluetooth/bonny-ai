@@ -134,6 +134,8 @@ export function useAdminChat({ onNewMessage }: UseAdminChatOptions = {}) {
                     table: 'messages'
                 },
                 (payload) => {
+                    console.log("[useAdminChat] Supabase INSERT event received:", payload.new) // Debug log
+
                     // Trigger callback via ref to ensure latest state is used
                     if (onNewMessageRef.current) {
                         onNewMessageRef.current(payload.new as Message)

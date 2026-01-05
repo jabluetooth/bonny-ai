@@ -5,7 +5,7 @@ import { createBrowserClient } from "@supabase/ssr"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Loader2, Send, Play, Pause, RefreshCcw, ArrowLeft, Volume2, VolumeX, Bell, BellOff } from "lucide-react"
+import { Loader2, Send, Play, Pause, RefreshCcw, ArrowLeft } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
 import { format } from "date-fns"
@@ -31,15 +31,12 @@ interface Message {
 }
 
 export function ChatManager() {
-    const {
-        soundEnabled,
-        setSoundEnabled,
-        notificationsEnabled,
-        setNotificationsEnabled
-    } = useAdminSettings()
+    const { soundEnabled, notificationsEnabled } = useAdminSettings()
 
     const { conversations, isLoading, refresh, onlineUsers } = useAdminChat({
         onNewMessage: (msg) => {
+            console.log("[ChatManager] New message received:", msg) // Debug log
+
             // Only notify for USER messages
             if (msg.sender_type === 'user') {
                 // 1. Toast Notification (Always Visible)
@@ -94,32 +91,12 @@ export function ChatManager() {
             {/* List */}
             <Card className={cn("col-span-1 flex flex-col h-full", selectedId ? "hidden md:flex" : "flex")}>
                 <CardHeader className="py-3 px-4 border-b">
-                    <CardTitle className="text-sm font-medium flex items-center justify-between">
+                    <CardTitle className="text-sm font-medium">
                         <div className="flex flex-col">
                             <span>Active Sessions</span>
                             <span className="text-[10px] text-muted-foreground font-normal">
                                 {onlineCount} Online Now
                             </span>
-                        </div>
-                        <div className="flex gap-1">
-                            <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-6 w-6"
-                                onClick={() => setSoundEnabled(!soundEnabled)}
-                                title={soundEnabled ? "Mute Sound" : "Enable Sound"}
-                            >
-                                {soundEnabled ? <Volume2 className="h-4 w-4" /> : <VolumeX className="h-4 w-4" />}
-                            </Button>
-                            <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-6 w-6"
-                                onClick={() => setNotificationsEnabled(!notificationsEnabled)}
-                                title={notificationsEnabled ? "Disable Desktop Notifications" : "Enable Desktop Notifications"}
-                            >
-                                {notificationsEnabled ? <Bell className="h-4 w-4" /> : <BellOff className="h-4 w-4" />}
-                            </Button>
                         </div>
                     </CardTitle>
                 </CardHeader>

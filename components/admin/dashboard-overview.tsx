@@ -2,14 +2,42 @@
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { useAdminChat } from "@/hooks/use-admin-chat"
+import { useAdminSettings } from "@/hooks/use-admin-settings"
 import { format, subHours, startOfHour, isSameHour } from "date-fns"
 import { Users, MessageSquare, Activity, MapPin, Zap, Clock, BarChart3, LayoutDashboard, Settings, BookOpen, Briefcase } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip } from "recharts"
+import { toast } from "sonner"
 
 export function DashboardOverview() {
-    const { conversations, onlineUsers, userLocations, isLoading } = useAdminChat()
+    const { soundEnabled, notificationsEnabled } = useAdminSettings()
+
+    const { conversations, onlineUsers, userLocations, isLoading } = useAdminChat({
+        onNewMessage: (msg) => {
+            console.log("[DashboardOverview] New message received:", msg) // Debug log
+
+            if (msg.sender_type === 'user') {
+                // Toast (always)
+                toast.info(`Visitor: ${msg.content.substring(0, 30)}${msg.content.length > 30 ? '...' : ''}`)
+
+                // Sound
+                if (soundEnabled) {
+                    const audio = new Audio("/notification.mp3")
+                    audio.play().catch(e => console.log("Audio play failed:", e))
+                }
+
+                // Desktop Notification
+                if (notificationsEnabled && "Notification" in window && Notification.permission === "granted") {
+                    new Notification("New Message", {
+                        body: msg.content,
+                        icon: "/bot-avatar.png",
+                        tag: "new-message"
+                    })
+                }
+            }
+        }
+    })
 
     // Derived Metrics
     const onlineCount = conversations.filter(c => onlineUsers.has(c.id)).length
