@@ -11,6 +11,7 @@ import { WelcomeModal } from "./welcome-modal";
 import { SkillsSection } from "@/components/skills-section";
 import { ProjectsSection } from "@/components/projects-section";
 import { AboutSection } from "@/components/about-section";
+import { LoadingScreen } from "@/components/loading-screen";
 import { InterestsSection } from "@/components/interests-section";
 import { VisionSection } from "@/components/vision-section";
 
@@ -115,7 +116,12 @@ export function Chatbox() {
         };
     }, [messages.length]);
 
-    // 1. Hero / Initial State
+    // 1. Loading State (Global / Start)
+    if (isLoading && messages.length === 0) {
+        return <LoadingScreen />;
+    }
+
+    // 2. Hero / Initial State
     if (messages.length === 0) {
         return (
             <>
@@ -150,7 +156,7 @@ export function Chatbox() {
                             value={input}
                             onChange={(e) => setInput(e.target.value)}
                             placeholder={isChatDisabled ? "Message limit reached." : "Ask me anything..."}
-                            className="w-full h-14 pl-6 pr-16 rounded-full text-lg shadow-lg border-muted-foreground/20 bg-background focus-visible:ring-1 focus-visible:ring-primary/50 transition-all hover:shadow-xl"
+                            className="w-full h-14 pl-6 pr-16 rounded-full text-lg shadow-lg border-muted-foreground/20 bg-background focus-visible:ring-1 focus-visible:ring-primary/50 transition-all hover:shadow-xl relative z-10"
                             disabled={!conversationId || isLoading || isChatDisabled}
                         />
                         <Button
