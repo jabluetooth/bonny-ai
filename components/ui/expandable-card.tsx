@@ -180,8 +180,8 @@ const ProjectListItem = ({
             className="py-4 pl-4 pr-4 flex flex-row justify-between items-center hover:bg-neutral-50 dark:hover:bg-neutral-800/50 rounded-xl cursor-pointer transition-colors group"
         >
             <div className="flex gap-4 flex-row items-center">
-                {/* Image */}
-                <div className="rounded-lg overflow-hidden h-14 w-14">
+                {/* Image - Hidden on mobile */}
+                <div className="hidden md:block rounded-lg overflow-hidden h-14 w-14">
                     <img
                         width={60}
                         height={60}
