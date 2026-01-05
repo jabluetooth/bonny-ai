@@ -32,6 +32,7 @@ import {
     Users,
     ChevronDown,
     ChevronUp,
+    Layers,
 } from "lucide-react"
 
 import { InteractiveHoverButton } from "@/components/ui/interactive-hover-button"
@@ -222,7 +223,7 @@ export function PortfolioNavbar() {
                                     </NavigationMenuContent>
                                 </NavigationMenuItem>
 
-                                {/* 3. SKILLS: Frontend, Backend, Design, Soft skills */}
+                                {/* 3. SKILLS: Frontend, Backend, Design, Other */}
                                 <NavigationMenuItem>
                                     <NavigationMenuTrigger className="bg-transparent hover:bg-primary/10 focus:bg-primary/10 data-[state=open]:bg-primary/10 rounded-full hover:text-primary relative after:absolute after:-top-1 after:left-1/2 after:-translate-x-1/2 after:w-8 after:h-[2px] after:bg-primary after:shadow-[0_0_8px_var(--primary)] after:opacity-0 hover:after:opacity-100 after:transition-all after:duration-300">Skills</NavigationMenuTrigger>
                                     <NavigationMenuContent>
@@ -236,7 +237,7 @@ export function PortfolioNavbar() {
                                             <ListItem icon={<Palette className="w-4 h-4" />} title="Design" onClick={() => handleNavClick("What are your Design skills?", ChatIntents.SKILLS_DESIGN)}>
                                                 Tailwind CSS, Figma.
                                             </ListItem>
-                                            <ListItem icon={<Users className="w-4 h-4" />} title="Soft skills" onClick={() => handleNavClick("What are your Soft Skills?", ChatIntents.SKILLS_SOFT)}>
+                                            <ListItem icon={<Layers className="w-4 h-4" />} title="Other" onClick={() => handleNavClick("What are your Other Skills?", ChatIntents.SKILLS_SOFT)}>
                                                 Teamwork, Communication
                                             </ListItem>
                                         </ul>

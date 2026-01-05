@@ -11,6 +11,7 @@ import {
     User,
     Users,
     ChevronDown,
+    Layers,
 } from "lucide-react"
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
 
@@ -158,9 +159,9 @@ export function AppSidebar({ onNavClick, ...props }: AppSidebarProps) {
                                             </SidebarMenuSubButton>
                                         </SidebarMenuSubItem>
                                         <SidebarMenuSubItem>
-                                            <SidebarMenuSubButton onClick={() => onNavClick("What are your Soft Skills?", ChatIntents.SKILLS_SOFT)}>
-                                                <Users />
-                                                <span>Soft Skills</span>
+                                            <SidebarMenuSubButton onClick={() => onNavClick("What are your Other Skills?", ChatIntents.SKILLS_SOFT)}>
+                                                <Layers />
+                                                <span>Other</span>
                                             </SidebarMenuSubButton>
                                         </SidebarMenuSubItem>
                                     </SidebarMenuSub>

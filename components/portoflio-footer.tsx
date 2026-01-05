@@ -24,7 +24,7 @@ export async function SiteFooter() {
                 <div className="hidden md:flex items-center">
                     <Status status="online" className="px-2 py-0.5 h-6">
                         <StatusIndicator />
-                        <StatusLabel className="text-xs">Online</StatusLabel>
+                        <StatusLabel className="text-xs">Open for part time</StatusLabel>
                     </Status>
                 </div>
             </div>
