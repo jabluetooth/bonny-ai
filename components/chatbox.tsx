@@ -162,7 +162,7 @@ export function Chatbox() {
                             type="submit"
                             size="icon"
                             disabled={!conversationId || isLoading || !input.trim() || isChatDisabled}
-                            className="absolute right-1.5 h-11 w-11 rounded-full bg-blue-500 hover:bg-blue-600 text-white shadow-sm transition-transform hover:scale-105 active:scale-95"
+                            className="absolute right-1.5 h-11 w-11 rounded-full bg-blue-500 hover:bg-blue-600 text-white shadow-sm transition-transform hover:scale-105 active:scale-95 z-20"
                         >
                             <ArrowRight size={20} />
                             <span className="sr-only">Send</span>
