@@ -69,7 +69,10 @@ export function getDeterministicResponse(intent: string | undefined, content: st
         'QUERY_INTERESTS': "[[SHOW_INTERESTS]] Here are my interests and hobbies! 📸",
         'QUERY_VISION': "[[SHOW_VISION]] Here is my vision for the future! 🔮",
         'QUERY_BACKGROUND': "[[SHOW_BACKGROUND]] Here is a visual overview of my journey! 🗺️",
-        'QUERY_ABOUT_ME': () => `[[SHOW_ABOUT]] Here is a bit about me:\n\n${formatList(context.about || [], 'title', 'content')}`
+        'QUERY_ABOUT_ME': () => {
+            const aboutContent = context.about?.map((a: any) => a.content).filter(Boolean).join('\n\n') || '';
+            return `[[SHOW_ABOUT]] Here is a bit about me:\n\n${aboutContent || "I'm a passionate developer who loves building great software!"}`;
+        }
     };
 
     const match = simpleResponses[intent];
