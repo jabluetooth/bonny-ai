@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { toast } from "sonner"
 import { Loader2, Plus, X } from "lucide-react"
+import { ImageUploader } from "@/components/admin/image-uploader"
 
 interface ProjectDialogProps {
     open: boolean
@@ -203,13 +204,13 @@ export function ProjectDialog({ open, onOpenChange, project, onSuccess }: Projec
                         </div>
                     </div>
 
-                    <div className="space-y-2">
-                        <Label>Header Image URL</Label>
-                        <div className="flex gap-2">
-                            <Input value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} placeholder="https://..." />
-                            {imageUrl && <img src={imageUrl} alt="Preview" className="h-10 w-10 rounded object-cover border" />}
-                        </div>
-                    </div>
+                    <ImageUploader
+                        label="Header Image"
+                        folder="projects"
+                        value={imageUrl}
+                        onChange={setImageUrl}
+                        aspectRatio="16/9"
+                    />
 
                     <div className="space-y-2">
                         <Label>Tech Stack / Skills (Press Enter or Add)</Label>

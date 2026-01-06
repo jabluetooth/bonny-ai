@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch"
 import { toast } from "sonner"
 import { Loader2 } from "lucide-react"
+import { ImageUploader } from "@/components/admin/image-uploader"
 
 interface SkillDialogProps {
     open: boolean
@@ -116,14 +117,14 @@ export function SkillDialog({ open, onOpenChange, skill, onSuccess }: SkillDialo
                         </Select>
                     </div>
 
-                    <div className="space-y-2">
-                        <Label>Icon URL (Optional)</Label>
-                        <div className="flex gap-2">
-                            <Input value={iconUrl} onChange={(e) => setIconUrl(e.target.value)} placeholder="https://..." />
-                            {iconUrl && <img src={iconUrl} alt="Preview" className="h-10 w-10 p-1 border rounded object-contain" />}
-                        </div>
-                        <p className="text-xs text-muted-foreground">URL to a transparent PNG/SVG logo.</p>
-                    </div>
+                    <ImageUploader
+                        label="Icon (Optional)"
+                        folder="skills"
+                        value={iconUrl}
+                        onChange={setIconUrl}
+                        aspectRatio="1/1"
+                        maxSizeMB={2}
+                    />
 
                     <div className="flex items-center justify-between border p-3 rounded-lg">
                         <div className="space-y-0.5">

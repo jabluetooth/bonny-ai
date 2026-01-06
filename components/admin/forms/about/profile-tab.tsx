@@ -3,13 +3,13 @@
 import { useEffect, useState } from "react"
 import { supabase } from "@/lib/supabase-client"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { toast } from "sonner"
 import { Loader2, Save, Plus, X } from "lucide-react"
+import { ImageUploader } from "@/components/admin/image-uploader"
 
 export function ProfileTab() {
     const [isLoading, setIsLoading] = useState(true)
@@ -135,27 +135,31 @@ export function ProfileTab() {
                 <div className="space-y-4">
                     <Label>Profile Images</Label>
 
-                    {imageUrls.map((url, index) => (
-                        <div key={index} className="flex gap-2 items-start">
-                            <Input
-                                value={url}
-                                onChange={(e) => updateImage(index, e.target.value)}
-                                placeholder="https://..."
-                            />
-                            {url && (
-                                <div className="h-10 w-10 shrink-0 overflow-hidden rounded-md border bg-muted">
-                                    <img src={url} alt="Preview" className="h-full w-full object-cover" />
-                                </div>
-                            )}
-                            <Button variant="ghost" size="icon" onClick={() => removeImage(index)}>
-                                <X className="h-4 w-4" />
-                            </Button>
-                        </div>
-                    ))}
+                    <div className="grid gap-4">
+                        {imageUrls.map((url, index) => (
+                            <div key={index} className="relative">
+                                <ImageUploader
+                                    label={`Image ${index + 1}`}
+                                    folder="profiles"
+                                    value={url}
+                                    onChange={(newUrl) => updateImage(index, newUrl)}
+                                    aspectRatio="16/9"
+                                />
+                                <Button
+                                    variant="destructive"
+                                    size="sm"
+                                    className="absolute top-0 right-0"
+                                    onClick={() => removeImage(index)}
+                                >
+                                    <X className="h-4 w-4 mr-1" /> Remove
+                                </Button>
+                            </div>
+                        ))}
+                    </div>
 
                     <div className="flex gap-2">
                         <Button variant="outline" size="sm" onClick={addImage} className="flex-1">
-                            <Plus className="mr-2 h-4 w-4" /> Add Image URL
+                            <Plus className="mr-2 h-4 w-4" /> Add Image Slot
                         </Button>
                         <Button variant="secondary" size="sm" onClick={fillStockImages} className="flex-1">
                             <Save className="mr-2 h-4 w-4" /> Use Stock Photos

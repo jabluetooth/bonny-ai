@@ -141,7 +141,7 @@ export function SkillsSection({ highlightSkill, highlightCategory }: { highlight
                         <Marquee className="h-full">
                             <MarqueeFade side="left" />
                             <MarqueeFade side="right" />
-                            <MarqueeContent>
+                            <MarqueeContent speed={100}>
                                 {marqueeSkills.map((skill: any) => (
                                     <MarqueeItem key={skill.name}>
                                         <SkillCard name={skill.name} img={skill.icon_url || ""} />
@@ -175,9 +175,7 @@ export function SkillsSection({ highlightSkill, highlightCategory }: { highlight
                                     key={skill.name}
                                     className={cn(
                                         "px-3 py-1.5 text-xs font-medium rounded-xl border whitespace-normal h-auto text-left max-w-full leading-snug break-words",
-                                        "bg-zinc-900 text-white border-zinc-800 dark:bg-white dark:text-zinc-900",
-                                        // Highlight skill if match
-                                        highlightSkill && "ring-2 ring-primary/50"
+                                        "bg-zinc-900 text-white border-zinc-800 dark:bg-white dark:text-zinc-900"
                                     )}
                                 >
                                     {skill.name}

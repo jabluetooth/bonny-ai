@@ -129,7 +129,10 @@ async function processSkills() {
 async function processExperience() {
     console.log('Processing Experiences...');
     const { data: experiences } = await supabase.from('experiences').select('*');
-    if (!experiences) return;
+    if (!experiences || experiences.length === 0) {
+        console.log('  No experiences found in database (skipping).');
+        return;
+    }
 
     for (const e of experiences) {
         const date = e.date_range || e.date || 'Unknown Date';
@@ -153,23 +156,96 @@ async function processExperience() {
             });
         }
     }
+    console.log(`  Embedded ${experiences.length} experiences.`);
+}
+
+async function processInterests() {
+    console.log('Processing Interests...');
+    const { data: interests } = await supabase.from('interests').select('*');
+    if (!interests || interests.length === 0) {
+        console.log('  No interests found in database (skipping).');
+        return;
+    }
+
+    for (const i of interests) {
+        const content = `Personal Interest/Hobby: ${i.title}. ${i.description || ''}`.trim();
+        const embedding = await generateEmbedding(content);
+
+        await supabase.from('document_embeddings').insert({
+            content,
+            embedding,
+            metadata: { source_table: 'interests', record_id: i.id, chunk_type: 'hobby', title: i.title }
+        });
+    }
+    console.log(`  Embedded ${interests.length} interests.`);
+}
+
+async function processBackgroundCards() {
+    console.log('Processing Background Cards...');
+    const { data: cards } = await supabase.from('background_cards').select('*');
+    if (!cards || cards.length === 0) {
+        console.log('  No background cards found in database (skipping).');
+        return;
+    }
+
+    for (const c of cards) {
+        const dateInfo = c.date_range ? ` (${c.date_range})` : '';
+        const content = `Background/Milestone: ${c.title}${dateInfo}. ${c.description || ''}`.trim();
+        const embedding = await generateEmbedding(content);
+
+        await supabase.from('document_embeddings').insert({
+            content,
+            embedding,
+            metadata: { source_table: 'background_cards', record_id: c.id, chunk_type: 'milestone', title: c.title }
+        });
+    }
+    console.log(`  Embedded ${cards.length} background cards.`);
+}
+
+async function processVisionCards() {
+    console.log('Processing Vision Cards...');
+    const { data: cards } = await supabase.from('vision_cards').select('*');
+    if (!cards || cards.length === 0) {
+        console.log('  No vision cards found in database (skipping).');
+        return;
+    }
+
+    for (const v of cards) {
+        // Include quote attribution for better context
+        const attribution = v.name ? ` - ${v.name}` : '';
+        const category = v.title ? ` [${v.title}]` : '';
+        const content = `Vision/Inspiration: "${v.quote}"${attribution}${category}`.trim();
+        const embedding = await generateEmbedding(content);
+
+        await supabase.from('document_embeddings').insert({
+            content,
+            embedding,
+            metadata: { source_table: 'vision_cards', record_id: v.id, chunk_type: 'quote', author: v.name }
+        });
+    }
+    console.log(`  Embedded ${cards.length} vision cards.`);
 }
 
 async function main() {
     console.log('Starting ingestion...');
 
-    // Clear old embeddings? 
-    // For safety, let's just wipe the table to avoid duplicates on re-runs
-    const { error: deleteError } = await supabase.from('document_embeddings').delete().neq('id', '00000000-0000-0000-0000-000000000000'); // Hacky delete all
+    // Clear old embeddings to avoid duplicates on re-runs
+    const { error: deleteError } = await supabase.from('document_embeddings').delete().neq('id', '00000000-0000-0000-0000-000000000000');
     if (deleteError) console.warn('Error clearing table (might be empty):', deleteError.message);
     else console.log('Cleared existing embeddings.');
 
+    // Core professional data
     await processProfiles();
     await processProjects();
     await processSkills();
     await processExperience();
 
-    console.log('Ingestion complete!');
+    // Personal/About section data
+    await processInterests();
+    await processBackgroundCards();
+    await processVisionCards();
+
+    console.log('\nIngestion complete!');
 }
 
 main().catch(console.error);

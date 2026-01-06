@@ -11,6 +11,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { toast } from "sonner"
 import { Loader2, Plus, Pencil, Trash2 } from "lucide-react"
 import { Textarea } from "@/components/ui/textarea"
+import { ImageUploader } from "@/components/admin/image-uploader"
 
 interface BackgroundCard {
     id: string
@@ -149,10 +150,13 @@ export function BackgroundTab() {
                             <Label>Description</Label>
                             <Textarea value={formData.description || ""} onChange={e => setFormData({ ...formData, description: e.target.value })} />
                         </div>
-                        <div className="grid gap-2">
-                            <Label>Image URL</Label>
-                            <Input value={formData.image || ""} onChange={e => setFormData({ ...formData, image: e.target.value })} />
-                        </div>
+                        <ImageUploader
+                            label="Image"
+                            folder="background"
+                            value={formData.image || ""}
+                            onChange={(url) => setFormData({ ...formData, image: url })}
+                            aspectRatio="16/9"
+                        />
                         <div className="grid gap-2">
                             <Label>Display Order</Label>
                             <Input type="number" value={formData.display_order || 0} onChange={e => setFormData({ ...formData, display_order: parseInt(e.target.value) })} />
