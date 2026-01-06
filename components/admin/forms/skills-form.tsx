@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { createBrowserClient } from "@supabase/ssr"
+import { supabase } from "@/lib/supabase-client"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Loader2, Plus, Pencil, Trash2, Star } from "lucide-react"
@@ -14,11 +14,6 @@ export function AdminSkillsForm() {
     const [categories, setCategories] = useState<any[]>([])
     const [isDialogOpen, setIsDialogOpen] = useState(false)
     const [selectedSkill, setSelectedSkill] = useState<any>(null)
-
-    const supabase = createBrowserClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-    )
 
     const fetchSkills = async () => {
         setIsLoading(true)

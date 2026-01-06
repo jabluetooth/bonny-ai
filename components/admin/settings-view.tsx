@@ -6,14 +6,15 @@ import { useState, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Label } from "@/components/ui/label"
-import { Input } from "@/components/ui/input"
+
 import { Switch } from "@/components/ui/switch"
 import { Textarea } from "@/components/ui/textarea"
 import { Button } from "@/components/ui/button"
 import { Bot, Bell, Shield, LogOut, Save, Laptop, Palette } from "lucide-react"
 import { toast } from "sonner"
-import { createBrowserClient } from "@supabase/ssr"
+import { supabase } from "@/lib/supabase-client"
 import { AvatarUploader } from "./avatar-uploader"
+import { ContactManager } from "@/components/admin/contact-manager"
 
 export function SettingsView() {
     const [isLoading, setIsLoading] = useState(false)
@@ -43,10 +44,6 @@ Impress the visitor with your skills and projects. Be helpful, enthusiastic, and
     }
 
     const handleSignOut = async () => {
-        const supabase = createBrowserClient(
-            process.env.NEXT_PUBLIC_SUPABASE_URL!,
-            process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-        )
         await supabase.auth.signOut()
         window.location.href = '/'
     }
@@ -195,6 +192,11 @@ Impress the visitor with your skills and projects. Be helpful, enthusiastic, and
                             </div>
                         </CardContent>
                     </Card>
+
+                    {/* Contact Links Manager */}
+                    <div className="mt-6">
+                        <ContactManager />
+                    </div>
                 </TabsContent>
             </Tabs>
         </div>

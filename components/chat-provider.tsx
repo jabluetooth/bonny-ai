@@ -1,6 +1,6 @@
 "use client"
 
-import { createContext, useContext, useEffect, useState, useRef, ReactNode } from "react"
+import { createContext, useContext, useEffect, useState, ReactNode } from "react"
 import { supabase } from "@/lib/supabase-client"
 
 interface ChatContextType {
@@ -15,7 +15,6 @@ interface ChatContextType {
     startChat: (name?: string) => Promise<string | null>
     isWelcomeOpen: boolean
     setIsWelcomeOpen: (open: boolean) => void
-    welcomePlaceholder: string
     isChatDisabled: boolean
     isAdminMode: boolean
 }
@@ -32,7 +31,6 @@ const ChatContext = createContext<ChatContextType>({
     startChat: async () => { return null },
     isWelcomeOpen: false,
     setIsWelcomeOpen: () => { },
-    welcomePlaceholder: "|",
     isChatDisabled: false,
     isAdminMode: false
 })
@@ -46,15 +44,8 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     const [isChatDisabled, setIsChatDisabled] = useState(false)
     const [isAdminMode, setIsAdminMode] = useState(false)
 
-    // --- Typing Animation Logic (Lifted State) ---
+    // Welcome modal state (animation is handled locally in WelcomeModal)
     const [isWelcomeOpen, setIsWelcomeOpen] = useState(false)
-    const [welcomePlaceholder, setWelcomePlaceholder] = useState("|")
-    const [phraseIndex, setPhraseIndex] = useState(0)
-    const [charIndex, setCharIndex] = useState(0)
-    const [isDeleting, setIsDeleting] = useState(false)
-    const [isPausing, setIsPausing] = useState(false)
-
-    // Use singleton directly (removed state)
 
     // Expose startChat for manual initialization
     const startChat = async (name?: string, forceReset: boolean = true): Promise<string | null> => {
@@ -362,50 +353,6 @@ export function ChatProvider({ children }: { children: ReactNode }) {
         }
     }
 
-    const phrases = [
-        "welcome to bonny ai",
-        "my name is fil heinz",
-        "write your name here.."
-    ]
-
-    useEffect(() => {
-        // Only run animation if welcome modal is open (or generally if we want it active during onboarding)
-        if (!isWelcomeOpen) return
-
-        const currentPhrase = phrases[phraseIndex]
-
-        let timeoutDuration = isDeleting ? 50 : 100
-        if (isPausing) timeoutDuration = 2000
-
-        const timeout = setTimeout(() => {
-            if (isPausing) {
-                setIsPausing(false)
-                setIsDeleting(true)
-                return
-            }
-
-            if (!isDeleting) {
-                if (charIndex < currentPhrase.length) {
-                    setCharIndex(prev => prev + 1)
-                } else {
-                    setIsPausing(true)
-                }
-            } else {
-                if (charIndex > 0) {
-                    setCharIndex(prev => prev - 1)
-                } else {
-                    setIsDeleting(false)
-                    setPhraseIndex((prev) => (prev + 1) % phrases.length)
-                }
-            }
-        }, timeoutDuration)
-
-        setWelcomePlaceholder(currentPhrase.substring(0, charIndex) + "|")
-
-        return () => clearTimeout(timeout)
-    }, [charIndex, isDeleting, isPausing, phraseIndex, isWelcomeOpen])
-
-
     return (
         <ChatContext.Provider value={{
             conversationId,
@@ -419,7 +366,6 @@ export function ChatProvider({ children }: { children: ReactNode }) {
             startChat,
             isWelcomeOpen,
             setIsWelcomeOpen,
-            welcomePlaceholder,
             isChatDisabled,
             isAdminMode
         }}>

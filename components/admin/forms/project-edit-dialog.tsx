@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { createBrowserClient } from "@supabase/ssr"
+import { supabase } from "@/lib/supabase-client"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
@@ -31,11 +31,6 @@ export function ProjectDialog({ open, onOpenChange, project, onSuccess }: Projec
     const [techStack, setTechStack] = useState<string[]>([]) // For now, just a list of strings
     const [newFeature, setNewFeature] = useState("")
     const [newTech, setNewTech] = useState("")
-
-    const supabase = createBrowserClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-    )
 
     useEffect(() => {
         if (project) {

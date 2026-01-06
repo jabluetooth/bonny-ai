@@ -1,12 +1,13 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { createBrowserClient } from "@supabase/ssr"
+import { supabase } from "@/lib/supabase-client"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { toast } from "sonner"
 import { Loader2, Save, Plus, X } from "lucide-react"
 
@@ -14,15 +15,11 @@ export function ProfileTab() {
     const [isLoading, setIsLoading] = useState(true)
     const [isSaving, setIsSaving] = useState(false)
 
-    const [title, setTitle] = useState("")
+
     const [description, setDescription] = useState("")
+    const [status, setStatus] = useState("available_fulltime")
     const [imageUrls, setImageUrls] = useState<string[]>([])
     const [profileId, setProfileId] = useState<string | null>(null)
-
-    const supabase = createBrowserClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-    )
 
     useEffect(() => {
         fetchProfile()
@@ -32,13 +29,13 @@ export function ProfileTab() {
         setIsLoading(true)
         const { data } = await supabase
             .from('author_profiles')
-            .select('*')
+            .select('id, description, images, status, is_active')
             .eq('is_active', true)
             .maybeSingle()
 
         if (data) {
-            setTitle(data.title || "")
             setDescription(data.description || "")
+            setStatus(data.status || "available_fulltime")
             if (data.images && Array.isArray(data.images)) {
                 setImageUrls(data.images)
             } else {
@@ -74,8 +71,8 @@ export function ProfileTab() {
         setIsSaving(true)
         try {
             const payload = {
-                title,
                 description,
+                status,
                 images: imageUrls.filter(url => url.trim() !== ""),
                 is_active: true,
                 updated_at: new Date().toISOString()
@@ -114,10 +111,23 @@ export function ProfileTab() {
                 </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
+
+
                 <div className="space-y-2">
-                    <Label htmlFor="title">Title / Headline</Label>
-                    <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="I'm Fil, a creative engineer" />
+                    <Label htmlFor="status">Availability Status</Label>
+                    <Select value={status} onValueChange={setStatus}>
+                        <SelectTrigger>
+                            <SelectValue placeholder="Select Status" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="available_fulltime">🟢 Available for Full-time</SelectItem>
+                            <SelectItem value="available_parttime">🟡 Available for Part-time</SelectItem>
+                            <SelectItem value="open_for_discussion">🔵 Open for Discussion</SelectItem>
+                            <SelectItem value="busy">🔴 Busy / Not Looking</SelectItem>
+                        </SelectContent>
+                    </Select>
                 </div>
+
                 <div className="space-y-2">
                     <Label htmlFor="description">Bio</Label>
                     <Textarea value={description} onChange={(e) => setDescription(e.target.value)} className="min-h-[150px]" placeholder="Short bio..." />

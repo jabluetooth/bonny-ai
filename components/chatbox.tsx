@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import { useChat } from "@/components/chat-provider";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -21,8 +21,64 @@ import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { BackgroundCards } from "@/components/background-cards";
 
+// Types for parsed message data
+interface ParsedMessageData {
+    cleanContent: string;
+    highlightSkill: string | undefined;
+    highlightCategory: string | undefined;
+    showSkills: boolean;
+    showProjects: boolean;
+    projectCategory: string | undefined;
+    showExperiences: boolean;
+    experienceCategory: string | undefined;
+    showAbout: boolean;
+    showInterests: boolean;
+    showVision: boolean;
+    showBackground: boolean;
+}
+
+// Pure function to parse message content for UI tags - moved outside component to avoid recreation
+function getMessageData(content: string): ParsedMessageData {
+    const skillMatch = content.match(/\[\[(?:SHOW_)?SKILL:\s*(.*?)\]\]/);
+    const categoryMatch = content.match(/\[\[(?:SHOW_)?CATEGORY:\s*(.*?)\]\]/);
+    const experienceMatch = content.match(/\[\[(?:SHOW_)?EXPERIENCE:\s*(.*?)\]\]/);
+    const projectMatch = content.match(/\[\[(?:SHOW_)?PROJECTS:\s*(.*?)\]\]/);
+
+    const showAllSkills = /\[\[(?:SHOW_)?SKILLS\]\]/.test(content);
+    const showProjects = !!projectMatch || /\[\[(?:SHOW_)?PROJECTS\]\]/.test(content);
+    const showAbout = /\[\[(?:SHOW_)?ABOUT\]\]/.test(content);
+    const showInterests = /\[\[(?:SHOW_)?INTERESTS\]\]/.test(content);
+    const showVision = /\[\[(?:SHOW_)?VISION\]\]/.test(content);
+    const showBackground = /\[\[(?:SHOW_)?BACKGROUND\]\]/.test(content);
+    const showExperiences = !!experienceMatch || /\[\[(?:SHOW_)?EXPERIENCE\]\]/.test(content);
+
+    const highlightSkill = skillMatch ? skillMatch[1] : undefined;
+    const highlightCategory = categoryMatch ? categoryMatch[1] : undefined;
+    const experienceCategory = experienceMatch ? experienceMatch[1].toLowerCase() : undefined;
+    const projectCategory = projectMatch ? projectMatch[1].toLowerCase() : undefined;
+
+    // Clean the tag out of the displayed text (remove all types of tags)
+    let cleanContent = content.replace(/\[\[(?:SHOW_)?SKILL:\s*.*?\]\]/g, "");
+    cleanContent = cleanContent.replace(/\[\[(?:SHOW_)?CATEGORY:\s*.*?\]\]/g, "");
+    cleanContent = cleanContent.replace(/\[\[(?:SHOW_)?EXPERIENCE:\s*.*?\]\]/g, "");
+    cleanContent = cleanContent.replace(/\[\[(?:SHOW_)?PROJECTS:\s*.*?\]\]/g, "");
+    cleanContent = cleanContent
+        .replace(/\[\[(?:SHOW_)?SKILLS\]\]/g, "")
+        .replace(/\[\[(?:SHOW_)?PROJECTS\]\]/g, "")
+        .replace(/\[\[(?:SHOW_)?EXPERIENCE\]\]/g, "")
+        .replace(/\[\[(?:SHOW_)?ABOUT\]\]/g, "")
+        .replace(/\[\[(?:SHOW_)?INTERESTS\]\]/g, "")
+        .replace(/\[\[(?:SHOW_)?VISION\]\]/g, "")
+        .replace(/\[\[(?:SHOW_)?BACKGROUND\]\]/g, "")
+        .trim();
+
+    const showSkills = !!highlightSkill || !!highlightCategory || showAllSkills;
+
+    return { cleanContent, highlightSkill, highlightCategory, showSkills, showProjects, projectCategory, showExperiences, experienceCategory, showAbout, showInterests, showVision, showBackground };
+}
+
 export function Chatbox() {
-    const { conversationId, sendMessage, messages, isLoading, welcomePlaceholder, isWelcomeOpen, isChatDisabled } = useChat();
+    const { conversationId, sendMessage, messages, isLoading, isWelcomeOpen, isChatDisabled } = useChat();
     const [input, setInput] = useState("");
     const [typedMessages, setTypedMessages] = useState<Set<string | number>>(new Set());
 
@@ -51,47 +107,13 @@ export function Chatbox() {
         await sendMessage(msg);
     };
 
-    // Helper to parse content for skill tags
-    const getMessageData = (content: string) => {
-        const skillMatch = content.match(/\[\[(?:SHOW_)?SKILL:\s*(.*?)\]\]/);
-        const categoryMatch = content.match(/\[\[(?:SHOW_)?CATEGORY:\s*(.*?)\]\]/);
-        const experienceMatch = content.match(/\[\[(?:SHOW_)?EXPERIENCE:\s*(.*?)\]\]/);
-        const projectMatch = content.match(/\[\[(?:SHOW_)?PROJECTS:\s*(.*?)\]\]/);
-
-        const showAllSkills = /\[\[(?:SHOW_)?SKILLS\]\]/.test(content);
-        const showProjects = !!projectMatch || /\[\[(?:SHOW_)?PROJECTS\]\]/.test(content);
-        const showAbout = /\[\[(?:SHOW_)?ABOUT\]\]/.test(content);
-        const showInterests = /\[\[(?:SHOW_)?INTERESTS\]\]/.test(content);
-        const showVision = /\[\[(?:SHOW_)?VISION\]\]/.test(content);
-        const showBackground = /\[\[(?:SHOW_)?BACKGROUND\]\]/.test(content);
-        // Fallback for old tag or if specific tag missing, though API now sends specific
-        const showExperiences = !!experienceMatch || /\[\[(?:SHOW_)?EXPERIENCE\]\]/.test(content);
-
-        const highlightSkill = skillMatch ? skillMatch[1] : undefined;
-        const highlightCategory = categoryMatch ? categoryMatch[1] : undefined;
-        const experienceCategory = experienceMatch ? experienceMatch[1].toLowerCase() : undefined;
-        const projectCategory = projectMatch ? projectMatch[1].toLowerCase() : undefined;
-
-        // Clean the tag out of the displayed text (remove all types of tags)
-        let cleanContent = content.replace(/\[\[(?:SHOW_)?SKILL:\s*.*?\]\]/g, "");
-        cleanContent = cleanContent.replace(/\[\[(?:SHOW_)?CATEGORY:\s*.*?\]\]/g, "");
-        cleanContent = cleanContent.replace(/\[\[(?:SHOW_)?EXPERIENCE:\s*.*?\]\]/g, "");
-        cleanContent = cleanContent.replace(/\[\[(?:SHOW_)?PROJECTS:\s*.*?\]\]/g, "");
-        cleanContent = cleanContent
-            .replace(/\[\[(?:SHOW_)?SKILLS\]\]/g, "")
-            .replace(/\[\[(?:SHOW_)?PROJECTS\]\]/g, "")
-            .replace(/\[\[(?:SHOW_)?EXPERIENCE\]\]/g, "")
-            .replace(/\[\[(?:SHOW_)?ABOUT\]\]/g, "")
-            .replace(/\[\[(?:SHOW_)?INTERESTS\]\]/g, "")
-            .replace(/\[\[(?:SHOW_)?VISION\]\]/g, "")
-            .replace(/\[\[(?:SHOW_)?BACKGROUND\]\]/g, "")
-            .trim();
-
-        // Show skills if tag exists OR context keywords found (heuristic fallback)
-        const showSkills = !!highlightSkill || !!highlightCategory || showAllSkills;
-
-        return { cleanContent, highlightSkill, highlightCategory, showSkills, showProjects, projectCategory, showExperiences, experienceCategory, showAbout, showInterests, showVision, showBackground };
-    };
+    // Memoize parsed message data - only re-parse when messages array changes
+    const parsedMessages = useMemo(() => {
+        return messages.map((msg: any) => ({
+            ...msg,
+            parsed: getMessageData(msg.content)
+        }));
+    }, [messages]);
 
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -183,10 +205,11 @@ export function Chatbox() {
                     <ScrollArea className="h-full w-full" viewportId="chat-scroll-area">
                         <div className="flex flex-col flex-1 justify-end gap-6 pb-2 px-4">
                             {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                            {messages.map((msg: any, i) => {
-                                const { cleanContent, highlightSkill, highlightCategory, showSkills, showProjects, projectCategory, showExperiences, experienceCategory, showAbout, showInterests, showVision, showBackground } = getMessageData(msg.content);
+                            {parsedMessages.map((msg: any, i) => {
+                                // Use pre-parsed data from memoized array
+                                const { cleanContent, highlightSkill, highlightCategory, showSkills, showProjects, projectCategory, showExperiences, experienceCategory, showAbout, showInterests, showVision, showBackground } = msg.parsed;
 
-                                const isLatestBotMessage = msg.role === 'bot' && i === messages.length - 1;
+                                const isLatestBotMessage = msg.role === 'bot' && i === parsedMessages.length - 1;
                                 const isAdmin = msg.role === 'admin' || (msg as any).sender_type === 'admin';
                                 const isUser = msg.role === 'user';
 
@@ -195,7 +218,7 @@ export function Chatbox() {
                                 const shouldAnimate = isLatestBotMessage && !hasTyped;
 
                                 // Heuristic for About Section if not explicitly tagged
-                                const prevMsg = messages[i - 1];
+                                const prevMsg = parsedMessages[i - 1];
                                 const showAboutHeuristic = prevMsg && prevMsg.role === 'user' && prevMsg.content.includes("Tell me about yourself");
 
                                 return (
@@ -228,7 +251,7 @@ export function Chatbox() {
                                                     />
                                                 ) : (
                                                     /* Format message with BOLD support */
-                                                    cleanContent.split(/(\*\*.*?\*\*)/).map((part, idx) => {
+                                                    cleanContent.split(/(\*\*.*?\*\*)/).map((part: string, idx: number) => {
                                                         if (part.startsWith('**') && part.endsWith('**')) {
                                                             return <strong key={idx}>{part.slice(2, -2)}</strong>;
                                                         }

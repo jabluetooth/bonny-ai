@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState, useRef } from "react"
-import { createBrowserClient } from "@supabase/ssr"
+import { supabase } from "@/lib/supabase-client"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -63,12 +63,6 @@ export function ChatManager() {
     // Local UI State
     const [selectedId, setSelectedId] = useState<string | null>(null)
     const [msgInput, setMsgInput] = useState("")
-
-    // Supabase Client for Actions
-    const [supabase] = useState(() => createBrowserClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-    ))
 
     const selectedConv = conversations.find(c => c.id === selectedId)
 

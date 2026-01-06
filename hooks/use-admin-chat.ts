@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState, useCallback, useRef } from "react"
-import { createBrowserClient } from "@supabase/ssr"
+import { supabase } from "@/lib/supabase-client"
 
 export interface Conversation {
     id: string
@@ -25,11 +25,6 @@ interface UseAdminChatOptions {
 }
 
 export function useAdminChat({ onNewMessage }: UseAdminChatOptions = {}) {
-    // Isolate Admin connection from main app connection to fix presence conflicts
-    const [supabase] = useState(() => createBrowserClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-    ))
 
     const [conversations, setConversations] = useState<Conversation[]>([])
     const [isLoading, setIsLoading] = useState(true)

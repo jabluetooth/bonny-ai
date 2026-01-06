@@ -186,13 +186,14 @@ export function PortfolioNavbar() {
                         <NavigationMenu value={navValue} onValueChange={setNavValue}>
                             <NavigationMenuList className="flex items-center justify-center gap-1 bg-background/20 backdrop-blur-xl border border-white/10 shadow-sm rounded-full px-1.5 py-1">
                                 {/* 1. ABOUT: Author/Developer, Background, Interests, Vision */}
-                                <NavigationMenuItem>
+                                <NavigationMenuItem value="about">
                                     <NavigationMenuTrigger className="bg-transparent hover:bg-primary/10 focus:bg-primary/10 data-[state=open]:bg-primary/10 rounded-full hover:text-primary relative after:absolute after:-top-1 after:left-1/2 after:-translate-x-1/2 after:w-8 after:h-[2px] after:bg-primary after:shadow-[0_0_8px_var(--primary)] after:opacity-0 hover:after:opacity-100 after:transition-all after:duration-300">About</NavigationMenuTrigger>
                                     <NavigationMenuContent>
                                         <ul className="grid gap-3 p-6 md:w-[400px] lg:w-[500px] lg:grid-cols-[250px_1fr]">
                                             <li className="row-span-3">
                                                 <NavigationMenuLink asChild>
-                                                    <AuthorCard />
+                                                    {/* Lazy render: Only mount AuthorCard when About menu is open */}
+                                                    {navValue === "about" ? <AuthorCard /> : <div className="h-full w-full min-h-[200px]" />}
                                                 </NavigationMenuLink>
                                             </li>
                                             <ListItem title="Background" onClick={() => handleNavClick("What is your professional background?", ChatIntents.BACKGROUND)}>

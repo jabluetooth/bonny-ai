@@ -4,6 +4,7 @@
 import { useEffect, useState } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ExpandableCardDemo } from "@/components/ui/expandable-card";
+import { fetchWithCache, CACHE_KEYS } from "@/lib/data-cache";
 
 export interface Project {
     title: string;
@@ -27,15 +28,22 @@ export function ProjectsSection({ category }: ProjectsSectionProps) {
     useEffect(() => {
         async function fetchProjects() {
             try {
-                const url = category
-                    ? `/api/projects?category=${encodeURIComponent(category)}`
-                    : '/api/projects';
+                const cacheKey = category
+                    ? CACHE_KEYS.PROJECTS_BY_CATEGORY(category)
+                    : CACHE_KEYS.PROJECTS;
 
-                const res = await fetch(url);
-                if (res.ok) {
-                    const data = await res.json();
-                    setProjects(data);
-                }
+                const data = await fetchWithCache(
+                    cacheKey,
+                    async () => {
+                        const url = category
+                            ? `/api/projects?category=${encodeURIComponent(category)}`
+                            : '/api/projects';
+                        const res = await fetch(url);
+                        if (!res.ok) throw new Error('Failed to fetch projects');
+                        return res.json();
+                    }
+                );
+                setProjects(data);
             } catch (error) {
                 console.error("Failed to load projects", error);
             } finally {

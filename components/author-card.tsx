@@ -7,10 +7,9 @@ import { useChat } from "@/components/chat-provider"
 import { ChatIntents } from "@/lib/intents"
 import { Skeleton } from "@/components/ui/skeleton"
 import Image from "next/image"
-import { createBrowserClient } from "@supabase/ssr"
+import { supabase } from "@/lib/supabase-client"
 
 interface AuthorProfile {
-    title: string;
     description: string;
     images: string[];
 }
@@ -21,17 +20,12 @@ export const AuthorCard = React.forwardRef<HTMLAnchorElement, React.ComponentPro
     const [profile, setProfile] = useState<AuthorProfile | null>(null);
     const [isLoading, setIsLoading] = useState(true);
 
-    const supabase = createBrowserClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-    );
-
     useEffect(() => {
         async function fetchProfile() {
             try {
                 const { data, error } = await supabase
                     .from('author_profiles')
-                    .select('*')
+                    .select('description, images')
                     .eq('is_active', true)
                     .maybeSingle();
 
@@ -58,7 +52,7 @@ export const AuthorCard = React.forwardRef<HTMLAnchorElement, React.ComponentPro
 
         const interval = setInterval(() => {
             setCurrentImageIndex((prev) => (prev + 1) % images.length)
-        }, 2000); // 7 seconds per image
+        }, 2000);
         return () => clearInterval(interval)
     }, [images])
 
@@ -120,10 +114,7 @@ export const AuthorCard = React.forwardRef<HTMLAnchorElement, React.ComponentPro
             ))}
             <div className="absolute inset-0 bg-black/40 group-hover:bg-black/50 transition-colors duration-300 z-10" />
 
-            <div className="relative z-20">
-                <div className="mb-2 mt-4 text-lg font-medium text-white">
-                    {profile?.title || "Author/Developer"}
-                </div>
+            <div className="relative z-20 mt-4">
                 <p className="text-sm leading-tight text-white/90">
                     {profile?.description || "Learn more about the creator behind this portfolio."}
                 </p>

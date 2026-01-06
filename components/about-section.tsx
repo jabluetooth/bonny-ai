@@ -4,7 +4,7 @@ import React, { useEffect, useState } from "react";
 import { CardBody, CardContainer, CardItem } from "@/components/ui/3d-card";
 import { Github, Linkedin, Twitter } from "lucide-react";
 import Link from "next/link";
-import { createBrowserClient } from "@supabase/ssr";
+import { supabase } from "@/lib/supabase-client";
 import { Skeleton } from "@/components/ui/skeleton";
 import TiltedCard from "@/components/ui/tilted-card";
 
@@ -19,11 +19,6 @@ export function AboutSection() {
     const [isLoading, setIsLoading] = useState(true);
 
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
-
-    const supabase = createBrowserClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-    );
 
     useEffect(() => {
         if (!profile?.images || profile.images.length <= 1) return;

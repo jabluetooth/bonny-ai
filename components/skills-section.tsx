@@ -6,6 +6,7 @@ import { Marquee, MarqueeContent, MarqueeFade, MarqueeItem } from "@/components/
 import { Separator } from "@/components/ui/separator";
 import { Cpu, Globe, Database, Palette, Users } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { fetchWithCache, CACHE_KEYS } from "@/lib/data-cache";
 
 
 
@@ -40,11 +41,15 @@ export function SkillsSection({ highlightSkill, highlightCategory }: { highlight
     useEffect(() => {
         async function fetchSkills() {
             try {
-                const res = await fetch('/api/skills');
-                if (res.ok) {
-                    const data = await res.json();
-                    setCategories(data.categories || []);
-                }
+                const data = await fetchWithCache(
+                    CACHE_KEYS.SKILLS,
+                    async () => {
+                        const res = await fetch('/api/skills');
+                        if (!res.ok) throw new Error('Failed to fetch skills');
+                        return res.json();
+                    }
+                );
+                setCategories(data.categories || []);
             } catch (error) {
                 console.error("Failed to load skills", error);
             } finally {
