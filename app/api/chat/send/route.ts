@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase-server';
 import { generateLLMResponse } from '@/lib/llm';
 import { getContextForIntent } from '@/lib/chat-context';
 import { getDeterministicResponse } from '@/lib/chat-responses';
+import { retrieveContextSmart, isRAGAvailable } from '@/lib/rag';
 import { z } from 'zod';
 import xss from 'xss';
 
@@ -108,18 +109,23 @@ export async function POST(req: Request) {
             .eq('id', user.id)
             .single();
 
-        // 5. Gather Context for AI based on Intent
-        // Logic extracted to lib/chat-context.ts for cleaner code
-        const context = await getContextForIntent(supabase, intent, userProfile?.name || "Guest");
-
+        // 5. Gather Context for AI based on Intent + RAG (in parallel)
+        // Intent-based context provides structured data for known queries
+        // RAG provides semantic search for nuanced/unknown queries
+        const [context, ragContext] = await Promise.all([
+            getContextForIntent(supabase, intent, userProfile?.name || "Guest"),
+            isRAGAvailable()
+                ? retrieveContextSmart(supabase, content, { matchCount: 4, matchThreshold: 0.72 })
+                : Promise.resolve({ formattedContext: '', documents: [], totalChars: 0, truncated: false }),
+        ]);
 
         // 6. Generate AI Response
         // TOKEN OPTIMIZATION: Check for Static Response first using Strategy Pattern
         let aiResponse = getDeterministicResponse(intent, content, context);
 
-        // If no static response, use LLM
+        // If no static response, use LLM with RAG context
         if (!aiResponse) {
-            aiResponse = await generateLLMResponse(content, context);
+            aiResponse = await generateLLMResponse(content, context, ragContext.formattedContext);
         }
 
         // 7. Save Bot Message

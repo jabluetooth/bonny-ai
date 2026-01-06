@@ -41,7 +41,8 @@ export interface LLMContext {
 
 export async function generateLLMResponse(
     userMessage: string,
-    context: LLMContext
+    context: LLMContext,
+    ragContext?: string
 ): Promise<string> {
     const apiKey = process.env.GROQ_API_KEY || process.env.OPENAI_API_KEY;
     const baseURL = process.env.GROQ_API_KEY ? 'https://api.groq.com/openai/v1' : undefined;
@@ -121,8 +122,9 @@ Impress the visitor with your skills and projects. Be helpful, enthusiastic, and
     - If you output a tag like '[[SHOW_SKILLS]]' or '[[SHOW_PROJECTS]]', keep your text response short (1-2 sentences).
     - Example: "Here is my work history! 👇 [[SHOW_EXPERIENCE:WORK]]"
 
-4.  **CONTEXT AWARENESS**: 
+4.  **CONTEXT AWARENESS**:
     - Answer based strictly on the provided context below.
+    - If "RELEVANT DATABASE MATCHES" is provided, use those specific details to give accurate answers.
     - If the user asks for **Skills**, definitely show '[[SHOW_SKILLS]]' or specific '[[SKILL: ...]]'. Do NOT show Projects unless explicitly asked.
     - If the user asks for **Experience/Work**, show '[[SHOW_EXPERIENCE:WORK]]'.
     - If the user asks for **Projects**, show '[[SHOW_PROJECTS]]'.
@@ -154,6 +156,7 @@ Impress the visitor with your skills and projects. Be helpful, enthusiastic, and
 
 **CONTEXT**:
 ${formatContext(context)}
+${ragContext ? `\n**RELEVANT DATABASE MATCHES** (Use this for specific details):\n${ragContext}` : ''}
 `;
 
         const completion = await openai.chat.completions.create({
