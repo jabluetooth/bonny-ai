@@ -26,7 +26,6 @@ const mapExperience = (items: any[]): ExperienceContext[] => items.map(e => ({
 }));
 
 const mapProfile = (items: any[]): ProfileContext[] => items.map(p => ({
-    title: p.title,
     content: p.description
 }));
 
@@ -104,11 +103,12 @@ export async function getContextForIntent(
     else {
         // "Fetch Everything" (Optimized)
         // We fetch top items to give a "gist" of the portfolio
-        const [projects, skills, experience, about] = await Promise.all([
+        const [projects, skills, experience, about, contacts] = await Promise.all([
             supabase.from('projects').select('*, project_skills(skills(name))').limit(5),
             supabase.from('skills').select('*, category:skill_categories(title)'),
             supabase.from('experiences').select('*').limit(3),
-            supabase.from('author_profiles').select('*').eq('is_active', true)
+            supabase.from('author_profiles').select('*').eq('is_active', true),
+            supabase.from('contact_links').select('*').eq('is_active', true)
         ]);
 
         const rawProjects = projects.data?.map((p: any) => ({
@@ -120,6 +120,13 @@ export async function getContextForIntent(
         context.skills = mapSkills(skills.data || []);
         context.experience = mapExperience(experience.data || []);
         context.about = mapProfile(about.data || []);
+
+        // Add contacts to context
+        const links = contacts.data || [];
+        if (links.length > 0) {
+            // @ts-ignore
+            context.contactLinks = links.map(l => ({ platform: l.platform, url: l.url }));
+        }
     }
 
     return context;

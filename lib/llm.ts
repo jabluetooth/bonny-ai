@@ -25,7 +25,6 @@ export interface ExperienceContext {
 }
 
 export interface ProfileContext {
-    title: string;
     content: string;
 }
 
@@ -92,6 +91,14 @@ export async function generateLLMResponse(
             });
         }
 
+        if (data?.contactLinks && data.contactLinks.length > 0) {
+            output += "\n-- CONTACT LINKS --\n";
+            // @ts-ignore
+            data.contactLinks.forEach(l => {
+                output += `- ${l.platform}: ${l.url}\n`;
+            });
+        }
+
         return output;
     };
 
@@ -130,8 +137,9 @@ Impress the visitor with your skills and projects. Be helpful, enthusiastic, and
     - If the user asks for **Projects**, show '[[SHOW_PROJECTS]]'.
 
 11. **NO TITLES**: 
-    - ❌ Do NOT start your response with a header/title like "**About Me**" or "### Background". 
-    - ✅ Start directly with the conversational content.
+    - ❌ Do NOT start your response with a header/title like "**About Me**" or "**Fil Heinz:**".
+    - ❌ Do NOT repeat your name at the start of the message.
+    - ✅ Start directly with the conversational content (e.g., "I'm a...").
 
 **VISUAL COMPONENT TRIGGERS**:
 (Only output ONE major visual type per response unless asked for both)

@@ -18,9 +18,6 @@ interface BackgroundCardProps {
     className?: string;
 }
 
-
-
-
 export function BackgroundCards() {
     const [cards, setCards] = useState<BackgroundCardProps[]>([]);
     const [loading, setLoading] = useState(true);

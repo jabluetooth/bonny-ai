@@ -43,11 +43,11 @@ async function generateEmbedding(text: string): Promise<number[]> {
 
 async function processProfiles() {
     console.log('Processing Profiles...');
-    const { data: profiles } = await supabase.from('author_profiles').select('*');
+    const { data: profiles } = await supabase.from('author_profiles').select('id, description');
     if (!profiles) return;
 
     for (const p of profiles) {
-        const content = `About the Author: ${p.description}. Title: ${p.title}.`;
+        const content = `About the Author: ${p.description}.`;
         const embedding = await generateEmbedding(content);
 
         await supabase.from('document_embeddings').upsert({
