@@ -99,26 +99,59 @@ export function ProjectDialog({ open, onOpenChange, project, onSuccess }: Projec
             if (projectId && techStack.length > 0) {
                 // First delete existing links if editing
                 if (project) {
-                    await supabase.from('project_skills').delete().eq('project_id', projectId)
+                    const { error: deleteError } = await supabase.from('project_skills').delete().eq('project_id', projectId)
+                    if (deleteError) console.error("Error deleting old skills:", deleteError)
                 }
 
                 for (const tech of techStack) {
-                    // Find or Create Skill
-                    let skillId;
-                    const { data: existing } = await supabase.from('skills').select('id').ilike('name', tech).maybeSingle()
+                    try {
+                        // Find or Create Skill
+                        let skillId;
+                        const { data: existing, error: searchError } = await supabase
+                            .from('skills')
+                            .select('id')
+                            .ilike('name', tech)
+                            .maybeSingle()
 
-                    if (existing) {
-                        skillId = existing.id
-                    } else {
-                        const { data: newSkill } = await supabase.from('skills').insert({ name: tech }).select().single()
-                        if (newSkill) skillId = newSkill.id
-                    }
+                        if (searchError) {
+                            console.error(`Error searching for skill ${tech}:`, searchError)
+                        }
 
-                    if (skillId) {
-                        await supabase.from('project_skills').insert({
-                            project_id: projectId,
-                            skill_id: skillId
-                        })
+                        if (existing) {
+                            skillId = existing.id
+                        } else {
+                            // Try to insert
+                            const { data: newSkill, error: insertError } = await supabase
+                                .from('skills')
+                                .insert({ name: tech })
+                                .select()
+                                .single()
+
+                            if (newSkill) {
+                                skillId = newSkill.id
+                            } else if (insertError) {
+                                console.error(`Error creating skill ${tech}:`, insertError)
+                                // Fallback: Maybe it exists now (race condition) or checking failed
+                                const { data: retry } = await supabase
+                                    .from('skills')
+                                    .select('id')
+                                    .ilike('name', tech)
+                                    .maybeSingle()
+                                if (retry) skillId = retry.id
+                            }
+                        }
+
+                        if (skillId) {
+                            const { error: linkError } = await supabase.from('project_skills').insert({
+                                project_id: projectId,
+                                skill_id: skillId
+                            })
+                            if (linkError) console.error(`Error linking skill ${tech}:`, linkError)
+                        } else {
+                            console.warn(`Could not resolve ID for skill: ${tech}`)
+                        }
+                    } catch (loopError) {
+                        console.error(`Unexpected error processing skill ${tech}:`, loopError)
                     }
                 }
             } else if (projectId && project) {
