@@ -18,14 +18,25 @@ export function AdminExperiencesForm() {
         setIsLoading(true)
         const { data, error } = await supabase
             .from('experiences')
-            .select('*')
-            .order('date', { ascending: false }) // Ideal would be true date sort, but text date is tricky. 
+            .select(`
+                *,
+                experience_skills (
+                    skills (
+                        name
+                    )
+                )
+            `)
+            .order('date', { ascending: false })
 
         if (error) {
             console.error(error)
-            // toast.error("Failed to fetch experiences") // Suppress initially if table empty/missing
         } else {
-            setExperiences(data || [])
+            // Map nested skills to flat array
+            const mapped = data?.map((e: any) => ({
+                ...e,
+                tech_stack: e.experience_skills ? e.experience_skills.map((es: any) => es.skills?.name).filter(Boolean) : (e.tech_stack || [])
+            })) || []
+            setExperiences(mapped)
         }
         setIsLoading(false)
     }
@@ -60,8 +71,8 @@ export function AdminExperiencesForm() {
         return <div className="flex h-40 items-center justify-center"><Loader2 className="animate-spin text-muted-foreground" /></div>
     }
 
-    const work = experiences.filter(e => e.category === 'work')
-    const education = experiences.filter(e => e.category === 'education')
+    const work = experiences.filter(e => (e.category || '').toLowerCase() === 'work')
+    const education = experiences.filter(e => (e.category || '').toLowerCase() === 'education')
 
     return (
         <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">

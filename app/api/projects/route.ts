@@ -52,7 +52,8 @@ export async function GET(request: Request) {
                 image_url: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&q=80&w=1000',
                 key_features: ['Real-time sales analytics', 'Inventory management', 'User role management', 'Order tracking system'],
                 challenges_learned: 'Implementing real-time updates for the inventory system was challenging.',
-                type: 'Web Development'
+                type: 'Web Development',
+                status: 'Online'
             },
             {
                 title: 'SaaS Landing Page',
@@ -64,7 +65,8 @@ export async function GET(request: Request) {
                 image_url: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&q=80&w=1000',
                 key_features: ['Responsive Design', 'Stripe Checkout', 'Animated sequences', 'SEO Optimized'],
                 challenges_learned: 'Optimizing images and animations for a perfect Lighthouse score.',
-                type: 'Web Development'
+                type: 'Web Development',
+                status: 'Online'
             },
             {
                 title: 'Task Management App',
@@ -76,7 +78,8 @@ export async function GET(request: Request) {
                 image_url: 'https://images.unsplash.com/photo-1484480974693-6ca0a78fb36b?auto=format&fit=crop&q=80&w=1000',
                 key_features: ['Drag and drop interface', 'Collaborative workspaces', 'Due date notifications', 'Dark mode support'],
                 challenges_learned: 'Designing a smooth drag-and-drop experience across different devices.',
-                type: 'Web Development'
+                type: 'Web Development',
+                status: 'Work in progress'
             },
             {
                 title: 'AI Chat Assistant',
@@ -88,7 +91,8 @@ export async function GET(request: Request) {
                 image_url: 'https://images.unsplash.com/photo-1531746790731-6c087fecd65a?q=80&w=1000&auto=format&fit=crop',
                 key_features: ['Context-aware conversations', 'Streaming responses', 'Markdown support', 'Code syntax highlighting'],
                 challenges_learned: 'Handling streaming responses and maintaining conversation history locally.',
-                type: 'AI & ML'
+                type: 'AI & ML',
+                status: 'Online'
             },
             {
                 title: 'Image Recognition Model',
@@ -100,7 +104,8 @@ export async function GET(request: Request) {
                 image_url: 'https://images.unsplash.com/photo-1555949963-ff9fe0c870eb?q=80&w=1000&auto=format&fit=crop',
                 key_features: ['Real-time object detection', 'High accuracy', 'Low latency inference', 'Video stream processing'],
                 challenges_learned: 'Optimizing the model for real-time performance on edge devices.',
-                type: 'AI & ML'
+                type: 'AI & ML',
+                status: 'Down'
             },
             {
                 title: 'Sentiment Analysis Tool',
@@ -112,7 +117,8 @@ export async function GET(request: Request) {
                 image_url: 'https://images.unsplash.com/photo-1518186285589-1f76d31d6928?q=80&w=1000&auto=format&fit=crop',
                 key_features: ['Multi-language support', 'Trend visualization', 'Exportable reports', 'Custom model fine-tuning'],
                 challenges_learned: 'Fine-tuning a BERT model on a specific industry dataset.',
-                type: 'AI & ML'
+                type: 'AI & ML',
+                status: 'Work in progress'
             }
         ];
     }
@@ -128,7 +134,8 @@ export async function GET(request: Request) {
             features: p.key_features || p.features || [],
             tech_stack: p.tech_stack || [],
             challenges: p.challenges_learned || p.challenges || "",
-            type: p.type // Map 'type' column
+            type: p.type, // Map 'type' column
+            status: p.status || 'Work in progress'
         }));
 
         // Filter by Category/Type

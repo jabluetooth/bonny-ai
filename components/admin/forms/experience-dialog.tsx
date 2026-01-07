@@ -26,11 +26,10 @@ export function ExperienceDialog({ open, onOpenChange, experience, onSuccess }: 
     const [date, setDate] = useState("")
     const [location, setLocation] = useState("")
     const [type, setType] = useState("Full-time")
-    const [description, setDescription] = useState<string[]>([])
+    const [description, setDescription] = useState("")
     const [techStack, setTechStack] = useState<string[]>([])
 
     // Inputs for lists
-    const [newDesc, setNewDesc] = useState("")
     const [newTech, setNewTech] = useState("")
 
     useEffect(() => {
@@ -41,7 +40,7 @@ export function ExperienceDialog({ open, onOpenChange, experience, onSuccess }: 
             setDate(experience.date || "")
             setLocation(experience.location || "")
             setType(experience.type || "Full-time")
-            setDescription(experience.description || [])
+            setDescription(Array.isArray(experience.description) ? experience.description.join('\n\n') : (experience.description || ""))
             setTechStack(experience.tech_stack || [])
         } else {
             setCategory("work")
@@ -50,7 +49,7 @@ export function ExperienceDialog({ open, onOpenChange, experience, onSuccess }: 
             setDate("")
             setLocation("")
             setType("Full-time")
-            setDescription([])
+            setDescription("")
             setTechStack([])
         }
     }, [experience, open])
@@ -70,7 +69,7 @@ export function ExperienceDialog({ open, onOpenChange, experience, onSuccess }: 
                 date,
                 location,
                 type,
-                description,
+                description: description.split('\n').map(s => s.trim()).filter(Boolean),
                 tech_stack: techStack,
                 updated_at: new Date().toISOString()
             }
@@ -124,14 +123,6 @@ export function ExperienceDialog({ open, onOpenChange, experience, onSuccess }: 
             setIsLoading(false)
         }
     }
-
-    const addDesc = () => {
-        if (newDesc.trim()) {
-            setDescription([...description, newDesc.trim()])
-            setNewDesc("")
-        }
-    }
-    const removeDesc = (i: number) => setDescription(description.filter((_, idx) => idx !== i))
 
     const addTech = () => {
         if (newTech.trim()) {
@@ -195,28 +186,14 @@ export function ExperienceDialog({ open, onOpenChange, experience, onSuccess }: 
                     </div>
 
                     <div className="space-y-2">
-                        <Label>Responsibilities / Description (Shift+Enter for paragraphs)</Label>
-                        <div className="flex gap-2">
-                            <Textarea
-                                value={newDesc}
-                                onChange={(e) => setNewDesc(e.target.value)}
-                                placeholder="Add a bullet point or paragraph..."
-                                className="min-h-[60px]"
-                            />
-                            <Button type="button" onClick={addDesc} variant="secondary" className="h-auto">
-                                <Plus className="h-4 w-4" />
-                            </Button>
-                        </div>
-                        <ul className="list-disc pl-5 mt-2 space-y-1">
-                            {description.map((item, i) => (
-                                <li key={i} className="text-sm group flex items-start justify-between gap-2">
-                                    <span className="whitespace-pre-wrap">{item}</span>
-                                    <button onClick={() => removeDesc(i)} className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-red-500 shrink-0">
-                                        <X className="h-4 w-4" />
-                                    </button>
-                                </li>
-                            ))}
-                        </ul>
+                        <Label>Responsibilities / Description</Label>
+                        <p className="text-xs text-muted-foreground">Each new line will be treated as a separate bullet point/paragraph.</p>
+                        <Textarea
+                            value={description}
+                            onChange={(e) => setDescription(e.target.value)}
+                            placeholder="• Led a team of 5 developers...&#10;• Implemented CI/CD pipeline..."
+                            className="min-h-[200px]"
+                        />
                     </div>
 
                     <div className="space-y-2">

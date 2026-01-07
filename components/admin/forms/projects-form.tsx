@@ -8,12 +8,24 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Loader2, Plus, Pencil, Trash2, ExternalLink } from "lucide-react"
 import { toast } from "sonner"
 import { ProjectDialog } from "./project-edit-dialog"
+import { ProjectStatusBadge } from "../project-status-badge"
+
+interface Project {
+    id: string;
+    title: string;
+    type: string;
+    status: string;
+    tech_stack: string[];
+    live_url?: string;
+    github_url?: string;
+    project_skills?: { skills: { name: string } | null }[];
+}
 
 export function AdminProjectsForm() {
     const [isLoading, setIsLoading] = useState(true)
-    const [projects, setProjects] = useState<any[]>([])
+    const [projects, setProjects] = useState<Project[]>([])
     const [isDialogOpen, setIsDialogOpen] = useState(false)
-    const [selectedProject, setSelectedProject] = useState<any>(null)
+    const [selectedProject, setSelectedProject] = useState<Project | null>(null)
 
     const fetchProjects = async () => {
         setIsLoading(true)
@@ -36,7 +48,7 @@ export function AdminProjectsForm() {
             console.log("Fetched Projects:", data); // Debug
 
             // Map the nested skill objects to flat array for easier UI handling
-            const mapped = data?.map(p => ({
+            const mapped = data?.map((p: any) => ({
                 ...p,
                 tech_stack: p.project_skills ? p.project_skills.map((ps: any) => ps.skills?.name).filter(Boolean) : []
             })) || []
@@ -62,7 +74,7 @@ export function AdminProjectsForm() {
         }
     }
 
-    const handleEdit = (project: any) => {
+    const handleEdit = (project: Project) => {
         setSelectedProject(project)
         setIsDialogOpen(true)
     }
@@ -114,6 +126,7 @@ export function AdminProjectsForm() {
                                 <TableRow>
                                     <TableHead>Title</TableHead>
                                     <TableHead>Type</TableHead>
+                                    <TableHead>Status</TableHead>
                                     <TableHead className="hidden md:table-cell">Tech Stack</TableHead>
                                     <TableHead className="text-right">Actions</TableHead>
                                 </TableRow>
@@ -123,6 +136,9 @@ export function AdminProjectsForm() {
                                     <TableRow key={project.id}>
                                         <TableCell className="font-medium">{project.title}</TableCell>
                                         <TableCell>{project.type}</TableCell>
+                                        <TableCell>
+                                            <ProjectStatusBadge status={project.status} />
+                                        </TableCell>
                                         <TableCell className="hidden md:table-cell">
                                             <div className="flex flex-wrap gap-1">
                                                 {project.tech_stack?.slice(0, 3).map((tech: string) => (

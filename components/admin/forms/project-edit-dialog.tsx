@@ -32,6 +32,7 @@ export function ProjectDialog({ open, onOpenChange, project, onSuccess }: Projec
     const [techStack, setTechStack] = useState<string[]>([]) // For now, just a list of strings
     const [newFeature, setNewFeature] = useState("")
     const [newTech, setNewTech] = useState("")
+    const [status, setStatus] = useState("Work in progress")
 
     useEffect(() => {
         if (project) {
@@ -44,6 +45,7 @@ export function ProjectDialog({ open, onOpenChange, project, onSuccess }: Projec
             setChallenges(project.challenges_learned || "")
             setFeatures(project.key_features || [])
             setTechStack(project.tech_stack || [])
+            setStatus(project.status || "Work in progress")
         } else {
             // Reset form
             setTitle("")
@@ -55,6 +57,7 @@ export function ProjectDialog({ open, onOpenChange, project, onSuccess }: Projec
             setChallenges("")
             setFeatures([])
             setTechStack([])
+            setStatus("Work in progress")
         }
     }, [project, open])
 
@@ -70,6 +73,7 @@ export function ProjectDialog({ open, onOpenChange, project, onSuccess }: Projec
                 live_url: liveUrl,
                 challenges_learned: challenges,
                 key_features: features,
+                status,
                 updated_at: new Date().toISOString()
             }
 
@@ -186,6 +190,20 @@ export function ProjectDialog({ open, onOpenChange, project, onSuccess }: Projec
                                 </SelectContent>
                             </Select>
                         </div>
+                    </div>
+
+                    <div className="space-y-2">
+                        <Label>Status</Label>
+                        <Select value={status} onValueChange={setStatus}>
+                            <SelectTrigger>
+                                <SelectValue placeholder="Select status" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="Work in progress">Work in progress</SelectItem>
+                                <SelectItem value="Online">Online</SelectItem>
+                                <SelectItem value="Down">Down</SelectItem>
+                            </SelectContent>
+                        </Select>
                     </div>
 
                     <div className="space-y-2">

@@ -89,7 +89,7 @@ export function SkillDialog({ open, onOpenChange, skill, onSuccess }: SkillDialo
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="sm:max-w-[425px]">
+            <DialogContent className="sm:max-w-[425px] max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                     <DialogTitle>{skill ? "Edit Skill" : "Add New Skill"}</DialogTitle>
                     <DialogDescription>

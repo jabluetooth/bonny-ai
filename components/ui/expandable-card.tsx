@@ -18,6 +18,7 @@ interface Project {
     features: string[];
     tech_stack: string[];
     challenges: string;
+    status?: string;
 }
 
 // Sub-component for the Expanded View (Portal)
@@ -80,9 +81,19 @@ const ProjectDetails = ({
                     {/* Content Section */}
                     <div className="flex-1 overflow-y-auto p-4 md:p-6">
                         <div className="flex justify-between items-start mb-4">
-                            <h3 className="font-bold text-neutral-700 dark:text-neutral-200 text-xl">
-                                {active.title}
-                            </h3>
+                            <div className="flex flex-col gap-1">
+                                <h3 className="font-bold text-neutral-700 dark:text-neutral-200 text-xl">
+                                    {active.title}
+                                </h3>
+                                {active.status && (
+                                    <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold w-fit ${active.status === 'Online' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' :
+                                            active.status === 'Down' ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200' :
+                                                'bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200'
+                                        }`}>
+                                        {active.status}
+                                    </span>
+                                )}
+                            </div>
 
                             {/* Checkout Button */}
                             {active.project_url && (

@@ -15,6 +15,7 @@ export interface Project {
     features: string[];
     tech_stack: string[];
     challenges: string;
+    status?: string;
 }
 
 interface ProjectsSectionProps {
