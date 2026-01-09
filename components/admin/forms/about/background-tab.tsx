@@ -133,11 +133,11 @@ export function BackgroundTab() {
             </CardContent>
 
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                <DialogContent>
+                <DialogContent className="max-h-[90vh] flex flex-col">
                     <DialogHeader>
                         <DialogTitle>{editingCard ? "Edit Card" : "New Background Card"}</DialogTitle>
                     </DialogHeader>
-                    <div className="grid gap-4 py-4">
+                    <div className="grid gap-4 py-4 overflow-y-auto flex-1">
                         <div className="grid gap-2">
                             <Label>Title</Label>
                             <Input value={formData.title || ""} onChange={e => setFormData({ ...formData, title: e.target.value })} />

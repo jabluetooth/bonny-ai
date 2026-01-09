@@ -28,12 +28,33 @@ export interface ProfileContext {
     content: string;
 }
 
+export interface InterestContext {
+    title: string;
+    description: string;
+}
+
+export interface VisionContext {
+    quote: string;
+    author?: string;
+    category?: string;
+}
+
+export interface BackgroundContext {
+    title: string;
+    description: string;
+    dateRange?: string;
+    category?: string;
+}
+
 export interface LLMContext {
     userName?: string;
     projects?: ProjectContext[];
     skills?: SkillContext[];
     experience?: ExperienceContext[];
     about?: ProfileContext[];
+    interests?: InterestContext[];
+    vision?: VisionContext[];
+    background?: BackgroundContext[];
     categories?: string[];
     [key: string]: any; // Allow extensibility
 }
@@ -88,6 +109,30 @@ export async function generateLLMResponse(
             output += "\n-- ABOUT ME --\n";
             data.about.forEach(a => {
                 output += `${a.content}\n`;
+            });
+        }
+
+        // NEW: Interests/Hobbies
+        if (data?.interests && data.interests.length > 0) {
+            output += "\n-- MY HOBBIES & INTERESTS --\n";
+            data.interests.forEach(i => {
+                output += `- ${i.title}${i.description ? `: ${i.description}` : ''}\n`;
+            });
+        }
+
+        // NEW: Vision/Goals/Inspirations
+        if (data?.vision && data.vision.length > 0) {
+            output += "\n-- MY VISION & INSPIRATIONS --\n";
+            data.vision.forEach(v => {
+                output += `- "${v.quote}"${v.author ? ` - ${v.author}` : ''}${v.category ? ` [${v.category}]` : ''}\n`;
+            });
+        }
+
+        // NEW: Background/Journey
+        if (data?.background && data.background.length > 0) {
+            output += "\n-- MY JOURNEY & BACKGROUND --\n";
+            data.background.forEach(b => {
+                output += `- ${b.title}${b.dateRange ? ` (${b.dateRange})` : ''}${b.category ? ` [${b.category}]` : ''}${b.description ? `: ${b.description}` : ''}\n`;
             });
         }
 
@@ -157,9 +202,10 @@ Impress the visitor with your skills and projects. Be helpful, enthusiastic, and
   - General: '[[SHOW_PROJECTS]]'
   - Specific: '[[SHOW_PROJECTS:WEB]]', '[[SHOW_PROJECTS:AI]]'
 
-- **PERSONAL**:
-  - Interests/Hobbies: '[[SHOW_INTERESTS]]'
-  - Vision/Goals: '[[SHOW_VISION]]'
+- **PERSONAL** (Prioritize for personal questions about life, hobbies, goals):
+  - Interests/Hobbies: '[[SHOW_INTERESTS]]' (Use when asked about hobbies, free time, what I enjoy, passions)
+  - Vision/Goals: '[[SHOW_VISION]]' (Use when asked about goals, dreams, aspirations, motivation, inspiration, quotes)
+  - Background/Journey: '[[SHOW_BACKGROUND]]' (Use when asked about journey, story, milestones, how I started)
   - About Me: '[[SHOW_ABOUT]]'
 
 **CONTEXT**:

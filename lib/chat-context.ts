@@ -1,6 +1,6 @@
 import { SupabaseClient } from '@supabase/supabase-js';
 import { ChatIntents } from './intents';
-import { LLMContext, ProjectContext, SkillContext, ExperienceContext, ProfileContext } from './llm';
+import { LLMContext, ProjectContext, SkillContext, ExperienceContext, ProfileContext, InterestContext, VisionContext, BackgroundContext } from './llm';
 
 // Helper to sanitize/map DB data to strict types
 const mapProjects = (items: any[]): ProjectContext[] => items.map(p => ({
@@ -29,6 +29,24 @@ const mapProfile = (items: any[]): ProfileContext[] => items.map(p => ({
     content: p.description
 }));
 
+const mapInterests = (items: any[]): InterestContext[] => items.map(i => ({
+    title: i.title?.replace(/:$/, '') || '', // Remove trailing colon
+    description: i.description || ''
+}));
+
+const mapVision = (items: any[]): VisionContext[] => items.map(v => ({
+    quote: v.quote,
+    author: v.name,
+    category: v.title
+}));
+
+const mapBackground = (items: any[]): BackgroundContext[] => items.map(b => ({
+    title: b.title?.replace(/:$/, '') || '', // Remove trailing colon
+    description: b.description || '',
+    dateRange: b.date_range,
+    category: b.category
+}));
+
 export async function getContextForIntent(
     supabase: SupabaseClient,
     intent: string | undefined,
@@ -39,29 +57,44 @@ export async function getContextForIntent(
         projects: [],
         skills: [],
         experience: [],
-        about: []
+        about: [],
+        interests: [],
+        vision: [],
+        background: []
     };
 
     // --- Intent-Specific Fetching ---
 
-    // 1. ABOUT / VISION / INTERESTS
-    if (intent === ChatIntents.ABOUT_ME || intent === ChatIntents.VISION || intent === ChatIntents.INTERESTS || intent === ChatIntents.BACKGROUND) {
-        // Try active profile first
+    // 1. ABOUT ME - Fetch author profile
+    if (intent === ChatIntents.ABOUT_ME) {
         let { data } = await supabase.from('author_profiles').select('*').eq('is_active', true).maybeSingle();
-
-        // Fallback: If no active profile found, take the first one available
         if (!data) {
             const { data: fallbackData } = await supabase.from('author_profiles').select('*').limit(1).maybeSingle();
             data = fallbackData;
         }
-
         context.about = mapProfile(data ? [data] : []);
+    }
 
-        // If background, also fetch experience
-        if (intent === ChatIntents.BACKGROUND) {
-            const { data: exp } = await supabase.from('experiences').select('*').order('id', { ascending: false });
-            context.experience = mapExperience(exp || []);
-        }
+    // 2. INTERESTS - Fetch from interests table
+    else if (intent === ChatIntents.INTERESTS) {
+        const { data: interests } = await supabase.from('interests').select('*').order('id', { ascending: true });
+        context.interests = mapInterests(interests || []);
+    }
+
+    // 3. VISION - Fetch from vision_cards table
+    else if (intent === ChatIntents.VISION) {
+        const { data: vision } = await supabase.from('vision_cards').select('*').order('id', { ascending: true });
+        context.vision = mapVision(vision || []);
+    }
+
+    // 4. BACKGROUND - Fetch from background_cards table + experiences
+    else if (intent === ChatIntents.BACKGROUND) {
+        const [backgroundCards, experiences] = await Promise.all([
+            supabase.from('background_cards').select('*').order('id', { ascending: true }),
+            supabase.from('experiences').select('*').order('id', { ascending: false })
+        ]);
+        context.background = mapBackground(backgroundCards.data || []);
+        context.experience = mapExperience(experiences.data || []);
     }
 
     // 2. EXPERIENCE
@@ -103,12 +136,15 @@ export async function getContextForIntent(
     else {
         // "Fetch Everything" (Optimized)
         // We fetch top items to give a "gist" of the portfolio
-        const [projects, skills, experience, about, contacts] = await Promise.all([
+        const [projects, skills, experience, about, contacts, interests, vision, background] = await Promise.all([
             supabase.from('projects').select('*, project_skills(skills(name))').limit(5),
             supabase.from('skills').select('*, category:skill_categories(title)'),
             supabase.from('experiences').select('*').limit(3),
             supabase.from('author_profiles').select('*').eq('is_active', true),
-            supabase.from('contact_links').select('*').eq('is_active', true)
+            supabase.from('contact_links').select('*').eq('is_active', true),
+            supabase.from('interests').select('*').limit(5),
+            supabase.from('vision_cards').select('*').limit(3),
+            supabase.from('background_cards').select('*').limit(3)
         ]);
 
         const rawProjects = projects.data?.map((p: any) => ({
@@ -120,6 +156,9 @@ export async function getContextForIntent(
         context.skills = mapSkills(skills.data || []);
         context.experience = mapExperience(experience.data || []);
         context.about = mapProfile(about.data || []);
+        context.interests = mapInterests(interests.data || []);
+        context.vision = mapVision(vision.data || []);
+        context.background = mapBackground(background.data || []);
 
         // Add contacts to context
         const links = contacts.data || [];

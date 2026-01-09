@@ -119,18 +119,18 @@ export function InterestsTab() {
             </CardContent>
 
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                <DialogContent>
+                <DialogContent className="max-h-[90vh] overflow-y-auto">
                     <DialogHeader>
                         <DialogTitle>{editingItem ? "Edit Interest" : "New Interest"}</DialogTitle>
                     </DialogHeader>
-                    <div className="grid gap-4 py-4">
-                        <div className="grid gap-2">
-                            <Label>Title</Label>
-                            <Input value={formData.title || ""} onChange={e => setFormData({ ...formData, title: e.target.value })} />
+                    <div className="grid gap-3 py-3">
+                        <div className="grid gap-1.5">
+                            <Label className="text-sm">Title</Label>
+                            <Input value={formData.title || ""} onChange={e => setFormData({ ...formData, title: e.target.value })} className="h-8" />
                         </div>
-                        <div className="grid gap-2">
-                            <Label>Description</Label>
-                            <Textarea value={formData.description || ""} onChange={e => setFormData({ ...formData, description: e.target.value })} />
+                        <div className="grid gap-1.5">
+                            <Label className="text-sm">Description</Label>
+                            <Textarea value={formData.description || ""} onChange={e => setFormData({ ...formData, description: e.target.value })} className="min-h-[80px]" />
                         </div>
                         <ImageUploader
                             label="Image"
@@ -139,9 +139,9 @@ export function InterestsTab() {
                             onChange={(url) => setFormData({ ...formData, image_url: url })}
                             aspectRatio="4/3"
                         />
-                        <div className="grid gap-2">
-                            <Label>Display Order</Label>
-                            <Input type="number" value={formData.display_order || 0} onChange={e => setFormData({ ...formData, display_order: parseInt(e.target.value) })} />
+                        <div className="grid gap-1.5">
+                            <Label className="text-sm">Display Order</Label>
+                            <Input type="number" value={formData.display_order || 0} onChange={e => setFormData({ ...formData, display_order: parseInt(e.target.value) })} className="h-8" />
                         </div>
                     </div>
                     <DialogFooter>

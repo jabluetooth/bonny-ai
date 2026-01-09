@@ -4,6 +4,7 @@ import { generateLLMResponse } from '@/lib/llm';
 import { getContextForIntent } from '@/lib/chat-context';
 import { getDeterministicResponse } from '@/lib/chat-responses';
 import { retrieveContextSmart, isRAGAvailable } from '@/lib/rag';
+import { detectIntent } from '@/lib/intents';
 import { z } from 'zod';
 import xss from 'xss';
 
@@ -42,10 +43,13 @@ export async function POST(req: Request) {
             );
         }
 
-        const { conversationId, content: rawContent, intent } = result.data;
+        const { conversationId, content: rawContent, intent: clientIntent } = result.data;
 
         // 3. Sanitize Content (XSS Protection)
         const content = xss(rawContent);
+
+        // Auto-detect intent if not provided by client
+        const intent = clientIntent || detectIntent(content);
 
         // 4. Save User Message
         const { error: msgError } = await supabase.from('messages').insert({

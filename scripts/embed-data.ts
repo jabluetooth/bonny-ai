@@ -43,14 +43,18 @@ async function generateEmbedding(text: string): Promise<number[]> {
 
 async function processProfiles() {
     console.log('Processing Profiles...');
-    const { data: profiles } = await supabase.from('author_profiles').select('id, description');
-    if (!profiles) return;
+    const { data: profiles } = await supabase.from('author_profiles').select('*');
+    if (!profiles || profiles.length === 0) {
+        console.log('  No profiles found in database (skipping).');
+        return;
+    }
 
     for (const p of profiles) {
-        const content = `About the Author: ${p.description}.`;
+        // Main bio/about chunk - include multiple keywords for better semantic matching
+        const content = `About Me - Personal Introduction and Biography: ${p.description || ''}. ${p.summary || ''}`.trim();
         const embedding = await generateEmbedding(content);
 
-        await supabase.from('document_embeddings').upsert({
+        const { error } = await supabase.from('document_embeddings').insert({
             content,
             embedding,
             metadata: {
@@ -58,10 +62,27 @@ async function processProfiles() {
                 record_id: p.id,
                 chunk_type: 'main_bio'
             }
-        }, { onConflict: 'id' as never }); // 'id' won't work for upsert unless we generate a consistent UUID or fetch existing. 
-        // Actually, for simplicity in this script, we'll just insert new records or we'd need a way to dedupe.
-        // Better strategy: Delete existing embeddings for this table first?
+        });
+        if (error) console.error('  Error inserting profile bio:', error.message);
+
+        // Additional profile fields if available
+        if (p.tagline || p.headline) {
+            const taglineContent = `Who am I - Professional Summary: ${p.tagline || p.headline}`;
+            const taglineEmbedding = await generateEmbedding(taglineContent);
+
+            const { error: taglineError } = await supabase.from('document_embeddings').insert({
+                content: taglineContent,
+                embedding: taglineEmbedding,
+                metadata: {
+                    source_table: 'author_profiles',
+                    record_id: p.id,
+                    chunk_type: 'tagline'
+                }
+            });
+            if (taglineError) console.error('  Error inserting profile tagline:', taglineError.message);
+        }
     }
+    console.log(`  Embedded ${profiles.length} profiles.`);
 }
 
 async function processProjects() {
@@ -74,22 +95,24 @@ async function processProjects() {
         const contentMain = `Project: ${p.title}. Type: ${p.type}. Description: ${p.description}.`;
         const embeddingMain = await generateEmbedding(contentMain);
 
-        await supabase.from('document_embeddings').insert({
+        const { error: mainError } = await supabase.from('document_embeddings').insert({
             content: contentMain,
             embedding: embeddingMain,
             metadata: { source_table: 'projects', record_id: p.id, chunk_type: 'overview', title: p.title }
         });
+        if (mainError) console.error(`  Error inserting project overview (${p.title}):`, mainError.message);
 
         // Chunk 2: Tech Stack
         if (p.tech_stack && p.tech_stack.length > 0) {
             const contentTech = `Project ${p.title} uses the following technologies: ${p.tech_stack.join(', ')}.`;
             const embeddingTech = await generateEmbedding(contentTech);
 
-            await supabase.from('document_embeddings').insert({
+            const { error: techError } = await supabase.from('document_embeddings').insert({
                 content: contentTech,
                 embedding: embeddingTech,
                 metadata: { source_table: 'projects', record_id: p.id, chunk_type: 'tech_stack', title: p.title }
             });
+            if (techError) console.error(`  Error inserting project tech stack (${p.title}):`, techError.message);
         }
 
         // Chunk 3: Challenges/Features
@@ -97,13 +120,15 @@ async function processProjects() {
             const contentChallenges = `Challenges and learnings from project ${p.title}: ${p.challenges_learned}`;
             const embeddingChallenges = await generateEmbedding(contentChallenges);
 
-            await supabase.from('document_embeddings').insert({
+            const { error: challengeError } = await supabase.from('document_embeddings').insert({
                 content: contentChallenges,
                 embedding: embeddingChallenges,
                 metadata: { source_table: 'projects', record_id: p.id, chunk_type: 'challenges' }
             });
+            if (challengeError) console.error(`  Error inserting project challenges (${p.title}):`, challengeError.message);
         }
     }
+    console.log(`  Embedded ${projects.length} projects.`);
 }
 
 async function processSkills() {
@@ -118,12 +143,14 @@ async function processSkills() {
         const content = `Skill: ${s.name} is a ${category} technology.${s.description ? ` Description: ${s.description}` : ''}`;
         const embedding = await generateEmbedding(content);
 
-        await supabase.from('document_embeddings').insert({
+        const { error } = await supabase.from('document_embeddings').insert({
             content,
             embedding,
             metadata: { source_table: 'skills', record_id: s.id, chunk_type: 'definition' }
         });
+        if (error) console.error(`  Error inserting skill (${s.name}):`, error.message);
     }
+    console.log(`  Embedded ${skills.length} skills.`);
 }
 
 async function processExperience() {
@@ -139,21 +166,23 @@ async function processExperience() {
         const content = `Experience: Worked as ${e.role} at ${e.company} (${date}). Type: ${e.category || e.type}. Location: ${e.location}.`;
         const embedding = await generateEmbedding(content);
 
-        await supabase.from('document_embeddings').insert({
+        const { error } = await supabase.from('document_embeddings').insert({
             content,
             embedding,
             metadata: { source_table: 'experiences', record_id: e.id, chunk_type: 'role_overview' }
         });
+        if (error) console.error(`  Error inserting experience (${e.role}):`, error.message);
 
         if (e.description && Array.isArray(e.description)) {
             const contentDesc = `Details for ${e.role} at ${e.company}: ${e.description.join(' ')}`;
             const embeddingDesc = await generateEmbedding(contentDesc);
 
-            await supabase.from('document_embeddings').insert({
+            const { error: descError } = await supabase.from('document_embeddings').insert({
                 content: contentDesc,
                 embedding: embeddingDesc,
                 metadata: { source_table: 'experiences', record_id: e.id, chunk_type: 'details' }
             });
+            if (descError) console.error(`  Error inserting experience details (${e.role}):`, descError.message);
         }
     }
     console.log(`  Embedded ${experiences.length} experiences.`);
@@ -168,14 +197,25 @@ async function processInterests() {
     }
 
     for (const i of interests) {
-        const content = `Personal Interest/Hobby: ${i.title}. ${i.description || ''}`.trim();
+        // Clean title: remove trailing colon if present
+        const cleanTitle = (i.title || '').replace(/:$/, '').trim();
+        const description = (i.description || '').trim();
+
+        // Include keywords: hobbies, interests, free time, what I like, passions, personal life
+        const content = `My Hobby and Personal Interest: ${cleanTitle}. ${description}`.trim();
         const embedding = await generateEmbedding(content);
 
-        await supabase.from('document_embeddings').insert({
+        const { error } = await supabase.from('document_embeddings').insert({
             content,
             embedding,
-            metadata: { source_table: 'interests', record_id: i.id, chunk_type: 'hobby', title: i.title }
+            metadata: {
+                source_table: 'interests',
+                record_id: i.id,
+                chunk_type: 'hobby_interest',
+                title: cleanTitle
+            }
         });
+        if (error) console.error(`  Error inserting interest (${cleanTitle}):`, error.message);
     }
     console.log(`  Embedded ${interests.length} interests.`);
 }
@@ -189,15 +229,28 @@ async function processBackgroundCards() {
     }
 
     for (const c of cards) {
+        // Clean title: remove trailing colon if present
+        const cleanTitle = (c.title || '').replace(/:$/, '').trim();
+        const description = (c.description || '').trim();
         const dateInfo = c.date_range ? ` (${c.date_range})` : '';
-        const content = `Background/Milestone: ${c.title}${dateInfo}. ${c.description || ''}`.trim();
+        const category = c.category ? ` [${c.category}]` : '';
+
+        // Include keywords: background, journey, story, path, milestone, education, history
+        const content = `My Journey and Background${category}: ${cleanTitle}${dateInfo}. ${description}`.trim();
         const embedding = await generateEmbedding(content);
 
-        await supabase.from('document_embeddings').insert({
+        const { error } = await supabase.from('document_embeddings').insert({
             content,
             embedding,
-            metadata: { source_table: 'background_cards', record_id: c.id, chunk_type: 'milestone', title: c.title }
+            metadata: {
+                source_table: 'background_cards',
+                record_id: c.id,
+                chunk_type: 'journey_milestone',
+                title: cleanTitle,
+                category: c.category || 'general'
+            }
         });
+        if (error) console.error(`  Error inserting background card (${cleanTitle}):`, error.message);
     }
     console.log(`  Embedded ${cards.length} background cards.`);
 }
@@ -211,17 +264,28 @@ async function processVisionCards() {
     }
 
     for (const v of cards) {
-        // Include quote attribution for better context
+        // Clean title: remove trailing colon if present
+        const cleanTitle = (v.title || '').replace(/:$/, '').trim();
+        const quote = (v.quote || '').trim();
         const attribution = v.name ? ` - ${v.name}` : '';
-        const category = v.title ? ` [${v.title}]` : '';
-        const content = `Vision/Inspiration: "${v.quote}"${attribution}${category}`.trim();
+        const category = cleanTitle ? ` [${cleanTitle}]` : '';
+
+        // Include keywords: vision, goals, aspirations, philosophy, beliefs, values, inspiration, motivation
+        const content = `My Vision and Inspiration${category}: "${quote}"${attribution}`.trim();
         const embedding = await generateEmbedding(content);
 
-        await supabase.from('document_embeddings').insert({
+        const { error } = await supabase.from('document_embeddings').insert({
             content,
             embedding,
-            metadata: { source_table: 'vision_cards', record_id: v.id, chunk_type: 'quote', author: v.name }
+            metadata: {
+                source_table: 'vision_cards',
+                record_id: v.id,
+                chunk_type: 'vision_quote',
+                author: v.name,
+                category: cleanTitle || 'inspiration'
+            }
         });
+        if (error) console.error(`  Error inserting vision card (${cleanTitle}):`, error.message);
     }
     console.log(`  Embedded ${cards.length} vision cards.`);
 }
@@ -245,7 +309,16 @@ async function main() {
     await processBackgroundCards();
     await processVisionCards();
 
-    console.log('\nIngestion complete!');
+    // Verify final count
+    const { count, error: countError } = await supabase
+        .from('document_embeddings')
+        .select('*', { count: 'exact', head: true });
+
+    if (countError) {
+        console.error('\nError getting final count:', countError.message);
+    } else {
+        console.log(`\nIngestion complete! Total embeddings in database: ${count}`);
+    }
 }
 
 main().catch(console.error);
