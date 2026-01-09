@@ -11,6 +11,7 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { toast } from "sonner"
 import { Loader2, Plus, Pencil, Trash2 } from "lucide-react"
+import { ImageUploader } from "@/components/admin/image-uploader"
 
 interface VisionCard {
     id: string
@@ -120,11 +121,11 @@ export function VisionTab() {
             </CardContent>
 
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                <DialogContent>
+                <DialogContent className="max-h-[90vh] flex flex-col">
                     <DialogHeader>
                         <DialogTitle>{editingItem ? "Edit Vision Card" : "New Vision Card"}</DialogTitle>
                     </DialogHeader>
-                    <div className="grid gap-4 py-4">
+                    <div className="grid gap-4 py-4 overflow-y-auto flex-1">
                         <div className="grid gap-2">
                             <Label>Quote</Label>
                             <Input value={formData.quote || ""} onChange={e => setFormData({ ...formData, quote: e.target.value })} placeholder="Quote..." />
@@ -139,10 +140,13 @@ export function VisionTab() {
                                 <Input value={formData.title || ""} onChange={e => setFormData({ ...formData, title: e.target.value })} placeholder="CEO, Tech Inc." />
                             </div>
                         </div>
-                        <div className="grid gap-2">
-                            <Label>Image URL (Optional)</Label>
-                            <Input value={formData.image_url || ""} onChange={e => setFormData({ ...formData, image_url: e.target.value })} placeholder="https://..." />
-                        </div>
+                        <ImageUploader
+                            label="Author Image (Optional)"
+                            folder="vision"
+                            value={formData.image_url || ""}
+                            onChange={(url) => setFormData({ ...formData, image_url: url })}
+                            aspectRatio="1/1"
+                        />
                     </div>
                     <DialogFooter>
                         <Button variant="outline" onClick={() => setIsDialogOpen(false)}>Cancel</Button>

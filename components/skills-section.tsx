@@ -1,7 +1,7 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Marquee, MarqueeContent, MarqueeFade, MarqueeItem } from "@/components/ui/marquee";
 import { Separator } from "@/components/ui/separator";
 import { Cpu, Globe, Database, Palette, Users } from "lucide-react";
@@ -82,7 +82,11 @@ export function SkillsSection({ highlightSkill, highlightCategory }: { highlight
 
     // Extract highlights for Marquee
     // Show Marquee for General AND Category views. Hide ONLY for specific Skill view.
-    const marqueeSkills = highlightSkill ? [] : categories.flatMap(cat => cat.skills).filter((s: any) => s.is_highlight);
+    // Memoized to prevent react-fast-marquee from recalculating on every re-render
+    const marqueeSkills = useMemo(() => {
+        if (highlightSkill) return [];
+        return categories.flatMap(cat => cat.skills).filter((s: any) => s.is_highlight);
+    }, [categories, highlightSkill]);
 
     const handleCategoryClick = (title: string) => {
         sendMessage(`What are your ${title} skills?`);
