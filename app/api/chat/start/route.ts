@@ -3,7 +3,7 @@ import { createServerClient, type CookieOptions } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 
 export async function POST(req: Request) {
-    const cookieStore = cookies();
+    const cookieStore = await cookies();
 
     // Create a Supabase client capable of retrieving the auth session from cookies
     const supabase = createServerClient(

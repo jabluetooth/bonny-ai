@@ -7,7 +7,7 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const categoryQuery = searchParams.get('category')?.toLowerCase();
 
-    const supabase = createClient();
+    const supabase = await createClient();
 
     console.log('[API] Check connection: Using Server Client');
 

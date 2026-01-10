@@ -9,12 +9,13 @@ import { DashboardOverview } from "@/components/admin/dashboard-overview";
 import { AnalyticsView } from "@/components/admin/analytics-view";
 import { SettingsView } from "@/components/admin/settings-view";
 
-export default function AdminDashboardPage({
+export default async function AdminDashboardPage({
     searchParams,
 }: {
-    searchParams: { view?: string };
+    searchParams: Promise<{ view?: string }>;
 }) {
-    const view = searchParams.view || "dashboard";
+    const params = await searchParams;
+    const view = params.view || "dashboard";
 
     return (
         <div className="flex flex-1 flex-col gap-4 p-4 pt-6">

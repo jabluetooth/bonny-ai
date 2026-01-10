@@ -32,7 +32,7 @@
     "framer-motion": "^12.23.26",
     "lucide-react": "^0.556.0",
     "motion": "^12.23.26",
-    "next": "^14.2.35",
+    "next": "^15.1.0",
     "next-themes": "^0.3.0",
     "openai": "^4.71.0",
     "react": "^18.3.1",
@@ -48,6 +48,7 @@
     "zod": "^3.23.8"
   },
   "devDependencies": {
+    "@cloudflare/next-on-pages": "^1.13.16",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",

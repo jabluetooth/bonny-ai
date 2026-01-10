@@ -22,7 +22,7 @@ const sendEmailSchema = z.object({
 });
 
 export async function POST(request: Request) {
-    const cookieStore = cookies();
+    const cookieStore = await cookies();
 
     // 1. Initialize Supabase for Auth Check
     const supabase = createServerClient(

@@ -4,7 +4,7 @@ import { createClient } from '@/lib/supabase-server';
 export const dynamic = 'force-dynamic';
 
 export async function GET() {
-    const supabase = createClient();
+    const supabase = await createClient();
 
     // Fetch categories with their skills (Relational)
     const { data: categories, error } = await supabase

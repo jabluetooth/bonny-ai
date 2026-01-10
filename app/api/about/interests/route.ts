@@ -4,7 +4,7 @@ import { NextResponse } from 'next/server';
 export const dynamic = 'force-dynamic';
 
 export async function GET() {
-    const supabase = createClient();
+    const supabase = await createClient();
     console.log("API: Fetching interests...");
 
     try {

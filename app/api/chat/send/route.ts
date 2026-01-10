@@ -16,7 +16,7 @@ const sendSchema = z.object({
 });
 
 export async function POST(req: Request) {
-    const supabase = createClient();
+    const supabase = await createClient();
 
     // 1. Authenticate User
     const {
