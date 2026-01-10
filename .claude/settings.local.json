@@ -5,7 +5,11 @@
       "Bash(npm install)",
       "Bash(npm install:*)",
       "Bash(npm run embed:*)",
-      "Bash(npm run build:*)"
+      "Bash(npm run build:*)",
+      "Bash(git add:*)",
+      "Bash(git check-ignore:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)"
     ]
   }
 }
