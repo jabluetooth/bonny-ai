@@ -66,10 +66,6 @@ export const metadata: Metadata = {
     shortcut: "/avatar.png",
     apple: "/avatar.png",
   },
-  verification: {
-    // Add your Google Search Console verification code here after setup
-    // google: "your-verification-code",
-  },
 };
 
 export default function RootLayout({
