@@ -152,11 +152,17 @@ export function Chatbox() {
                 <div className="relative w-full max-w-2xl aspect-video mb-0 translate-y-12 -mb-12">
                     <video
                         src="/bot-transparent.webm"
+                        poster="/bot-avatar.png"
                         autoPlay
                         loop
                         muted
                         playsInline
                         className="w-full h-full object-contain"
+                        style={{ backgroundColor: 'transparent' }}
+                        onLoadedData={(e) => {
+                            // Ensure video is visible only after loaded
+                            (e.target as HTMLVideoElement).style.opacity = '1';
+                        }}
                     />
                 </div>
 

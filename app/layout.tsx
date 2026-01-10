@@ -15,36 +15,40 @@ const jetbrainsMono = JetBrains_Mono({
   subsets: ["latin"],
 });
 
+const siteUrl = process.env.NEXT_PUBLIC_APP_URL || "https://filheinzrelatorre.com";
+
 export const metadata: Metadata = {
   title: {
     default: "Fil Heinz - Software Engineer Portfolio",
     template: "%s | Fil Heinz",
   },
-  description: "AI-powered interactive portfolio of Fil Heinz O. Re La Torre, a passionate Software Engineer specializing in web development, AI/ML, and modern technologies.",
-  keywords: ["Software Engineer", "Web Developer", "AI", "Machine Learning", "React", "Next.js", "Portfolio"],
+  description: "Check out my portfolio website! AI-powered interactive portfolio of Fil Heinz O. Re La Torre - Software Engineer specializing in web development and AI/ML.",
+  keywords: ["Software Engineer", "Web Developer", "AI", "Machine Learning", "React", "Next.js", "Portfolio", "Fil Heinz", "Full Stack Developer"],
   authors: [{ name: "Fil Heinz O. Re La Torre" }],
   creator: "Fil Heinz O. Re La Torre",
-  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "https://localhost:3000"),
+  metadataBase: new URL(siteUrl),
   openGraph: {
     type: "website",
     locale: "en_US",
+    url: siteUrl,
     title: "Fil Heinz - Software Engineer Portfolio",
-    description: "AI-powered interactive portfolio showcasing projects, skills, and experience.",
+    description: "Check out my portfolio website! AI-powered interactive portfolio showcasing projects, skills, and experience.",
     siteName: "Fil Heinz Portfolio",
     images: [
       {
-        url: "/avatar.png",
+        url: `${siteUrl}/avatar.png`,
         width: 512,
         height: 512,
-        alt: "Fil Heinz",
+        alt: "Fil Heinz - Software Engineer",
       },
     ],
   },
   twitter: {
-    card: "summary_large_image",
+    card: "summary",
     title: "Fil Heinz - Software Engineer Portfolio",
-    description: "AI-powered interactive portfolio showcasing projects, skills, and experience.",
-    images: ["/avatar.png"],
+    description: "Check out my portfolio website! AI-powered interactive portfolio showcasing projects, skills, and experience.",
+    images: [`${siteUrl}/avatar.png`],
+    creator: "@filheinz",
   },
   robots: {
     index: true,
@@ -59,7 +63,12 @@ export const metadata: Metadata = {
   },
   icons: {
     icon: "/avatar.png",
+    shortcut: "/avatar.png",
     apple: "/avatar.png",
+  },
+  verification: {
+    // Add your Google Search Console verification code here after setup
+    // google: "your-verification-code",
   },
 };
 
