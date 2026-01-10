@@ -162,9 +162,9 @@ IONOS offers Node.js hosting, but it requires more manual setup:
 
 ---
 
-## Updating the Site
+## Updating the Site (Production)
 
-To deploy updates:
+To deploy updates to your live site:
 
 ```bash
 git add .
@@ -172,9 +172,103 @@ git commit -m "Your update message"
 git push origin main
 ```
 
-Vercel will automatically rebuild and deploy.
+Vercel will automatically rebuild and deploy within ~1-2 minutes.
 
 To update RAG embeddings after content changes:
 ```bash
 npm run embed
 ```
+
+---
+
+## Staging & Preview Deployments
+
+Vercel automatically creates preview deployments for any branch other than `main`. Use this to test changes before going live.
+
+### Creating a Staging Branch
+
+```bash
+# Create and switch to staging branch
+git checkout -b staging
+
+# Make your changes to the code...
+
+# Commit and push
+git add .
+git commit -m "Testing new feature"
+git push origin staging
+```
+
+Vercel will create a preview URL like: `bonny-ai-git-staging-yourname.vercel.app`
+
+### Merging Staging to Production
+
+Once you're happy with changes on staging:
+
+```bash
+# Switch back to main
+git checkout main
+
+# Merge staging changes
+git merge staging
+
+# Push to deploy to production
+git push origin main
+```
+
+### Branch Summary
+
+| Branch | URL | Purpose |
+|--------|-----|---------|
+| `main` | filheinzrelatorre.com | Live production site |
+| `staging` | *.vercel.app (preview) | Testing before going live |
+| Any feature branch | *.vercel.app (preview) | Feature-specific testing |
+
+### Deleting a Staging Branch (Optional)
+
+After merging, you can delete the staging branch:
+
+```bash
+# Delete locally
+git branch -d staging
+
+# Delete on GitHub
+git push origin --delete staging
+```
+
+---
+
+## Quick Reference Commands
+
+```bash
+# Check current branch
+git branch
+
+# Switch to main
+git checkout main
+
+# Switch to staging (create if doesn't exist)
+git checkout -b staging
+
+# See all changes
+git status
+
+# Push current branch
+git push origin <branch-name>
+
+# Pull latest changes
+git pull origin main
+```
+
+---
+
+## Vercel Dashboard
+
+Access your project dashboard at: [vercel.com/dashboard](https://vercel.com/dashboard)
+
+From there you can:
+- View deployment logs
+- Check preview deployments
+- Manage environment variables
+- View analytics
+- Rollback to previous deployments
