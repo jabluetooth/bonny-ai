@@ -164,7 +164,7 @@ export function Chatbox() {
                         }}
                     >
                         {/* HEVC with alpha for iOS Safari */}
-                        <source src="/bot-transparent-ios.mov" type="video/quicktime" />
+                        <source src="/bot-avatar-ios.mov" type="video/quicktime" />
                         {/* WebM with alpha for Chrome/Firefox */}
                         <source src="/bot-transparent.webm" type="video/webm" />
                     </video>
