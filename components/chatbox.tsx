@@ -151,7 +151,6 @@ export function Chatbox() {
 
                 <div className="relative w-full max-w-2xl aspect-video mb-0 translate-y-12 -mb-12">
                     <video
-                        src="/bot-transparent.webm"
                         poster="/bot-avatar.png"
                         autoPlay
                         loop
@@ -163,7 +162,12 @@ export function Chatbox() {
                             // Ensure video is visible only after loaded
                             (e.target as HTMLVideoElement).style.opacity = '1';
                         }}
-                    />
+                    >
+                        {/* HEVC with alpha for iOS Safari */}
+                        <source src="/bot-transparent.mov" type="video/quicktime" />
+                        {/* WebM with alpha for Chrome/Firefox */}
+                        <source src="/bot-transparent.webm" type="video/webm" />
+                    </video>
                 </div>
 
                 <div className="w-full max-w-lg mx-auto px-4 animate-in fade-in zoom-in duration-500 slide-in-from-bottom-4">

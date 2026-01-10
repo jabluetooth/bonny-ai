@@ -15,7 +15,9 @@
       "Bash(git stash:*)",
       "Bash(git fetch:*)",
       "Bash(npm view:*)",
-      "Bash(npm uninstall:*)"
+      "Bash(npm uninstall:*)",
+      "Bash(dir /b \"E:\\\\Projects\\\\bonny-ai\\\\public\")",
+      "Bash(findstr:*)"
     ]
   }
 }
