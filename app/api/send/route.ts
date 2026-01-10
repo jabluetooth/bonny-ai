@@ -4,7 +4,17 @@ import { z } from 'zod';
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+// Lazy initialization to prevent build-time errors
+let resend: Resend | null = null;
+function getResend() {
+    if (!resend) {
+        if (!process.env.RESEND_API_KEY) {
+            throw new Error('RESEND_API_KEY is not configured');
+        }
+        resend = new Resend(process.env.RESEND_API_KEY);
+    }
+    return resend;
+}
 
 const sendEmailSchema = z.object({
     email: z.string().email(),
@@ -76,7 +86,7 @@ export async function POST(request: Request) {
             }
         }
 
-        const { data, error } = await resend.emails.send({
+        const { data, error } = await getResend().emails.send({
             from: 'Portfolio Contact <onboarding@resend.dev>',
             to: [process.env.MY_EMAIL || 'delivered@resend.dev'],
             subject: `New Message from Portfolio Visitor (${email})`,
