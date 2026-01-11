@@ -402,7 +402,7 @@ export function Chatbox() {
                                     <div className="h-10 w-10 shrink-0 relative overflow-hidden">
                                         <video
                                             ref={loadingVideoRef}
-                                            src="/ffmpeg/botfinal.webm"
+                                            src="/avatar.mov"
                                             poster="/bot-avatar.png"
                                             autoPlay
                                             loop
