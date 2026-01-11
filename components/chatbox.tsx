@@ -151,7 +151,6 @@ export function Chatbox() {
 
                 <div className="relative w-full max-w-2xl aspect-video mb-0 translate-y-12 -mb-12">
                     <video
-                        poster="/bot-avatar.png"
                         autoPlay
                         loop
                         muted
@@ -164,9 +163,7 @@ export function Chatbox() {
                         }}
                     >
                         {/* HEVC with alpha for iOS Safari */}
-                        <source src="/bot-avatar-ios1.mov" type="video/quicktime" />
-                        {/* WebM with alpha for Chrome/Firefox */}
-                        <source src="/bot-transparent.webm" type="video/webm" />
+                        <source src="/bot-avatar-ios-final.mov" type="video/quicktime" />
                     </video>
                 </div>
 
