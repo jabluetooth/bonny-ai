@@ -157,12 +157,12 @@ export function Chatbox() {
                         playsInline
                         className="w-full h-full object-contain"
                         style={{ backgroundColor: 'transparent' }}
-                        onLoadedData={(e) => {
-                            // Ensure video is visible only after loaded
-                            (e.target as HTMLVideoElement).style.opacity = '1';
-                        }}
                     >
+                        {/* WebM for Chrome/Firefox/Edge */}
+                        <source src="/bot-transparent.webm" type="video/webm" />
                         {/* HEVC with alpha for iOS Safari */}
+                        <source src="/bot-avatar-ios-final.mov" type='video/mp4; codecs="hvc1"' />
+                        {/* Fallback for older iOS */}
                         <source src="/bot-avatar-ios-final.mov" type="video/quicktime" />
                     </video>
                 </div>
@@ -402,14 +402,19 @@ export function Chatbox() {
                                     <div className="h-10 w-10 shrink-0 relative overflow-hidden">
                                         <video
                                             ref={loadingVideoRef}
-                                            src="/avatar.mov"
                                             poster="/bot-avatar.png"
                                             autoPlay
                                             loop
                                             muted
                                             playsInline
                                             className="w-full h-full object-cover"
-                                        />
+                                        >
+                                            {/* HEVC for iOS Safari (preferred) */}
+                                            <source src="/avatar.mov" type='video/mp4; codecs="hvc1"' />
+                                            <source src="/avatar.mov" type="video/quicktime" />
+                                            {/* WebM fallback for Chrome/Firefox/Edge */}
+                                            <source src="/botfinal.webm" type="video/webm" />
+                                        </video>
                                     </div>
                                     <div className="bg-muted text-foreground rounded-[20px] rounded-bl-none px-5 py-4 flex gap-1 items-center shadow-sm">
                                         <span className="w-1.5 h-1.5 bg-foreground/40 rounded-full animate-bounce [animation-delay:-0.3s]" />
