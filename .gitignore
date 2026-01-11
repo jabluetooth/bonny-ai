@@ -50,3 +50,6 @@ Reference/
 *.txt
 
 public/arrayofpic/
+public/arrayofpngs/
+
+ffmpeg.exe

@@ -158,7 +158,7 @@ export function Chatbox() {
                         className="w-full h-full object-contain"
                         style={{ backgroundColor: 'transparent' }}
                     >
-                        <source src="/Sequence1.webm" type="video/webm" />
+                        <source src="/newlanding.webm" type="video/webm" />
                     </video>
                 </div>
 
