@@ -1,1 +1,4 @@
-public/avataraw.mov filter=lfs diff=lfs merge=lfs -text
+public/newlanding_ios.mov filter=lfs diff=lfs merge=lfs -text
+public/botloading_ios.mov filter=lfs diff=lfs merge=lfs -text
+public/boatloading.mov filter=lfs diff=lfs merge=lfs -text
+public/boatloading_ios.mov filter=lfs diff=lfs merge=lfs -text
