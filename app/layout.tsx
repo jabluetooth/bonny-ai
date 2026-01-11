@@ -36,7 +36,7 @@ export const metadata: Metadata = {
     siteName: "Fil Heinz Portfolio",
     images: [
       {
-        url: `${siteUrl}/og-image.png`,
+        url: `${siteUrl}/avatar.png`,
         width: 1200,
         height: 630,
         alt: "Fil Heinz - Software Engineer Portfolio",
@@ -47,7 +47,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Fil Heinz - Software Engineer Portfolio",
     description: "Check out my portfolio website! AI-powered interactive portfolio showcasing projects, skills, and experience.",
-    images: [`${siteUrl}/og-image.png`],
+    images: [`${siteUrl}/avatar.png`],
     creator: "@filheinz",
   },
   robots: {
