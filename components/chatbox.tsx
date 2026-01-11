@@ -158,11 +158,7 @@ export function Chatbox() {
                         className="w-full h-full object-contain"
                         style={{ backgroundColor: 'transparent' }}
                     >
-                        {/* HEVC with alpha for iOS Safari (preferred) */}
-                        <source src="/Sequence01.mov" type='video/mp4; codecs="hvc1"' />
-                        <source src="/Sequence01.mov" type="video/quicktime" />
-                        {/* WebM fallback for Chrome/Firefox/Edge */}
-                        <source src="/bot-transparent.webm" type="video/webm" />
+                        <source src="/Sequence1.webm" type="video/webm" />
                     </video>
                 </div>
 
@@ -408,11 +404,7 @@ export function Chatbox() {
                                             playsInline
                                             className="w-full h-full object-cover"
                                         >
-                                            {/* HEVC for iOS Safari (preferred) */}
-                                            <source src="/Sequence03.mov" type='video/mp4; codecs="hvc1"' />
-                                            <source src="/Sequence03.mov" type="video/quicktime" />
-                                            {/* WebM fallback for Chrome/Firefox/Edge */}
-                                            <source src="/botfinal.webm" type="video/webm" />
+                                            <source src="/Sequence2.webm" type="video/webm" />
                                         </video>
                                     </div>
                                     <div className="bg-muted text-foreground rounded-[20px] rounded-bl-none px-5 py-4 flex gap-1 items-center shadow-sm">
