@@ -160,7 +160,7 @@ export function Chatbox() {
                         {/* WebM with alpha for Chrome/Firefox/Edge */}
                         <source src="/newlandingdefault.webm" type="video/webm" />
                         {/* ProRes 4444 with alpha for iOS/Safari */}
-                        <source src="/newlanding_ios.mov" type="video/quicktime" />
+                        <source src="/newlanding_ios.mp4" type="video/mp4" />
                     </video>
                 </div>
 
