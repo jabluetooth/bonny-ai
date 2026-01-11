@@ -55,5 +55,4 @@ public/arrayofpngs/
 ffmpeg.exe
 
 # Large video source files
-*.mov
 public/*raw*

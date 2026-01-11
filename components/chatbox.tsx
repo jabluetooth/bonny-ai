@@ -156,9 +156,11 @@ export function Chatbox() {
                         muted
                         playsInline
                         className="w-full h-full object-contain"
-                        style={{ backgroundColor: 'transparent' }}
                     >
-                        <source src="/newlanding.webm" type="video/webm" />
+                        {/* WebM with alpha for Chrome/Firefox/Edge */}
+                        <source src="/newlandingdefault.webm" type="video/webm" />
+                        {/* ProRes 4444 with alpha for iOS/Safari */}
+                        <source src="/newlanding_ios.mov" type="video/quicktime" />
                     </video>
                 </div>
 
@@ -404,7 +406,8 @@ export function Chatbox() {
                                             playsInline
                                             className="w-full h-full object-cover"
                                         >
-                                            <source src="/Sequence2.webm" type="video/webm" />
+                                            <source src="/botloading.webm" type="video/webm" />
+                                            <source src="/botloading_ios.mov" type="video/quicktime" />
                                         </video>
                                     </div>
                                     <div className="bg-muted text-foreground rounded-[20px] rounded-bl-none px-5 py-4 flex gap-1 items-center shadow-sm">
