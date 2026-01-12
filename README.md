@@ -19,7 +19,7 @@ Visitors can ask questions and receive dynamic, context-aware responses that tri
 ## Tech Stack
 
 **Frontend**
-- Next.js 14 (App Router)
+- Next.js 15 (App Router)
 - React, TypeScript
 - Tailwind CSS, shadcn/ui
 - Framer Motion
