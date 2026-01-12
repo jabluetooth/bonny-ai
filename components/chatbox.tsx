@@ -406,8 +406,7 @@ export function Chatbox() {
                                             playsInline
                                             className="w-full h-full object-cover"
                                         >
-                                            <source src="/botloading.webm" type="video/webm; codecs=vp9" />
-                                            <source src="/botloading_ios.mov" type="video/quicktime; codecs=h264" />
+                                            <source src="/botloading_ios_1.mov" type="video/quicktime" />
                                         </video>
                                     </div>
                                     <div className="bg-muted text-foreground rounded-[20px] rounded-bl-none px-5 py-4 flex gap-1 items-center shadow-sm">
