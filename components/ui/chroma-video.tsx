@@ -8,7 +8,69 @@ interface ChromaVideoProps {
     className?: string;
     similarity?: number; // 0-100, how close to green (default 28)
     smoothness?: number; // 0-100, edge feathering (default 10)
-    greenColor?: { r: number; g: number; b: number }; // Target green color
+    greenColor?: { r: number; g: number; b: number }; // Target green color (0-255)
+}
+
+// WebGL shader for GPU-accelerated chroma keying
+const vertexShaderSource = `
+    attribute vec2 a_position;
+    attribute vec2 a_texCoord;
+    varying vec2 v_texCoord;
+    void main() {
+        gl_Position = vec4(a_position, 0.0, 1.0);
+        v_texCoord = a_texCoord;
+    }
+`;
+
+const fragmentShaderSource = `
+    precision mediump float;
+    uniform sampler2D u_texture;
+    uniform vec3 u_keyColor;
+    uniform float u_similarity;
+    uniform float u_smoothness;
+    varying vec2 v_texCoord;
+
+    void main() {
+        vec4 color = texture2D(u_texture, v_texCoord);
+
+        // Calculate distance from key color
+        float dist = distance(color.rgb, u_keyColor);
+
+        // Apply chroma key with smoothness
+        float alpha = 1.0;
+        if (dist < u_similarity) {
+            alpha = 0.0;
+        } else if (dist < u_similarity + u_smoothness) {
+            alpha = (dist - u_similarity) / u_smoothness;
+        }
+
+        gl_FragColor = vec4(color.rgb, color.a * alpha);
+    }
+`;
+
+function createShader(gl: WebGLRenderingContext, type: number, source: string): WebGLShader | null {
+    const shader = gl.createShader(type);
+    if (!shader) return null;
+    gl.shaderSource(shader, source);
+    gl.compileShader(shader);
+    if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+        gl.deleteShader(shader);
+        return null;
+    }
+    return shader;
+}
+
+function createProgram(gl: WebGLRenderingContext, vertexShader: WebGLShader, fragmentShader: WebGLShader): WebGLProgram | null {
+    const program = gl.createProgram();
+    if (!program) return null;
+    gl.attachShader(program, vertexShader);
+    gl.attachShader(program, fragmentShader);
+    gl.linkProgram(program);
+    if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+        gl.deleteProgram(program);
+        return null;
+    }
+    return program;
 }
 
 export function ChromaVideo({
@@ -21,6 +83,9 @@ export function ChromaVideo({
 }: ChromaVideoProps) {
     const videoRef = useRef<HTMLVideoElement>(null);
     const canvasRef = useRef<HTMLCanvasElement>(null);
+    const glRef = useRef<WebGLRenderingContext | null>(null);
+    const programRef = useRef<WebGLProgram | null>(null);
+    const textureRef = useRef<WebGLTexture | null>(null);
     const animationRef = useRef<number | null>(null);
 
     useEffect(() => {
@@ -28,83 +93,119 @@ export function ChromaVideo({
         const canvas = canvasRef.current;
         if (!video || !canvas) return;
 
-        const ctx = canvas.getContext("2d", { willReadFrequently: true });
-        if (!ctx) return;
+        // Initialize WebGL
+        const gl = canvas.getContext("webgl", { premultipliedAlpha: false, alpha: true });
+        if (!gl) {
+            console.error("WebGL not supported");
+            return;
+        }
+        glRef.current = gl;
 
-        // Convert similarity/smoothness from 0-100 to usable values
-        const similarityThreshold = (similarity / 100) * 442; // Max distance in RGB space is ~442
-        const smoothnessRange = (smoothness / 100) * 100;
+        // Create shaders
+        const vertexShader = createShader(gl, gl.VERTEX_SHADER, vertexShaderSource);
+        const fragmentShader = createShader(gl, gl.FRAGMENT_SHADER, fragmentShaderSource);
+        if (!vertexShader || !fragmentShader) return;
 
-        const processFrame = () => {
-            if (video.paused || video.ended) {
-                animationRef.current = requestAnimationFrame(processFrame);
-                return;
-            }
+        // Create program
+        const program = createProgram(gl, vertexShader, fragmentShader);
+        if (!program) return;
+        programRef.current = program;
+        gl.useProgram(program);
 
-            // Match canvas size to video
-            if (canvas.width !== video.videoWidth || canvas.height !== video.videoHeight) {
-                canvas.width = video.videoWidth || 80;
-                canvas.height = video.videoHeight || 80;
-            }
+        // Set up geometry (full-screen quad)
+        const positionBuffer = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
+            -1, -1, 1, -1, -1, 1,
+            -1, 1, 1, -1, 1, 1,
+        ]), gl.STATIC_DRAW);
 
-            // Draw current frame
-            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        const positionLocation = gl.getAttribLocation(program, "a_position");
+        gl.enableVertexAttribArray(positionLocation);
+        gl.vertexAttribPointer(positionLocation, 2, gl.FLOAT, false, 0, 0);
 
-            // Get image data
-            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-            const data = imageData.data;
+        // Set up texture coordinates
+        const texCoordBuffer = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, texCoordBuffer);
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
+            0, 1, 1, 1, 0, 0,
+            0, 0, 1, 1, 1, 0,
+        ]), gl.STATIC_DRAW);
 
-            // Process each pixel
-            for (let i = 0; i < data.length; i += 4) {
-                const r = data[i];
-                const g = data[i + 1];
-                const b = data[i + 2];
+        const texCoordLocation = gl.getAttribLocation(program, "a_texCoord");
+        gl.enableVertexAttribArray(texCoordLocation);
+        gl.vertexAttribPointer(texCoordLocation, 2, gl.FLOAT, false, 0, 0);
 
-                // Calculate distance from target green color
-                const distance = Math.sqrt(
-                    Math.pow(r - greenColor.r, 2) +
-                    Math.pow(g - greenColor.g, 2) +
-                    Math.pow(b - greenColor.b, 2)
-                );
+        // Create texture
+        const texture = gl.createTexture();
+        textureRef.current = texture;
+        gl.bindTexture(gl.TEXTURE_2D, texture);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
 
-                // Apply chroma key with smoothness
-                if (distance < similarityThreshold) {
-                    // Fully transparent
-                    data[i + 3] = 0;
-                } else if (distance < similarityThreshold + smoothnessRange) {
-                    // Smooth transition (feathering)
-                    const alpha = ((distance - similarityThreshold) / smoothnessRange) * 255;
-                    data[i + 3] = Math.min(255, alpha);
+        // Enable blending for transparency
+        gl.enable(gl.BLEND);
+        gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+
+        // Convert parameters
+        const similarityNorm = (similarity / 100) * 1.732; // Max RGB distance is sqrt(3)
+        const smoothnessNorm = (smoothness / 100) * 0.5;
+
+        // Set uniforms
+        const keyColorLocation = gl.getUniformLocation(program, "u_keyColor");
+        const similarityLocation = gl.getUniformLocation(program, "u_similarity");
+        const smoothnessLocation = gl.getUniformLocation(program, "u_smoothness");
+
+        gl.uniform3f(keyColorLocation, greenColor.r / 255, greenColor.g / 255, greenColor.b / 255);
+        gl.uniform1f(similarityLocation, similarityNorm);
+        gl.uniform1f(smoothnessLocation, smoothnessNorm);
+
+        const render = () => {
+            if (!video.paused && !video.ended && video.readyState >= 2) {
+                // Update canvas size if needed
+                if (canvas.width !== video.videoWidth || canvas.height !== video.videoHeight) {
+                    canvas.width = video.videoWidth || 320;
+                    canvas.height = video.videoHeight || 320;
+                    gl.viewport(0, 0, canvas.width, canvas.height);
                 }
-                // else: keep original alpha (fully opaque)
+
+                // Upload video frame to texture
+                gl.bindTexture(gl.TEXTURE_2D, texture);
+                gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, video);
+
+                // Clear and draw
+                gl.clearColor(0, 0, 0, 0);
+                gl.clear(gl.COLOR_BUFFER_BIT);
+                gl.drawArrays(gl.TRIANGLES, 0, 6);
             }
-
-            ctx.putImageData(imageData, 0, 0);
-            animationRef.current = requestAnimationFrame(processFrame);
+            animationRef.current = requestAnimationFrame(render);
         };
 
-        const handlePlay = () => {
-            processFrame();
+        const handleCanPlay = () => {
+            canvas.width = video.videoWidth || 320;
+            canvas.height = video.videoHeight || 320;
+            gl.viewport(0, 0, canvas.width, canvas.height);
+            render();
         };
 
-        const handleLoadedData = () => {
-            canvas.width = video.videoWidth || 80;
-            canvas.height = video.videoHeight || 80;
-            // Draw first frame
-            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-        };
+        video.addEventListener("canplay", handleCanPlay);
+        video.addEventListener("playing", handleCanPlay);
 
-        video.addEventListener("play", handlePlay);
-        video.addEventListener("loadeddata", handleLoadedData);
-
-        // Start processing if video is already playing
-        if (!video.paused) {
-            processFrame();
+        // Start if already ready
+        if (video.readyState >= 3) {
+            handleCanPlay();
         }
 
+        // iOS autoplay workaround - try to play on load
+        video.play().catch(() => {
+            // Autoplay blocked - will start on user interaction
+        });
+
         return () => {
-            video.removeEventListener("play", handlePlay);
-            video.removeEventListener("loadeddata", handleLoadedData);
+            video.removeEventListener("canplay", handleCanPlay);
+            video.removeEventListener("playing", handleCanPlay);
             if (animationRef.current) {
                 cancelAnimationFrame(animationRef.current);
             }
@@ -113,7 +214,6 @@ export function ChromaVideo({
 
     return (
         <div className={className} style={{ position: "relative" }}>
-            {/* Hidden video element */}
             <video
                 ref={videoRef}
                 src={src}
@@ -122,12 +222,11 @@ export function ChromaVideo({
                 loop
                 muted
                 playsInline
-                style={{ position: "absolute", opacity: 0, pointerEvents: "none" }}
+                style={{ position: "absolute", opacity: 0, pointerEvents: "none", width: 0, height: 0 }}
             />
-            {/* Visible canvas with transparency */}
             <canvas
                 ref={canvasRef}
-                style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                style={{ width: "100%", height: "100%", objectFit: "contain" }}
             />
         </div>
     );

@@ -145,7 +145,7 @@ export function Chatbox() {
 
                 <div className="relative w-full max-w-2xl aspect-video mb-0 translate-y-12 -mb-12">
                     <ChromaVideo
-                        src="/newlanding.mp4"
+                        src="/gs.mp4"
                         className="w-full h-full"
                         similarity={28}
                         smoothness={10}
@@ -387,7 +387,7 @@ export function Chatbox() {
                                 <div className="flex gap-3 max-w-[85%] items-end">
                                     <div className="h-10 w-10 shrink-0 relative overflow-hidden">
                                         <ChromaVideo
-                                            src="/botloading.mp4"
+                                            src="/botpng000.mp4"
                                             poster="/bot-avatar.png"
                                             className="w-full h-full"
                                             similarity={28}
