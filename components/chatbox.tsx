@@ -144,18 +144,13 @@ export function Chatbox() {
                 <WelcomeModal />
 
                 <div className="relative w-full max-w-2xl aspect-video mb-0 translate-y-12 -mb-12">
-                    <video
-                        autoPlay
-                        loop
-                        muted
-                        playsInline
-                        className="w-full h-full object-contain"
-                    >
-                        {/* WebM with alpha for Chrome/Firefox/Edge */}
-                        <source src="/newlandingdefault.webm" type="video/webm" />
-                        {/* ProRes 4444 with alpha for iOS/Safari */}
-                        <source src="/newlanding_ios.mp4" type="video/mp4" />
-                    </video>
+                    <ChromaVideo
+                        src="/newlanding.mp4"
+                        className="w-full h-full"
+                        similarity={28}
+                        smoothness={10}
+                        greenColor={{ r: 0, g: 255, b: 0 }}
+                    />
                 </div>
 
                 <div className="w-full max-w-lg mx-auto px-4 animate-in fade-in zoom-in duration-500 slide-in-from-bottom-4">
