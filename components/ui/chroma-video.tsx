@@ -77,8 +77,8 @@ export function ChromaVideo({
     src,
     poster,
     className,
-    similarity = 28,
-    smoothness = 10,
+    similarity = 35,
+    smoothness = 30,
     greenColor = { r: 0, g: 255, b: 0 },
 }: ChromaVideoProps) {
     const videoRef = useRef<HTMLVideoElement>(null);

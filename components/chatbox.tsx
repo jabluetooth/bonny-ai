@@ -147,8 +147,8 @@ export function Chatbox() {
                     <ChromaVideo
                         src="/gs.mp4"
                         className="w-full h-full"
-                        similarity={28}
-                        smoothness={10}
+                        similarity={35}
+                        smoothness={45}
                         greenColor={{ r: 0, g: 255, b: 0 }}
                     />
                 </div>
@@ -390,8 +390,8 @@ export function Chatbox() {
                                             src="/botpng000.mp4"
                                             poster="/bot-avatar.png"
                                             className="w-full h-full"
-                                            similarity={28}
-                                            smoothness={10}
+                                            similarity={35}
+                                            smoothness={50}
                                             greenColor={{ r: 0, g: 255, b: 0 }}
                                         />
                                     </div>
