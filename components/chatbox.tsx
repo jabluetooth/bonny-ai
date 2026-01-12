@@ -20,6 +20,7 @@ import { TypingAnimation } from "@/components/ui/typing-animation";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { BackgroundCards } from "@/components/background-cards";
+import { ChromaVideo } from "@/components/ui/chroma-video";
 
 // Types for parsed message data
 interface ParsedMessageData {
@@ -92,13 +93,6 @@ export function Chatbox() {
 
 
 
-    const loadingVideoRef = useRef<HTMLVideoElement>(null);
-
-    useEffect(() => {
-        if (loadingVideoRef.current) {
-            loadingVideoRef.current.playbackRate = 2.0;
-        }
-    }, [isLoading]);
 
     const handleSend = async () => {
         if (!input.trim()) return;
@@ -397,17 +391,14 @@ export function Chatbox() {
                             {isLoading && (
                                 <div className="flex gap-3 max-w-[85%] items-end">
                                     <div className="h-10 w-10 shrink-0 relative overflow-hidden">
-                                        <video
-                                            ref={loadingVideoRef}
+                                        <ChromaVideo
+                                            src="/botloading.mp4"
                                             poster="/bot-avatar.png"
-                                            autoPlay
-                                            loop
-                                            muted
-                                            playsInline
-                                            className="w-full h-full object-cover"
-                                        >
-                                            <source src="/botloading_ios_1.mov" type="video/quicktime" />
-                                        </video>
+                                            className="w-full h-full"
+                                            similarity={28}
+                                            smoothness={10}
+                                            greenColor={{ r: 0, g: 255, b: 0 }}
+                                        />
                                     </div>
                                     <div className="bg-muted text-foreground rounded-[20px] rounded-bl-none px-5 py-4 flex gap-1 items-center shadow-sm">
                                         <span className="w-1.5 h-1.5 bg-foreground/40 rounded-full animate-bounce [animation-delay:-0.3s]" />
