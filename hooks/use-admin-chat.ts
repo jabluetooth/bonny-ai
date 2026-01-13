@@ -93,14 +93,16 @@ export function useAdminChat({ onNewMessage }: UseAdminChatOptions = {}) {
             const locations = new Map<string, string>()
 
             Object.entries(newState).forEach(([key, presences]) => {
+                // The key itself is the conversationId (from presence config)
                 if (key && key.length > 20) {
                     onlineIds.add(key)
                 }
+                // Also check the tracked data for conversationId
                 if (Array.isArray(presences)) {
                     presences.forEach((p: any) => {
                         if (p.conversationId) {
                             onlineIds.add(p.conversationId)
-                            if (p.location) {
+                            if (p.location && p.location !== "Active") {
                                 locations.set(p.conversationId, p.location)
                             }
                         }
@@ -116,7 +118,22 @@ export function useAdminChat({ onNewMessage }: UseAdminChatOptions = {}) {
             .on('presence', { event: 'sync' }, updateOnlineUsers)
             .on('presence', { event: 'join' }, updateOnlineUsers)
             .on('presence', { event: 'leave' }, updateOnlineUsers)
-            .subscribe()
+            .subscribe((status) => {
+                if (status === 'SUBSCRIBED') {
+                    // Force initial sync after subscription
+                    updateOnlineUsers()
+                } else if (status === 'CHANNEL_ERROR') {
+                    console.error("[useAdminChat] Presence channel error - retrying...")
+                    setTimeout(() => {
+                        presenceChannel.subscribe()
+                    }, 3000)
+                }
+            })
+
+        // Periodic presence state refresh (handles missed events)
+        const presenceRefresh = setInterval(() => {
+            updateOnlineUsers()
+        }, 5000) // Refresh every 5 seconds
 
         // Real-time Subscription for DB changes
         const dbChannel = supabase
@@ -158,10 +175,11 @@ export function useAdminChat({ onNewMessage }: UseAdminChatOptions = {}) {
             .subscribe()
 
         return () => {
+            clearInterval(presenceRefresh)
             supabase.removeChannel(presenceChannel)
             supabase.removeChannel(dbChannel)
         }
-    }, [fetchConversations, supabase])
+    }, [fetchConversations])
 
     return {
         conversations,

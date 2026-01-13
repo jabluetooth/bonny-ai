@@ -1,6 +1,6 @@
 "use client"
 
-import { createContext, useContext, useEffect, useState, ReactNode } from "react"
+import { createContext, useContext, useEffect, useState, useRef, ReactNode } from "react"
 import { supabase } from "@/lib/supabase-client"
 
 interface ChatContextType {
@@ -210,6 +210,9 @@ export function ChatProvider({ children }: { children: ReactNode }) {
         }
     }, [conversationId, supabase])
 
+    // Presence Channel Ref (to use in cleanup)
+    const presenceChannelRef = useRef<ReturnType<typeof supabase.channel> | null>(null)
+
     // Presence Tracking (Global Room)
     useEffect(() => {
         if (!conversationId) return
@@ -222,6 +225,8 @@ export function ChatProvider({ children }: { children: ReactNode }) {
                 },
             },
         })
+
+        presenceChannelRef.current = channel
 
         channel.on('presence', { event: 'sync' }, () => {
             // We just track our own presence
@@ -248,41 +253,89 @@ export function ChatProvider({ children }: { children: ReactNode }) {
                     conversationId: conversationId,
                     location: location
                 })
+            } else if (status === 'CHANNEL_ERROR') {
+                console.error("Presence channel error - retrying...")
+                // Retry subscription after a delay
+                setTimeout(() => {
+                    channel.subscribe()
+                }, 2000)
             }
         })
 
-        // Keep-Alive: Database Heartbeat (Robust)
+        // Keep-Alive: Database Heartbeat + Re-track presence (Robust)
         const keepAlive = setInterval(async () => {
+            // Database heartbeat
             await supabase
                 .from('conversations')
                 .update({ last_seen_at: new Date().toISOString() })
                 .eq('id', conversationId)
-        }, 10000) // Update DB every 10s
+
+            // Re-track presence to keep it fresh (handles stale connections)
+            if (presenceChannelRef.current) {
+                presenceChannelRef.current.track({
+                    online_at: new Date().toISOString(),
+                    conversationId: conversationId,
+                    location: "Active" // Simplified for heartbeat
+                }).catch(() => {
+                    // Ignore tracking errors during heartbeat
+                })
+            }
+        }, 15000) // Update every 15s
 
         return () => {
             clearInterval(keepAlive)
+            presenceChannelRef.current = null
             supabase.removeChannel(channel)
         }
-    }, [conversationId, supabase])
+    }, [conversationId])
 
     // Aggressive Cleanup on Tab Close (Instant Offline)
     useEffect(() => {
         if (!conversationId) return
 
         const handleUnload = () => {
-            // 1. Explicitly untrack presence (sends 'leave')
-            const channel = supabase.channel('room:chat-presence')
-            channel.untrack().then(() => {
-                // 2. Kill socket connection
-                supabase.removeAllChannels()
-            })
-
-            // Backup: Fire and forget remove if untrack hangs
+            // Use the stored channel reference for proper untrack
+            if (presenceChannelRef.current) {
+                try {
+                    presenceChannelRef.current.untrack()
+                } catch (e) {
+                    // Ignore errors during unload
+                }
+            }
+            // Backup: Remove all channels
             supabase.removeAllChannels()
         }
 
+        // Handle both unload and visibility change (for mobile)
+        const handleVisibilityChange = () => {
+            if (document.visibilityState === 'hidden') {
+                // Re-track with "away" status when tab is hidden
+                if (presenceChannelRef.current) {
+                    presenceChannelRef.current.track({
+                        online_at: new Date().toISOString(),
+                        conversationId: conversationId,
+                        status: 'away'
+                    }).catch(() => {})
+                }
+            } else if (document.visibilityState === 'visible') {
+                // Re-track as active when tab becomes visible
+                if (presenceChannelRef.current) {
+                    presenceChannelRef.current.track({
+                        online_at: new Date().toISOString(),
+                        conversationId: conversationId,
+                        status: 'active'
+                    }).catch(() => {})
+                }
+            }
+        }
+
         window.addEventListener('beforeunload', handleUnload)
-        return () => window.removeEventListener('beforeunload', handleUnload)
+        document.addEventListener('visibilitychange', handleVisibilityChange)
+
+        return () => {
+            window.removeEventListener('beforeunload', handleUnload)
+            document.removeEventListener('visibilitychange', handleVisibilityChange)
+        }
     }, [conversationId])
 
     const sendMessage = async (content: string, intent?: string, activeId?: string) => {
