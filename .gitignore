@@ -56,3 +56,5 @@ ffmpeg.exe
 
 # Large video source files
 public/*raw*
+.claude/
+*.md
