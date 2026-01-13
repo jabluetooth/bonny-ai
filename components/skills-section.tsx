@@ -145,7 +145,11 @@ export function SkillsSection({ highlightSkill, highlightCategory }: { highlight
                         <Marquee className="h-full">
                             <MarqueeFade side="left" />
                             <MarqueeFade side="right" />
-                            <MarqueeContent speed={100}>
+                            <MarqueeContent
+                                key={`marquee-${marqueeSkills.length}`}
+                                speed={50}
+                                delay={0.5}
+                            >
                                 {marqueeSkills.map((skill: any) => (
                                     <MarqueeItem key={skill.name}>
                                         <SkillCard name={skill.name} img={skill.icon_url || ""} />
