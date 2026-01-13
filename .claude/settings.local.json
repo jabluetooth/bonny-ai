@@ -17,7 +17,10 @@
       "Bash(npm view:*)",
       "Bash(npm uninstall:*)",
       "Bash(dir /b \"E:\\\\Projects\\\\bonny-ai\\\\public\")",
-      "Bash(findstr:*)"
+      "Bash(findstr:*)",
+      "Bash(dir /b \"C:\\\\Users\\\\frelatorre\\\\Desktop\\\\Projects\\\\bonny-ai\\\\public\")",
+      "Bash(del \"C:\\\\Users\\\\frelatorre\\\\Desktop\\\\Projects\\\\bonny-ai\\\\app\\\\favicon.ico\")",
+      "Bash(del \"C:\\\\Users\\\\frelatorre\\\\Desktop\\\\Projects\\\\bonny-ai\\\\public\\\\vercel.svg\" \"C:\\\\Users\\\\frelatorre\\\\Desktop\\\\Projects\\\\bonny-ai\\\\public\\\\next.svg\" \"C:\\\\Users\\\\frelatorre\\\\Desktop\\\\Projects\\\\bonny-ai\\\\public\\\\globe.svg\" \"C:\\\\Users\\\\frelatorre\\\\Desktop\\\\Projects\\\\bonny-ai\\\\public\\\\file.svg\" \"C:\\\\Users\\\\frelatorre\\\\Desktop\\\\Projects\\\\bonny-ai\\\\public\\\\window.svg\")"
     ]
   }
 }
