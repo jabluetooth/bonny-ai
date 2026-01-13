@@ -37,6 +37,7 @@ export function SkillsSection({ highlightSkill, highlightCategory }: { highlight
     const { sendMessage } = useChat();
     const [categories, setCategories] = useState<any[]>([]);
     const [isLoading, setIsLoading] = useState(true);
+    const [marqueeMounted, setMarqueeMounted] = useState(false);
 
     useEffect(() => {
         async function fetchSkills() {
@@ -57,6 +58,14 @@ export function SkillsSection({ highlightSkill, highlightCategory }: { highlight
             }
         }
         fetchSkills();
+    }, []);
+
+    // Delay marquee mount to allow container to settle after Framer Motion animation
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            setMarqueeMounted(true);
+        }, 500); // Wait for motion animation to complete
+        return () => clearTimeout(timer);
     }, []);
 
     // Filter categories logic
@@ -142,21 +151,23 @@ export function SkillsSection({ highlightSkill, highlightCategory }: { highlight
             {marqueeSkills.length > 0 && (
                 <>
                     <div className="w-full max-w-full relative overflow-hidden h-24">
-                        <Marquee className="h-full">
-                            <MarqueeFade side="left" />
-                            <MarqueeFade side="right" />
-                            <MarqueeContent
-                                key={`marquee-${marqueeSkills.length}`}
-                                speed={50}
-                                delay={0.5}
-                            >
-                                {marqueeSkills.map((skill: any) => (
-                                    <MarqueeItem key={skill.name}>
-                                        <SkillCard name={skill.name} img={skill.icon_url || ""} />
-                                    </MarqueeItem>
-                                ))}
-                            </MarqueeContent>
-                        </Marquee>
+                        {marqueeMounted ? (
+                            <Marquee className="h-full">
+                                <MarqueeFade side="left" />
+                                <MarqueeFade side="right" />
+                                <MarqueeContent speed={40}>
+                                    {marqueeSkills.map((skill: any) => (
+                                        <MarqueeItem key={skill.name}>
+                                            <SkillCard name={skill.name} img={skill.icon_url || ""} />
+                                        </MarqueeItem>
+                                    ))}
+                                </MarqueeContent>
+                            </Marquee>
+                        ) : (
+                            <div className="h-full flex items-center justify-center">
+                                <Skeleton className="w-full h-16" />
+                            </div>
+                        )}
                     </div>
                     <Separator />
                 </>
