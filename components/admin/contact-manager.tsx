@@ -11,12 +11,14 @@ import { Switch } from "@/components/ui/switch";
 import { Trash2, Plus, GripVertical, Check, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
 import * as Icons from "lucide-react";
+import { ImageUploader } from "./image-uploader";
 
 interface ContactLink {
     id: string;
     platform: string;
     url: string;
     icon: string;
+    custom_icon_url?: string;
     is_active: boolean;
 }
 
@@ -28,6 +30,7 @@ export function ContactManager() {
     const [newPlatform, setNewPlatform] = useState("");
     const [newUrl, setNewUrl] = useState("");
     const [newIcon, setNewIcon] = useState("Link"); // Default icon
+    const [newCustomIconUrl, setNewCustomIconUrl] = useState("");
 
     useEffect(() => {
         fetchLinks();
@@ -63,6 +66,7 @@ export function ContactManager() {
                     platform: newPlatform,
                     url: newUrl,
                     icon: newIcon,
+                    custom_icon_url: newCustomIconUrl || null,
                     is_active: true
                 });
 
@@ -72,6 +76,7 @@ export function ContactManager() {
             setNewPlatform("");
             setNewUrl("");
             setNewIcon("Link");
+            setNewCustomIconUrl("");
             fetchLinks();
         } catch (error) {
             console.error('Error adding link:', error);
@@ -129,7 +134,7 @@ export function ContactManager() {
                 {/* Add New Link Section */}
                 <div className="grid gap-4 p-4 border rounded-lg bg-muted/20">
                     <h3 className="font-medium text-sm">Add New Link</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="space-y-2">
                             <Label htmlFor="platform">Platform</Label>
                             <Input
@@ -139,7 +144,7 @@ export function ContactManager() {
                                 onChange={(e) => setNewPlatform(e.target.value)}
                             />
                         </div>
-                        <div className="space-y-2 md:col-span-2">
+                        <div className="space-y-2">
                             <Label htmlFor="url">URL</Label>
                             <Input
                                 id="url"
@@ -148,21 +153,34 @@ export function ContactManager() {
                                 onChange={(e) => setNewUrl(e.target.value)}
                             />
                         </div>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
                         <div className="space-y-2">
-                            <Label htmlFor="icon">Icon (Lucide)</Label>
+                            <Label htmlFor="icon">Icon (Lucide Name)</Label>
                             <div className="flex gap-2">
                                 <Input
                                     id="icon"
                                     placeholder="Github"
                                     value={newIcon}
                                     onChange={(e) => setNewIcon(e.target.value)}
+                                    disabled={!!newCustomIconUrl}
                                 />
-                                <div className="flex items-center justify-center w-10 h-10 border rounded bg-background">
+                                <div className="flex items-center justify-center w-10 h-10 border rounded bg-background shrink-0">
                                     {/* @ts-ignore */}
                                     {isValidIcon(newIcon) ? React.createElement(Icons[newIcon], { size: 18 }) : <Icons.HelpCircle size={18} />}
                                 </div>
                             </div>
+                            <p className="text-xs text-muted-foreground">Use a Lucide icon name, or upload a custom image below.</p>
                         </div>
+                        <ImageUploader
+                            label="Custom Icon (Optional)"
+                            folder="contact-icons"
+                            value={newCustomIconUrl}
+                            onChange={setNewCustomIconUrl}
+                            aspectRatio="1/1"
+                            allowExternalUrl={true}
+                            maxSizeMB={1}
+                        />
                     </div>
                     <Button onClick={handleAddLink} className="w-full md:w-auto self-end">
                         <Plus className="w-4 h-4 mr-2" /> Add Link
@@ -194,8 +212,16 @@ export function ContactManager() {
                                 links.map((link) => (
                                     <TableRow key={link.id}>
                                         <TableCell>
-                                            {/* @ts-ignore */}
-                                            {isValidIcon(link.icon) ? React.createElement(Icons[link.icon], { size: 18 }) : <Icons.Link size={18} />}
+                                            {link.custom_icon_url ? (
+                                                <img
+                                                    src={link.custom_icon_url}
+                                                    alt={link.platform}
+                                                    className="w-5 h-5 rounded object-cover"
+                                                />
+                                            ) : (
+                                                /* @ts-ignore */
+                                                isValidIcon(link.icon) ? React.createElement(Icons[link.icon], { size: 18 }) : <Icons.Link size={18} />
+                                            )}
                                         </TableCell>
                                         <TableCell className="font-medium">{link.platform}</TableCell>
                                         <TableCell className="hidden md:table-cell text-muted-foreground truncate max-w-[200px]">

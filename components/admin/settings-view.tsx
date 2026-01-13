@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button"
 import { Bot, Bell, Shield, LogOut, Save, Laptop, Palette } from "lucide-react"
 import { toast } from "sonner"
 import { supabase } from "@/lib/supabase-client"
-import { AvatarUploader } from "./avatar-uploader"
+import { ImageUploader } from "./image-uploader"
 import { ContactManager } from "@/components/admin/contact-manager"
 
 export function SettingsView() {
@@ -33,6 +33,10 @@ This is YOUR portfolio website. You are chatting with a visitor who is intereste
 
 YOUR GOAL:
 Impress the visitor with your skills and projects. Be helpful, enthusiastic, and professional.`)
+
+    // Avatar URLs State
+    const [botAvatarUrl, setBotAvatarUrl] = useState("")
+    const [adminAvatarUrl, setAdminAvatarUrl] = useState("")
 
     const handleSavePrompt = () => {
         setIsLoading(true)
@@ -143,16 +147,24 @@ Impress the visitor with your skills and projects. Be helpful, enthusiastic, and
                             </CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-8">
-                            <AvatarUploader
+                            <ImageUploader
                                 label="Bot Avatar"
-                                filePath="bot-avatar.png"
-                                defaultPreview=""
+                                folder="avatars"
+                                value={botAvatarUrl}
+                                onChange={setBotAvatarUrl}
+                                aspectRatio="1/1"
+                                allowExternalUrl={false}
+                                maxSizeMB={2}
                             />
                             <div className="border-t pt-6">
-                                <AvatarUploader
+                                <ImageUploader
                                     label="Your Avatar (Admin)"
-                                    filePath="admin-avatar.png"
-                                    defaultPreview=""
+                                    folder="avatars"
+                                    value={adminAvatarUrl}
+                                    onChange={setAdminAvatarUrl}
+                                    aspectRatio="1/1"
+                                    allowExternalUrl={false}
+                                    maxSizeMB={2}
                                 />
                             </div>
                         </CardContent>
