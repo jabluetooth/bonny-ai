@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useEffect } from "react";
+import { useRef, useEffect, useState } from "react";
 
 interface ChromaVideoProps {
     src: string;
@@ -9,6 +9,7 @@ interface ChromaVideoProps {
     similarity?: number; // 0-100, how close to green (default 28)
     smoothness?: number; // 0-100, edge feathering (default 10)
     greenColor?: { r: number; g: number; b: number }; // Target green color (0-255)
+    maxResolution?: number; // Max canvas dimension in pixels (reduces quality to match smaller displays)
 }
 
 // WebGL shader for GPU-accelerated chroma keying
@@ -80,6 +81,7 @@ export function ChromaVideo({
     similarity = 35,
     smoothness = 30,
     greenColor = { r: 0, g: 255, b: 0 },
+    maxResolution,
 }: ChromaVideoProps) {
     const videoRef = useRef<HTMLVideoElement>(null);
     const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -87,6 +89,20 @@ export function ChromaVideo({
     const programRef = useRef<WebGLProgram | null>(null);
     const textureRef = useRef<WebGLTexture | null>(null);
     const animationRef = useRef<number | null>(null);
+    const [isVideoReady, setIsVideoReady] = useState(false);
+
+    // Helper to calculate capped dimensions while maintaining aspect ratio
+    const getCanvasSize = (videoWidth: number, videoHeight: number) => {
+        if (!maxResolution || (videoWidth <= maxResolution && videoHeight <= maxResolution)) {
+            return { width: videoWidth || 320, height: videoHeight || 320 };
+        }
+        const aspect = videoWidth / videoHeight;
+        if (videoWidth > videoHeight) {
+            return { width: maxResolution, height: Math.round(maxResolution / aspect) };
+        } else {
+            return { width: Math.round(maxResolution * aspect), height: maxResolution };
+        }
+    };
 
     useEffect(() => {
         const video = videoRef.current;
@@ -164,10 +180,11 @@ export function ChromaVideo({
 
         const render = () => {
             if (!video.paused && !video.ended && video.readyState >= 2) {
-                // Update canvas size if needed
-                if (canvas.width !== video.videoWidth || canvas.height !== video.videoHeight) {
-                    canvas.width = video.videoWidth || 320;
-                    canvas.height = video.videoHeight || 320;
+                // Update canvas size if needed (capped by maxResolution)
+                const size = getCanvasSize(video.videoWidth, video.videoHeight);
+                if (canvas.width !== size.width || canvas.height !== size.height) {
+                    canvas.width = size.width;
+                    canvas.height = size.height;
                     gl.viewport(0, 0, canvas.width, canvas.height);
                 }
 
@@ -179,13 +196,17 @@ export function ChromaVideo({
                 gl.clearColor(0, 0, 0, 0);
                 gl.clear(gl.COLOR_BUFFER_BIT);
                 gl.drawArrays(gl.TRIANGLES, 0, 6);
+
+                // Signal that video is rendering
+                setIsVideoReady(true);
             }
             animationRef.current = requestAnimationFrame(render);
         };
 
         const handleCanPlay = () => {
-            canvas.width = video.videoWidth || 320;
-            canvas.height = video.videoHeight || 320;
+            const size = getCanvasSize(video.videoWidth, video.videoHeight);
+            canvas.width = size.width;
+            canvas.height = size.height;
             gl.viewport(0, 0, canvas.width, canvas.height);
             render();
         };
@@ -209,8 +230,9 @@ export function ChromaVideo({
             if (animationRef.current) {
                 cancelAnimationFrame(animationRef.current);
             }
+            setIsVideoReady(false);
         };
-    }, [similarity, smoothness, greenColor]);
+    }, [similarity, smoothness, greenColor, maxResolution]);
 
     return (
         <div className={className} style={{ position: "relative" }}>
@@ -224,9 +246,30 @@ export function ChromaVideo({
                 playsInline
                 style={{ position: "absolute", opacity: 0, pointerEvents: "none", width: 0, height: 0 }}
             />
+            {/* Poster fallback - shown until video is ready */}
+            {poster && !isVideoReady && (
+                <img
+                    src={poster}
+                    alt=""
+                    style={{
+                        position: "absolute",
+                        top: 0,
+                        left: 0,
+                        width: "100%",
+                        height: "100%",
+                        objectFit: "contain",
+                    }}
+                />
+            )}
             <canvas
                 ref={canvasRef}
-                style={{ width: "100%", height: "100%", objectFit: "contain" }}
+                style={{
+                    width: "100%",
+                    height: "100%",
+                    objectFit: "contain",
+                    opacity: isVideoReady ? 1 : 0,
+                    transition: "opacity 0.2s ease-in-out",
+                }}
             />
         </div>
     );

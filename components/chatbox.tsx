@@ -393,6 +393,7 @@ export function Chatbox() {
                                             similarity={35}
                                             smoothness={50}
                                             greenColor={{ r: 0, g: 255, b: 0 }}
+                                            maxResolution={100}
                                         />
                                     </div>
                                     <div className="bg-muted text-foreground rounded-[20px] rounded-bl-none px-5 py-4 flex gap-1 items-center shadow-sm">
