@@ -10,10 +10,11 @@ import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
 import { Textarea } from "@/components/ui/textarea"
 import { Button } from "@/components/ui/button"
-import { Bot, Bell, Shield, LogOut, Save, Laptop, Palette } from "lucide-react"
+import { Bot, Bell, Shield, LogOut, Save, Laptop, Palette, FileText } from "lucide-react"
 import { toast } from "sonner"
 import { supabase } from "@/lib/supabase-client"
 import { ImageUploader } from "./image-uploader"
+import { ResumeUploader } from "./resume-uploader"
 import { ContactManager } from "@/components/admin/contact-manager"
 
 export function SettingsView() {
@@ -24,7 +25,11 @@ export function SettingsView() {
         soundEnabled,
         setSoundEnabled,
         notificationsEnabled,
-        setNotificationsEnabled
+        setNotificationsEnabled,
+        resumeUrl,
+        isUploadingResume,
+        updateResumeUrl,
+        deleteResumeUrl
     } = useAdminSettings()
 
     // System Prompt State
@@ -62,7 +67,7 @@ Impress the visitor with your skills and projects. Be helpful, enthusiastic, and
             </div>
 
             <Tabs defaultValue="ai" className="w-full">
-                <TabsList className="grid w-full grid-cols-4">
+                <TabsList className="grid w-full grid-cols-5">
                     <TabsTrigger value="ai" className="flex items-center gap-2">
                         <Bot className="h-4 w-4" /> AI Brain
                     </TabsTrigger>
@@ -71,6 +76,9 @@ Impress the visitor with your skills and projects. Be helpful, enthusiastic, and
                     </TabsTrigger>
                     <TabsTrigger value="appearance" className="flex items-center gap-2">
                         <Palette className="h-4 w-4" /> Appearance
+                    </TabsTrigger>
+                    <TabsTrigger value="resume" className="flex items-center gap-2">
+                        <FileText className="h-4 w-4" /> Resume
                     </TabsTrigger>
                     <TabsTrigger value="security" className="flex items-center gap-2">
                         <Shield className="h-4 w-4" /> Security
@@ -171,7 +179,29 @@ Impress the visitor with your skills and projects. Be helpful, enthusiastic, and
                     </Card>
                 </TabsContent>
 
-                {/* --- TAB 4: SECURITY --- */}
+                {/* --- TAB 4: RESUME --- */}
+                <TabsContent value="resume" className="mt-6">
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Resume / CV</CardTitle>
+                            <CardDescription>
+                                Upload your resume or CV. Visitors can download it from the Contact drawer.
+                            </CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <ResumeUploader
+                                value={resumeUrl}
+                                onChange={updateResumeUrl}
+                                onDelete={deleteResumeUrl}
+                                isLoading={isUploadingResume}
+                                folder="resume"
+                                maxSizeMB={10}
+                            />
+                        </CardContent>
+                    </Card>
+                </TabsContent>
+
+                {/* --- TAB 5: SECURITY --- */}
                 <TabsContent value="security" className="mt-6">
                     <Card>
                         <CardHeader>

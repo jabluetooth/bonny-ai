@@ -60,6 +60,9 @@ export function PortfolioNavbar() {
     const [isSending, setIsSending] = useState(false)
     const prevMsgLength = React.useRef(messages.length)
 
+    // Resume State
+    const [resumeUrl, setResumeUrl] = useState<string | null>(null)
+
     // Check mobile for conditional Sidebar rendering
     const isMobile = useIsMobile()
 
@@ -124,6 +127,30 @@ export function PortfolioNavbar() {
 
         prevMsgLength.current = messages.length
     }, [messages.length])
+
+    // Fetch resume URL on mount
+    useEffect(() => {
+        const fetchResume = async () => {
+            try {
+                const res = await fetch("/api/resume")
+                if (res.ok) {
+                    const data = await res.json()
+                    setResumeUrl(data.resume_url)
+                }
+            } catch (error) {
+                console.error("Failed to fetch resume:", error)
+            }
+        }
+        fetchResume()
+    }, [])
+
+    const handleDownloadResume = () => {
+        if (resumeUrl) {
+            window.open(resumeUrl, '_blank')
+        } else {
+            toast.error("Resume is not available yet. Please check back later.")
+        }
+    }
 
     return (
         <div className="relative z-50 w-full flex-none">
@@ -316,8 +343,13 @@ export function PortfolioNavbar() {
                             </div>
 
                             {/* Resume Download */}
-                            <Button variant="outline" className="w-full">
-                                Download Resume
+                            <Button
+                                variant="outline"
+                                className="w-full"
+                                onClick={handleDownloadResume}
+                                disabled={!resumeUrl}
+                            >
+                                {resumeUrl ? "Download Resume" : "Resume Not Available"}
                             </Button>
                         </div>
 

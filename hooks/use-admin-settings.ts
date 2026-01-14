@@ -1,12 +1,16 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { toast } from "sonner"
 
 export function useAdminSettings() {
     const [soundEnabled, setSoundEnabled] = useState(true)
     const [notificationsEnabled, setNotificationsEnabled] = useState(false)
     const [isLoaded, setIsLoaded] = useState(false)
+
+    // Resume state
+    const [resumeUrl, setResumeUrl] = useState<string | null>(null)
+    const [isUploadingResume, setIsUploadingResume] = useState(false)
 
     useEffect(() => {
         // Load initial state from localStorage
@@ -38,7 +42,76 @@ export function useAdminSettings() {
         } else {
             setNotificationsEnabled(false)
         }
+
+        // Fetch resume URL from API
+        fetchResumeUrl()
+
         setIsLoaded(true)
+    }, [])
+
+    // Fetch current resume URL from API
+    const fetchResumeUrl = useCallback(async () => {
+        try {
+            const res = await fetch("/api/resume")
+            if (res.ok) {
+                const data = await res.json()
+                setResumeUrl(data.resume_url)
+            }
+        } catch (error) {
+            console.error("Failed to fetch resume URL:", error)
+        }
+    }, [])
+
+    // Update resume URL in database
+    const updateResumeUrl = useCallback(async (url: string) => {
+        setIsUploadingResume(true)
+        try {
+            const res = await fetch("/api/resume", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ resume_url: url })
+            })
+
+            if (!res.ok) {
+                const data = await res.json()
+                throw new Error(data.error || "Failed to update resume")
+            }
+
+            setResumeUrl(url)
+            toast.success("Resume updated successfully!")
+            return true
+        } catch (error: any) {
+            console.error("Failed to update resume:", error)
+            toast.error(error.message || "Failed to update resume")
+            return false
+        } finally {
+            setIsUploadingResume(false)
+        }
+    }, [])
+
+    // Delete resume URL from database
+    const deleteResumeUrl = useCallback(async () => {
+        setIsUploadingResume(true)
+        try {
+            const res = await fetch("/api/resume", {
+                method: "DELETE"
+            })
+
+            if (!res.ok) {
+                const data = await res.json()
+                throw new Error(data.error || "Failed to delete resume")
+            }
+
+            setResumeUrl(null)
+            toast.success("Resume removed successfully!")
+            return true
+        } catch (error: any) {
+            console.error("Failed to delete resume:", error)
+            toast.error(error.message || "Failed to delete resume")
+            return false
+        } finally {
+            setIsUploadingResume(false)
+        }
     }, [])
 
     const toggleSound = (enabled: boolean) => {
@@ -91,6 +164,12 @@ export function useAdminSettings() {
         setSoundEnabled: toggleSound,
         notificationsEnabled,
         setNotificationsEnabled: toggleNotifications,
-        isLoaded
+        isLoaded,
+        // Resume functions
+        resumeUrl,
+        isUploadingResume,
+        updateResumeUrl,
+        deleteResumeUrl,
+        fetchResumeUrl
     }
 }
