@@ -12,14 +12,14 @@ Visitors can ask questions and receive dynamic, context-aware responses that tri
 - **Database-First Design** – Skills, projects, and experiences are stored and queried from PostgreSQL  
 - **Dynamic UI Rendering** – Chat responses control frontend components in real time  
 - **Admin Dashboard** – Secure Google OAuth login for managing content and conversations  
-- **Polished UX** – Responsive design, animations, and dark mode  
+- **Polished UX** – Responsive design & animations
 
 ---
 
 ## Tech Stack
 
 **Frontend**
-- Next.js 15 (App Router)
+- Next.js 15
 - React, TypeScript
 - Tailwind CSS, shadcn/ui
 - Framer Motion
