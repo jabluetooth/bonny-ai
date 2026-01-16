@@ -1,3 +1,16 @@
 {
-  "buildCommand": "npm run build"
+  "buildCommand": "npm run build",
+  "redirects": [
+    {
+      "source": "/:path*",
+      "has": [
+        {
+          "type": "host",
+          "value": "www.filheinzrelatorre.com"
+        }
+      ],
+      "destination": "https://filheinzrelatorre.com/:path*",
+      "permanent": true
+    }
+  ]
 }
