@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Outfit, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { ChatProvider } from "@/components/chat-provider";
@@ -15,7 +15,42 @@ const jetbrainsMono = JetBrains_Mono({
   subsets: ["latin"],
 });
 
-const siteUrl = process.env.NEXT_PUBLIC_APP_URL || "https://filheinzrelatorre.com";
+const siteUrl = process.env.NEXT_PUBLIC_APP_URL || "https://www.filheinzrelatorre.com";
+
+// Viewport configuration for mobile optimization
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 5,
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
+    { media: "(prefers-color-scheme: dark)", color: "#0a0a0a" },
+  ],
+};
+
+// JSON-LD Structured Data for Person schema
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": "Person",
+  name: "Fil Heinz O. Re La Torre",
+  url: siteUrl,
+  image: `${siteUrl}/avatar.png`,
+  jobTitle: "Software Engineer",
+  description: "Software Engineer specializing in web development and AI/ML",
+  sameAs: [
+    "https://github.com/filheinzrelatorre",
+    "https://linkedin.com/in/filheinzrelatorre",
+  ],
+  knowsAbout: [
+    "Software Engineering",
+    "Web Development",
+    "React",
+    "Next.js",
+    "TypeScript",
+    "AI/Machine Learning",
+    "Full Stack Development",
+  ],
+};
 
 export const metadata: Metadata = {
   title: {
@@ -75,6 +110,19 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      <head>
+        {/* DNS Prefetch for external resources */}
+        <link rel="dns-prefetch" href="https://fonts.googleapis.com" />
+        <link rel="dns-prefetch" href="https://fonts.gstatic.com" />
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+
+        {/* JSON-LD Structured Data */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
+      </head>
       <body
         className={`${outfit.variable} ${jetbrainsMono.variable} font-sans antialiased`}
       >
