@@ -7,4 +7,4 @@ Disallow: /admin
 Disallow: /api/
 
 # Sitemap location (update with your domain)
-Sitemap: https://filheinzrelatorre.com/sitemap.xml
+Sitemap: https://www.filheinzrelatorre.com/sitemap.xml
