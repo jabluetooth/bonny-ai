@@ -108,7 +108,8 @@ export function Chatbox() {
         if (!input.trim()) return;
         const msg = input;
         setInput("");
-        setDismissedSuggestions(true);
+        // Only dismiss chips when sending from chat interface (not the first/hero send)
+        if (messages.length > 0) setDismissedSuggestions(true);
         await sendMessage(msg);
     };
 
