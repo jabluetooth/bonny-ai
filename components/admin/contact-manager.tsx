@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Switch } from "@/components/ui/switch";
-import { Trash2, Plus, GripVertical, Check, ExternalLink } from "lucide-react";
+import { Trash2, Plus, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
 import * as Icons from "lucide-react";
 import { ImageUploader } from "./image-uploader";

@@ -4,8 +4,8 @@ import { useEffect, useState, useRef } from "react"
 import { supabase } from "@/lib/supabase-client"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Loader2, Send, Play, Pause, RefreshCcw, ArrowLeft } from "lucide-react"
+import { Card, CardHeader, CardTitle } from "@/components/ui/card"
+import { Loader2, Send, Play, Pause, ArrowLeft } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
 import { format } from "date-fns"
@@ -35,8 +35,6 @@ export function ChatManager() {
 
     const { conversations, isLoading, refresh, onlineUsers } = useAdminChat({
         onNewMessage: (msg) => {
-            console.log("[ChatManager] New message received:", msg) // Debug log
-
             // Only notify for USER messages
             if (msg.sender_type === 'user') {
                 // 1. Toast Notification (Always Visible)

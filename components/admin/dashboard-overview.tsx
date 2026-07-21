@@ -1,10 +1,10 @@
 "use client"
 
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { useAdminChat } from "@/hooks/use-admin-chat"
 import { useAdminSettings } from "@/hooks/use-admin-settings"
 import { format, subHours, startOfHour, isSameHour } from "date-fns"
-import { Users, MessageSquare, Activity, MapPin, Zap, Clock, BarChart3, LayoutDashboard, Settings, BookOpen, Briefcase } from "lucide-react"
+import { Users, MessageSquare, Activity, MapPin, Zap, Clock, BarChart3, BookOpen, Briefcase } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip } from "recharts"
@@ -15,8 +15,6 @@ export function DashboardOverview() {
 
     const { conversations, onlineUsers, userLocations, isLoading } = useAdminChat({
         onNewMessage: (msg) => {
-            console.log("[DashboardOverview] New message received:", msg) // Debug log
-
             if (msg.sender_type === 'user') {
                 // Toast (always)
                 toast.info(`Visitor: ${msg.content.substring(0, 30)}${msg.content.length > 30 ? '...' : ''}`)
@@ -163,7 +161,7 @@ export function DashboardOverview() {
                     <CardContent className="grid grid-cols-2 gap-3">
                         <Button variant="outline" className="justify-start gap-2 h-auto py-4" asChild>
                             <Link href="/admin?view=chats">
-                                <LayoutDashboard className="h-5 w-5 text-primary" />
+                                <MessageSquare className="h-5 w-5 text-primary" />
                                 <div className="flex flex-col items-start">
                                     <span className="font-semibold">View Chats</span>
                                     <span className="text-[10px] text-muted-foreground font-normal">Manage sessions</span>

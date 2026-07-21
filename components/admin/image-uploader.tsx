@@ -166,7 +166,6 @@ export function ImageUploader({
                     <div className="absolute inset-0 flex flex-col items-center justify-center text-muted-foreground">
                         <ImageIcon className="h-10 w-10 mb-2" />
                         <p className="text-sm">Click to upload</p>
-                        <p className="text-xs">or drag and drop</p>
                     </div>
                 )}
 

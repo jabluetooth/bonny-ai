@@ -10,6 +10,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { toast } from "sonner"
 import { Loader2, Plus, Pencil, Trash2 } from "lucide-react"
+import { ConfirmDialog } from "@/components/admin/confirm-dialog"
 import { Textarea } from "@/components/ui/textarea"
 import { ImageUploader } from "@/components/admin/image-uploader"
 
@@ -27,6 +28,8 @@ export function InterestsTab() {
     const [isDialogOpen, setIsDialogOpen] = useState(false)
     const [editingItem, setEditingItem] = useState<Interest | null>(null)
     const [isSaving, setIsSaving] = useState(false)
+    const [confirmOpen, setConfirmOpen] = useState(false)
+    const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null)
     const [formData, setFormData] = useState<Partial<Interest>>({})
 
     useEffect(() => {
@@ -72,14 +75,20 @@ export function InterestsTab() {
         }
     }
 
-    const handleDelete = async (id: string) => {
-        if (!confirm("Are you sure?")) return
-        const { error } = await supabase.from('interests').delete().eq('id', id)
+    const handleDeleteClick = (id: string) => {
+        setPendingDeleteId(id)
+        setConfirmOpen(true)
+    }
+
+    const handleConfirmDelete = async () => {
+        if (!pendingDeleteId) return
+        const { error } = await supabase.from('interests').delete().eq('id', pendingDeleteId)
         if (error) toast.error(error.message)
         else {
             toast.success("Deleted")
             fetchItems()
         }
+        setPendingDeleteId(null)
     }
 
     if (isLoading) return <Loader2 className="animate-spin mx-auto" />
@@ -109,7 +118,7 @@ export function InterestsTab() {
                                 <TableCell>{item.display_order}</TableCell>
                                 <TableCell className="text-right space-x-2">
                                     <Button variant="ghost" size="icon" onClick={() => openEditDialog(item)}><Pencil className="h-4 w-4" /></Button>
-                                    <Button variant="ghost" size="icon" className="text-destructive" onClick={() => handleDelete(item.id)}><Trash2 className="h-4 w-4" /></Button>
+                                    <Button variant="ghost" size="icon" className="text-destructive" onClick={() => handleDeleteClick(item.id)}><Trash2 className="h-4 w-4" /></Button>
                                 </TableCell>
                             </TableRow>
                         ))}
@@ -117,6 +126,12 @@ export function InterestsTab() {
                     </TableBody>
                 </Table>
             </CardContent>
+
+            <ConfirmDialog
+                open={confirmOpen}
+                onOpenChange={setConfirmOpen}
+                onConfirm={handleConfirmDelete}
+            />
 
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                 <DialogContent className="max-h-[90vh] overflow-y-auto">

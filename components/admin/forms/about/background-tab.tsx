@@ -7,9 +7,10 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { toast } from "sonner"
 import { Loader2, Plus, Pencil, Trash2 } from "lucide-react"
+import { ConfirmDialog } from "@/components/admin/confirm-dialog"
 import { Textarea } from "@/components/ui/textarea"
 import { ImageUploader } from "@/components/admin/image-uploader"
 
@@ -28,6 +29,8 @@ export function BackgroundTab() {
     const [isDialogOpen, setIsDialogOpen] = useState(false)
     const [editingCard, setEditingCard] = useState<BackgroundCard | null>(null)
     const [isSaving, setIsSaving] = useState(false)
+    const [confirmOpen, setConfirmOpen] = useState(false)
+    const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null)
 
     // Form State
     const [formData, setFormData] = useState<Partial<BackgroundCard>>({})
@@ -84,14 +87,20 @@ export function BackgroundTab() {
         }
     }
 
-    const handleDelete = async (id: string) => {
-        if (!confirm("Are you sure?")) return
-        const { error } = await supabase.from('background_cards').delete().eq('id', id)
+    const handleDeleteClick = (id: string) => {
+        setPendingDeleteId(id)
+        setConfirmOpen(true)
+    }
+
+    const handleConfirmDelete = async () => {
+        if (!pendingDeleteId) return
+        const { error } = await supabase.from('background_cards').delete().eq('id', pendingDeleteId)
         if (error) toast.error(error.message)
         else {
             toast.success("Deleted")
             fetchCards()
         }
+        setPendingDeleteId(null)
     }
 
     if (isLoading) return <Loader2 className="animate-spin mx-auto" />
@@ -123,7 +132,7 @@ export function BackgroundTab() {
                                 <TableCell>{card.display_order}</TableCell>
                                 <TableCell className="text-right space-x-2">
                                     <Button variant="ghost" size="icon" onClick={() => openEditDialog(card)}><Pencil className="h-4 w-4" /></Button>
-                                    <Button variant="ghost" size="icon" className="text-destructive" onClick={() => handleDelete(card.id)}><Trash2 className="h-4 w-4" /></Button>
+                                    <Button variant="ghost" size="icon" className="text-destructive" onClick={() => handleDeleteClick(card.id)}><Trash2 className="h-4 w-4" /></Button>
                                 </TableCell>
                             </TableRow>
                         ))}
@@ -131,6 +140,12 @@ export function BackgroundTab() {
                     </TableBody>
                 </Table>
             </CardContent>
+
+            <ConfirmDialog
+                open={confirmOpen}
+                onOpenChange={setConfirmOpen}
+                onConfirm={handleConfirmDelete}
+            />
 
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                 <DialogContent className="max-h-[90vh] flex flex-col">

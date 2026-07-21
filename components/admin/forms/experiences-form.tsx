@@ -3,16 +3,19 @@
 import { useEffect, useState } from "react"
 import { supabase } from "@/lib/supabase-client"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Loader2, Plus, Pencil, Trash2, Briefcase, GraduationCap } from "lucide-react"
 import { toast } from "sonner"
 import { ExperienceDialog } from "./experience-dialog"
+import { ConfirmDialog } from "@/components/admin/confirm-dialog"
 
 export function AdminExperiencesForm() {
     const [isLoading, setIsLoading] = useState(true)
     const [experiences, setExperiences] = useState<any[]>([])
     const [isDialogOpen, setIsDialogOpen] = useState(false)
     const [selectedExp, setSelectedExp] = useState<any>(null)
+    const [confirmOpen, setConfirmOpen] = useState(false)
+    const [pendingDeleteId, setPendingDeleteId] = useState<number | null>(null)
 
     const fetchExperiences = async () => {
         setIsLoading(true)
@@ -45,16 +48,21 @@ export function AdminExperiencesForm() {
         fetchExperiences()
     }, [])
 
-    const handleDelete = async (id: number) => {
-        if (!confirm("Delete this experience?")) return
+    const handleDeleteClick = (id: number) => {
+        setPendingDeleteId(id)
+        setConfirmOpen(true)
+    }
 
-        const { error } = await supabase.from('experiences').delete().eq('id', id)
+    const handleConfirmDelete = async () => {
+        if (!pendingDeleteId) return
+        const { error } = await supabase.from('experiences').delete().eq('id', pendingDeleteId)
         if (error) {
             toast.error("Failed to delete experience")
         } else {
             toast.success("Experience deleted")
             fetchExperiences()
         }
+        setPendingDeleteId(null)
     }
 
     const handleEdit = (exp: any) => {
@@ -107,7 +115,7 @@ export function AdminExperiencesForm() {
                                     <Button variant="ghost" size="icon" onClick={() => handleEdit(exp)}>
                                         <Pencil className="h-4 w-4" />
                                     </Button>
-                                    <Button variant="ghost" size="icon" className="text-red-500" onClick={() => handleDelete(exp.id)}>
+                                    <Button variant="ghost" size="icon" className="text-red-500" onClick={() => handleDeleteClick(exp.id)}>
                                         <Trash2 className="h-4 w-4" />
                                     </Button>
                                 </div>
@@ -135,7 +143,7 @@ export function AdminExperiencesForm() {
                                     <Button variant="ghost" size="icon" onClick={() => handleEdit(exp)}>
                                         <Pencil className="h-4 w-4" />
                                     </Button>
-                                    <Button variant="ghost" size="icon" className="text-red-500" onClick={() => handleDelete(exp.id)}>
+                                    <Button variant="ghost" size="icon" className="text-red-500" onClick={() => handleDeleteClick(exp.id)}>
                                         <Trash2 className="h-4 w-4" />
                                     </Button>
                                 </div>
@@ -144,6 +152,12 @@ export function AdminExperiencesForm() {
                     </CardContent>
                 </Card>
             </div>
+
+            <ConfirmDialog
+                open={confirmOpen}
+                onOpenChange={setConfirmOpen}
+                onConfirm={handleConfirmDelete}
+            />
 
             <ExperienceDialog
                 open={isDialogOpen}

@@ -3,8 +3,8 @@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { useAdminChat } from "@/hooks/use-admin-chat"
 import { format, subDays, startOfDay, isSameDay, getHours } from "date-fns"
-import { Users, MessageSquare, TrendingUp, Calendar, Clock } from "lucide-react"
-import { Bar, BarChart, Line, LineChart, ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianGrid, Area, AreaChart } from "recharts"
+import { Users, MessageSquare, TrendingUp, Calendar } from "lucide-react"
+import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianGrid, Area, AreaChart } from "recharts"
 
 export function AnalyticsView() {
     const { conversations, isLoading } = useAdminChat()

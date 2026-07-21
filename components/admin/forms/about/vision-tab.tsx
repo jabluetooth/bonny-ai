@@ -8,9 +8,9 @@ import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { toast } from "sonner"
 import { Loader2, Plus, Pencil, Trash2 } from "lucide-react"
+import { ConfirmDialog } from "@/components/admin/confirm-dialog"
 import { ImageUploader } from "@/components/admin/image-uploader"
 
 interface VisionCard {
@@ -27,6 +27,8 @@ export function VisionTab() {
     const [isDialogOpen, setIsDialogOpen] = useState(false)
     const [editingItem, setEditingItem] = useState<VisionCard | null>(null)
     const [isSaving, setIsSaving] = useState(false)
+    const [confirmOpen, setConfirmOpen] = useState(false)
+    const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null)
     const [formData, setFormData] = useState<Partial<VisionCard>>({})
 
     useEffect(() => {
@@ -72,14 +74,20 @@ export function VisionTab() {
         }
     }
 
-    const handleDelete = async (id: string) => {
-        if (!confirm("Are you sure?")) return
-        const { error } = await supabase.from('vision_cards').delete().eq('id', id)
+    const handleDeleteClick = (id: string) => {
+        setPendingDeleteId(id)
+        setConfirmOpen(true)
+    }
+
+    const handleConfirmDelete = async () => {
+        if (!pendingDeleteId) return
+        const { error } = await supabase.from('vision_cards').delete().eq('id', pendingDeleteId)
         if (error) toast.error(error.message)
         else {
             toast.success("Deleted")
             fetchItems()
         }
+        setPendingDeleteId(null)
     }
 
     if (isLoading) return <Loader2 className="animate-spin mx-auto" />
@@ -108,10 +116,17 @@ export function VisionTab() {
                             <TableRow key={item.id}>
                                 <TableCell className="font-medium truncate max-w-[200px]">{item.quote}</TableCell>
                                 <TableCell>{item.name}</TableCell>
-                                <TableCell className="truncate max-w-[150px]">{item.image_url || "-"}</TableCell>
+                                <TableCell>
+                                    {item.image_url ? (
+                                        // eslint-disable-next-line @next/next/no-img-element
+                                        <img src={item.image_url} alt="" className="h-8 w-8 rounded object-cover" />
+                                    ) : (
+                                        <span className="text-muted-foreground">—</span>
+                                    )}
+                                </TableCell>
                                 <TableCell className="text-right space-x-2">
                                     <Button variant="ghost" size="icon" onClick={() => openEditDialog(item)}><Pencil className="h-4 w-4" /></Button>
-                                    <Button variant="ghost" size="icon" className="text-destructive" onClick={() => handleDelete(item.id)}><Trash2 className="h-4 w-4" /></Button>
+                                    <Button variant="ghost" size="icon" className="text-destructive" onClick={() => handleDeleteClick(item.id)}><Trash2 className="h-4 w-4" /></Button>
                                 </TableCell>
                             </TableRow>
                         ))}
@@ -119,6 +134,12 @@ export function VisionTab() {
                     </TableBody>
                 </Table>
             </CardContent>
+
+            <ConfirmDialog
+                open={confirmOpen}
+                onOpenChange={setConfirmOpen}
+                onConfirm={handleConfirmDelete}
+            />
 
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                 <DialogContent className="max-h-[90vh] flex flex-col">

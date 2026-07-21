@@ -3,17 +3,19 @@
 import { useEffect, useState } from "react"
 import { supabase } from "@/lib/supabase-client"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Loader2, Plus, Pencil, Trash2, Star } from "lucide-react"
 import { toast } from "sonner"
 import { SkillDialog } from "./skill-dialog"
-import { Badge } from "@/components/ui/badge"
+import { ConfirmDialog } from "@/components/admin/confirm-dialog"
 
 export function AdminSkillsForm() {
     const [isLoading, setIsLoading] = useState(true)
     const [categories, setCategories] = useState<any[]>([])
     const [isDialogOpen, setIsDialogOpen] = useState(false)
     const [selectedSkill, setSelectedSkill] = useState<any>(null)
+    const [confirmOpen, setConfirmOpen] = useState(false)
+    const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null)
 
     const fetchSkills = async () => {
         setIsLoading(true)
@@ -44,16 +46,21 @@ export function AdminSkillsForm() {
         fetchSkills()
     }, [])
 
-    const handleDelete = async (id: string) => {
-        if (!confirm("Delete this skill?")) return
+    const handleDeleteClick = (id: string) => {
+        setPendingDeleteId(id)
+        setConfirmOpen(true)
+    }
 
-        const { error } = await supabase.from('skills').delete().eq('id', id)
+    const handleConfirmDelete = async () => {
+        if (!pendingDeleteId) return
+        const { error } = await supabase.from('skills').delete().eq('id', pendingDeleteId)
         if (error) {
             toast.error("Failed to delete skill")
         } else {
             toast.success("Skill deleted")
             fetchSkills()
         }
+        setPendingDeleteId(null)
     }
 
     const handleEdit = (skill: any) => {
@@ -118,7 +125,7 @@ export function AdminSkillsForm() {
                                             <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleEdit(skill)}>
                                                 <Pencil className="h-4 w-4" />
                                             </Button>
-                                            <Button variant="ghost" size="icon" className="h-8 w-8 text-red-500 hover:text-red-600" onClick={() => handleDelete(skill.id)}>
+                                            <Button variant="ghost" size="icon" className="h-8 w-8 text-red-500 hover:text-red-600" onClick={() => handleDeleteClick(skill.id)}>
                                                 <Trash2 className="h-4 w-4" />
                                             </Button>
                                         </div>
@@ -129,6 +136,12 @@ export function AdminSkillsForm() {
                     ))}
                 </div>
             )}
+
+            <ConfirmDialog
+                open={confirmOpen}
+                onOpenChange={setConfirmOpen}
+                onConfirm={handleConfirmDelete}
+            />
 
             <SkillDialog
                 open={isDialogOpen}

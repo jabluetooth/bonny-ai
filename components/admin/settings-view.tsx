@@ -2,7 +2,7 @@
 
 import { useAdminSettings } from "@/hooks/use-admin-settings"
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Label } from "@/components/ui/label"
@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
 import { Textarea } from "@/components/ui/textarea"
 import { Button } from "@/components/ui/button"
-import { Bot, Bell, Shield, LogOut, Save, Laptop, Palette, FileText } from "lucide-react"
+import { Bot, Bell, Shield, LogOut, Save, Laptop, Palette, FileText, Link2 } from "lucide-react"
 import { toast } from "sonner"
 import { supabase } from "@/lib/supabase-client"
 import { ImageUploader } from "./image-uploader"
@@ -67,21 +67,24 @@ Impress the visitor with your skills and projects. Be helpful, enthusiastic, and
             </div>
 
             <Tabs defaultValue="ai" className="w-full">
-                <TabsList className="grid w-full grid-cols-5">
-                    <TabsTrigger value="ai" className="flex items-center gap-2">
-                        <Bot className="h-4 w-4" /> AI Brain
+                <TabsList className="grid w-full grid-cols-6">
+                    <TabsTrigger value="ai" className="flex items-center gap-1.5" title="AI Brain">
+                        <Bot className="h-4 w-4 shrink-0" /><span className="hidden sm:inline">AI Brain</span>
                     </TabsTrigger>
-                    <TabsTrigger value="notifications" className="flex items-center gap-2">
-                        <Bell className="h-4 w-4" /> Notifications
+                    <TabsTrigger value="notifications" className="flex items-center gap-1.5" title="Notifications">
+                        <Bell className="h-4 w-4 shrink-0" /><span className="hidden sm:inline">Notifications</span>
                     </TabsTrigger>
-                    <TabsTrigger value="appearance" className="flex items-center gap-2">
-                        <Palette className="h-4 w-4" /> Appearance
+                    <TabsTrigger value="appearance" className="flex items-center gap-1.5" title="Appearance">
+                        <Palette className="h-4 w-4 shrink-0" /><span className="hidden sm:inline">Appearance</span>
                     </TabsTrigger>
-                    <TabsTrigger value="resume" className="flex items-center gap-2">
-                        <FileText className="h-4 w-4" /> Resume
+                    <TabsTrigger value="resume" className="flex items-center gap-1.5" title="Resume">
+                        <FileText className="h-4 w-4 shrink-0" /><span className="hidden sm:inline">Resume</span>
                     </TabsTrigger>
-                    <TabsTrigger value="security" className="flex items-center gap-2">
-                        <Shield className="h-4 w-4" /> Security
+                    <TabsTrigger value="links" className="flex items-center gap-1.5" title="Links">
+                        <Link2 className="h-4 w-4 shrink-0" /><span className="hidden sm:inline">Links</span>
+                    </TabsTrigger>
+                    <TabsTrigger value="security" className="flex items-center gap-1.5" title="Security">
+                        <Shield className="h-4 w-4 shrink-0" /><span className="hidden sm:inline">Security</span>
                     </TabsTrigger>
                 </TabsList>
 
@@ -105,7 +108,7 @@ Impress the visitor with your skills and projects. Be helpful, enthusiastic, and
                                     placeholder="You are..."
                                 />
                                 <p className="text-xs text-muted-foreground">
-                                    Changes take effect immediately for new conversations. Use markdown for formatting.
+                                    Note: The system prompt is defined in your codebase (lib/llm.ts). This editor is for reference only and does not persist changes.
                                 </p>
                             </div>
                         </CardContent>
@@ -201,7 +204,12 @@ Impress the visitor with your skills and projects. Be helpful, enthusiastic, and
                     </Card>
                 </TabsContent>
 
-                {/* --- TAB 5: SECURITY --- */}
+                {/* --- TAB 5: LINKS --- */}
+                <TabsContent value="links" className="mt-6">
+                    <ContactManager />
+                </TabsContent>
+
+                {/* --- TAB 6: SECURITY --- */}
                 <TabsContent value="security" className="mt-6">
                     <Card>
                         <CardHeader>
@@ -234,11 +242,6 @@ Impress the visitor with your skills and projects. Be helpful, enthusiastic, and
                             </div>
                         </CardContent>
                     </Card>
-
-                    {/* Contact Links Manager */}
-                    <div className="mt-6">
-                        <ContactManager />
-                    </div>
                 </TabsContent>
             </Tabs>
         </div>

@@ -10,13 +10,10 @@ import {
     MessageSquare,
     Settings,
     LogOut,
-    Menu,
-    AudioWaveform,
     Command,
-    GalleryVerticalEnd
 } from "lucide-react"
 import Link from "next/link"
-import { usePathname, useSearchParams } from "next/navigation"
+import { useSearchParams } from "next/navigation"
 
 import {
     Sidebar,
@@ -89,7 +86,6 @@ const data = {
 }
 
 export function AdminSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-    const pathname = usePathname()
     const searchParams = useSearchParams()
     const currentView = searchParams.get("view") || "dashboard"
 

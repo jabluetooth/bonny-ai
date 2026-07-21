@@ -9,6 +9,7 @@ import { Loader2, Plus, Pencil, Trash2, ExternalLink } from "lucide-react"
 import { toast } from "sonner"
 import { ProjectDialog } from "./project-edit-dialog"
 import { ProjectStatusBadge } from "../project-status-badge"
+import { ConfirmDialog } from "@/components/admin/confirm-dialog"
 
 interface Project {
     id: string;
@@ -26,6 +27,8 @@ export function AdminProjectsForm() {
     const [projects, setProjects] = useState<Project[]>([])
     const [isDialogOpen, setIsDialogOpen] = useState(false)
     const [selectedProject, setSelectedProject] = useState<Project | null>(null)
+    const [confirmOpen, setConfirmOpen] = useState(false)
+    const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null)
 
     const fetchProjects = async () => {
         setIsLoading(true)
@@ -45,8 +48,6 @@ export function AdminProjectsForm() {
             console.error(error)
             toast.error("Failed to fetch projects")
         } else {
-            console.log("Fetched Projects:", data); // Debug
-
             // Map the nested skill objects to flat array for easier UI handling
             const mapped = data?.map((p: any) => ({
                 ...p,
@@ -62,16 +63,21 @@ export function AdminProjectsForm() {
         fetchProjects()
     }, [])
 
-    const handleDelete = async (id: string) => {
-        if (!confirm("Are you sure you want to delete this project?")) return
+    const handleDeleteClick = (id: string) => {
+        setPendingDeleteId(id)
+        setConfirmOpen(true)
+    }
 
-        const { error } = await supabase.from('projects').delete().eq('id', id)
+    const handleConfirmDelete = async () => {
+        if (!pendingDeleteId) return
+        const { error } = await supabase.from('projects').delete().eq('id', pendingDeleteId)
         if (error) {
             toast.error("Failed to delete project")
         } else {
             toast.success("Project deleted")
             fetchProjects()
         }
+        setPendingDeleteId(null)
     }
 
     const handleEdit = (project: Project) => {
@@ -163,7 +169,7 @@ export function AdminProjectsForm() {
                                                 <Button variant="ghost" size="icon" onClick={() => handleEdit(project)}>
                                                     <Pencil className="h-4 w-4" />
                                                 </Button>
-                                                <Button variant="ghost" size="icon" onClick={() => handleDelete(project.id)}>
+                                                <Button variant="ghost" size="icon" onClick={() => handleDeleteClick(project.id)}>
                                                     <Trash2 className="h-4 w-4 text-red-500" />
                                                 </Button>
                                             </div>
@@ -181,6 +187,12 @@ export function AdminProjectsForm() {
                 onOpenChange={setIsDialogOpen}
                 project={selectedProject}
                 onSuccess={() => handleDialogClose(true)}
+            />
+
+            <ConfirmDialog
+                open={confirmOpen}
+                onOpenChange={setConfirmOpen}
+                onConfirm={handleConfirmDelete}
             />
         </div>
     )
