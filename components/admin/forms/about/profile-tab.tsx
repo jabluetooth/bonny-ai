@@ -107,7 +107,7 @@ export function ProfileTab() {
             <CardHeader>
                 <CardTitle>Main Profile</CardTitle>
                 <CardDescription>
-                    Update the main "About" card introduction.
+                    Update the main &quot;About&quot; card introduction.
                 </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">

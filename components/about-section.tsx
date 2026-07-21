@@ -69,14 +69,14 @@ export function AboutSection() {
                 <CardBody className="relative group/card w-auto sm:w-[40rem] h-auto p-6 flex flex-col sm:flex-row gap-6 items-center">
                     <div className="flex-1">
                         <CardItem translateZ="50" className="text-4xl font-bold text-neutral-800 dark:text-white mb-2">
-                            I'm Fil, a <br />
+                            I&apos;m Fil, a <br />
                             <span className="text-transparent bg-clip-text bg-gradient-to-r from-pink-500 to-orange-400">
                                 creative engineer
                             </span>
                         </CardItem>
                         <div className="space-y-4 my-4">
                             <CardItem as="p" translateZ="60" className="text-neutral-500 dark:text-neutral-300 text-sm leading-relaxed">
-                                I'm Fil Heinz, a proactive full-stack developer passionate about creating dynamic web experiences. From frontend to backend, I thrive on solving complex problems with clean, efficient code.
+                                I&apos;m Fil Heinz, a proactive full-stack developer passionate about creating dynamic web experiences. From frontend to backend, I thrive on solving complex problems with clean, efficient code.
                             </CardItem>
                         </div>
                         <div className="flex gap-4 mt-6">

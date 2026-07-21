@@ -26,40 +26,10 @@ export const InfiniteMovingCards = ({
     const containerRef = React.useRef<HTMLDivElement>(null);
     const scrollerRef = React.useRef<HTMLUListElement>(null);
 
-    useEffect(() => {
-        if (items.length > 0) {
-            addAnimation();
-        }
-    }, [items]);
-
     const [internalStart, setInternalStart] = useState(false);
 
     // Use prop if provided, otherwise internal state
     const isStarted = startAnimation !== undefined ? startAnimation : internalStart;
-
-    function addAnimation() {
-        if (containerRef.current && scrollerRef.current && items.length > 0) {
-            const scrollerContent = Array.from(scrollerRef.current.children);
-
-            // Prevent duplicate cloning if already cloned (simple check: if children > items)
-            if (scrollerRef.current.children.length > items.length) {
-                // Already cloned? Or we could clear and re-clone. 
-                // For safety with async data, let's just proceed if not started.
-                if (isStarted) return;
-            }
-
-            scrollerContent.forEach((item) => {
-                const duplicatedItem = item.cloneNode(true);
-                if (scrollerRef.current) {
-                    scrollerRef.current.appendChild(duplicatedItem);
-                }
-            });
-
-            getDirection();
-            getSpeed();
-            setInternalStart(true);
-        }
-    }
 
     const getDirection = () => {
         if (containerRef.current) {
@@ -88,6 +58,36 @@ export const InfiniteMovingCards = ({
             }
         }
     };
+
+    function addAnimation() {
+        if (containerRef.current && scrollerRef.current && items.length > 0) {
+            const scrollerContent = Array.from(scrollerRef.current.children);
+
+            // Prevent duplicate cloning if already cloned (simple check: if children > items)
+            if (scrollerRef.current.children.length > items.length) {
+                // Already cloned? Or we could clear and re-clone.
+                // For safety with async data, let's just proceed if not started.
+                if (isStarted) return;
+            }
+
+            scrollerContent.forEach((item) => {
+                const duplicatedItem = item.cloneNode(true);
+                if (scrollerRef.current) {
+                    scrollerRef.current.appendChild(duplicatedItem);
+                }
+            });
+
+            getDirection();
+            getSpeed();
+            setInternalStart(true);
+        }
+    }
+
+    useEffect(() => {
+        if (items.length > 0) {
+            addAnimation();
+        }
+    }, [items]);
 
     return (
         <div

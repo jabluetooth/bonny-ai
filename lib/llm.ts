@@ -138,7 +138,7 @@ export async function generateLLMResponse(
 
         if (data?.contactLinks && data.contactLinks.length > 0) {
             output += "\n-- CONTACT LINKS --\n";
-            // @ts-ignore
+            // @ts-expect-error -- contactLinks is dynamically added to LLMContext at runtime
             data.contactLinks.forEach(l => {
                 output += `- ${l.platform}: ${l.url}\n`;
             });

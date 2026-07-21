@@ -4,6 +4,9 @@ import useFluidCursor from '@/hooks/use-fluid-cursor';
 
 const FluidCursor = () => {
     useEffect(() => {
+        // useFluidCursor is a WebGL initializer, not a React hook — it only carries the
+        // "use" prefix by convention and does not call any React hooks internally.
+        // eslint-disable-next-line react-hooks/rules-of-hooks
         useFluidCursor();
     }, []);
 

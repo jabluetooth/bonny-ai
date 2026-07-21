@@ -119,7 +119,7 @@ export function ContactManager() {
 
     // Helper to verify icon exists
     const isValidIcon = (name: string) => {
-        // @ts-ignore
+        // @ts-expect-error -- lucide-react exports are indexed dynamically
         return !!Icons[name];
     };
 
@@ -166,7 +166,7 @@ export function ContactManager() {
                                     disabled={!!newCustomIconUrl}
                                 />
                                 <div className="flex items-center justify-center w-10 h-10 border rounded bg-background shrink-0">
-                                    {/* @ts-ignore */}
+                                    {/* @ts-expect-error -- lucide-react exports are indexed dynamically */}
                                     {isValidIcon(newIcon) ? React.createElement(Icons[newIcon], { size: 18 }) : <Icons.HelpCircle size={18} />}
                                 </div>
                             </div>
@@ -219,7 +219,7 @@ export function ContactManager() {
                                                     className="w-5 h-5 rounded object-cover"
                                                 />
                                             ) : (
-                                                /* @ts-ignore */
+                                                /* @ts-expect-error -- lucide-react exports are indexed dynamically */
                                                 isValidIcon(link.icon) ? React.createElement(Icons[link.icon], { size: 18 }) : <Icons.Link size={18} />
                                             )}
                                         </TableCell>

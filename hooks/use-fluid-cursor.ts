@@ -1258,13 +1258,13 @@ const useFluidCursor = () => {
         return c;
     }
 
-    function HSVtoRGB(h, s, v) {
-        let r, g, b, i, f, p, q, t;
-        i = Math.floor(h * 6);
-        f = h * 6 - i;
-        p = v * (1 - s);
-        q = v * (1 - f * s);
-        t = v * (1 - (1 - f) * s);
+    function HSVtoRGB(h: number, s: number, v: number) {
+        let r, g, b;
+        const i = Math.floor(h * 6);
+        const f = h * 6 - i;
+        const p = v * (1 - s);
+        const q = v * (1 - f * s);
+        const t = v * (1 - (1 - f) * s);
 
         switch (i % 6) {
             case 0:
@@ -1294,13 +1294,13 @@ const useFluidCursor = () => {
         };
     }
 
-    function wrap(value, min, max) {
+    function wrap(value: number, min: number, max: number) {
         const range = max - min;
         if (range == 0) return min;
         return ((value - min) % range) + min;
     }
 
-    function getResolution(resolution) {
+    function getResolution(resolution: number) {
         let aspectRatio = gl.drawingBufferWidth / gl.drawingBufferHeight;
         if (aspectRatio < 1) aspectRatio = 1.0 / aspectRatio;
 
@@ -1312,12 +1312,12 @@ const useFluidCursor = () => {
         else return { width: min, height: max };
     }
 
-    function scaleByPixelRatio(input) {
+    function scaleByPixelRatio(input: number) {
         const pixelRatio = window.devicePixelRatio || 1;
         return Math.floor(input * pixelRatio);
     }
 
-    function hashCode(s) {
+    function hashCode(s: string) {
         if (s.length == 0) return 0;
         let hash = 0;
         for (let i = 0; i < s.length; i++) {

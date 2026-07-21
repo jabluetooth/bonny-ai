@@ -138,8 +138,7 @@ async function processSkills() {
     if (!skills) return;
 
     for (const s of skills) {
-        // @ts-ignore
-        const category = s.skill_categories?.title || 'General';
+        const category = (s as any).skill_categories?.title || 'General';
         const content = `Skill: ${s.name} is a ${category} technology.${s.description ? ` Description: ${s.description}` : ''}`;
         const embedding = await generateEmbedding(content);
 

@@ -17,10 +17,18 @@ import { VisionSection } from "@/components/vision-section";
 
 import { ExperiencesSection } from "@/components/experiences-section";
 import { TypingAnimation } from "@/components/ui/typing-animation";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { BackgroundCards } from "@/components/background-cards";
 import { ChromaVideo } from "@/components/ui/chroma-video";
+
+const SUGGESTIONS = [
+    "What projects have you built?",
+    "What's your tech stack?",
+    "Show me your work experience",
+    "Tell me about yourself",
+    "What are you currently working on?",
+];
 
 // Types for parsed message data
 interface ParsedMessageData {
@@ -82,6 +90,7 @@ export function Chatbox() {
     const { conversationId, sendMessage, messages, isLoading, isWelcomeOpen, isChatDisabled } = useChat();
     const [input, setInput] = useState("");
     const [typedMessages, setTypedMessages] = useState<Set<string | number>>(new Set());
+    const [dismissedSuggestions, setDismissedSuggestions] = useState(false);
 
     const handleTypingComplete = (id: string | number) => {
         setTypedMessages(prev => {
@@ -97,8 +106,14 @@ export function Chatbox() {
     const handleSend = async () => {
         if (!input.trim()) return;
         const msg = input;
-        setInput(""); // Immediate clear
+        setInput("");
+        setDismissedSuggestions(true);
         await sendMessage(msg);
+    };
+
+    const handleSuggestion = async (text: string) => {
+        setDismissedSuggestions(true);
+        await sendMessage(text);
     };
 
     // Memoize parsed message data - only re-parse when messages array changes
@@ -408,6 +423,34 @@ export function Chatbox() {
                         </div>
                     </ScrollArea>
                 </div >
+
+                {/* Suggestion Chips */}
+                <AnimatePresence>
+                    {!dismissedSuggestions && !isChatDisabled && (
+                        <motion.div
+                            key="suggestions"
+                            initial={{ opacity: 0, y: 8 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: 4, transition: { duration: 0.15 } }}
+                            transition={{ duration: 0.3, delay: 0.2 }}
+                            className="w-full pb-2"
+                        >
+                            <div className="flex gap-2 overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+                                {SUGGESTIONS.map((s) => (
+                                    <button
+                                        key={s}
+                                        type="button"
+                                        onClick={() => handleSuggestion(s)}
+                                        disabled={isLoading || !conversationId}
+                                        className="shrink-0 rounded-full border border-border/40 bg-background/60 backdrop-blur-sm px-3.5 py-1.5 text-xs text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-all duration-150 disabled:opacity-30 disabled:cursor-not-allowed whitespace-nowrap"
+                                    >
+                                        {s}
+                                    </button>
+                                ))}
+                            </div>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
 
                 {/* Input Area - Wide & Clean */}
                 < div className="w-full" >

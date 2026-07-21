@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 
 interface TypingAnimationProps {
@@ -10,43 +10,35 @@ interface TypingAnimationProps {
     onComplete?: () => void;
 }
 
-export function TypingAnimation({
-    text,
-    duration = 50,
-    className,
-    onComplete,
-}: TypingAnimationProps) {
-    const [displayedText, setDisplayedText] = useState<string>("");
-    const [i, setI] = useState<number>(0);
+export function TypingAnimation({ text, duration = 50, className, onComplete }: TypingAnimationProps) {
+    const [displayedText, setDisplayedText] = useState("");
+    const onCompleteRef = useRef(onComplete);
+
+    // Keep ref current without adding onComplete to the main effect's deps
+    useEffect(() => {
+        onCompleteRef.current = onComplete;
+    });
 
     useEffect(() => {
-        // Reset if text changes significantly (e.g. reused component)
-        // But for chat, usually it mounts once.
-        // If we want typing effect, we start interval.
+        if (!text) {
+            setDisplayedText("");
+            return;
+        }
 
-        // Safety check
-        if (!text) return;
+        setDisplayedText("");
+        let index = 0;
 
-        const typingEffect = setInterval(() => {
-            if (i < text.length) {
-                setDisplayedText((prevState) => prevState + text.charAt(i));
-                setI((prevI) => prevI + 1);
-            } else {
-                clearInterval(typingEffect);
-                if (onComplete) onComplete();
+        const interval = setInterval(() => {
+            index++;
+            setDisplayedText(text.slice(0, index));
+            if (index >= text.length) {
+                clearInterval(interval);
+                onCompleteRef.current?.();
             }
         }, duration);
 
-        return () => {
-            clearInterval(typingEffect);
-        };
-    }, [duration, i, text, onComplete]);
+        return () => clearInterval(interval);
+    }, [text, duration]);
 
-    return (
-        <span
-            className={cn(className)}
-        >
-            {displayedText}
-        </span>
-    );
+    return <span className={cn(className)}>{displayedText}</span>;
 }

@@ -163,7 +163,6 @@ export async function getContextForIntent(
         // Add contacts to context
         const links = contacts.data || [];
         if (links.length > 0) {
-            // @ts-ignore
             context.contactLinks = links.map(l => ({ platform: l.platform, url: l.url }));
         }
     }

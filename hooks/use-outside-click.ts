@@ -2,7 +2,7 @@ import React, { useEffect } from "react";
 
 export const useOutsideClick = (
     ref: React.RefObject<HTMLElement | null>,
-    callback: Function
+    callback: (...args: unknown[]) => unknown
 ) => {
     useEffect(() => {
         const listener = (event: any) => {
