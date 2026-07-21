@@ -51,32 +51,21 @@ export async function POST(req: Request) {
         // Auto-detect intent if not provided by client
         const intent = clientIntent || detectIntent(content);
 
-        // 4. Save User Message
-        const { error: msgError } = await supabase.from('messages').insert({
-            conversation_id: conversationId,
-            sender_type: 'user',
-            content,
-        });
-
-        if (msgError) {
-            console.error('Error saving user message:', msgError);
-            return NextResponse.json({ error: 'Failed to save message' }, { status: 500 });
-        }
-
-        // CHECK ADMIN STATUS: If admin has taken over, DO NOT Auto-Reply
-        // We need to fetch the conversation status first (or we could have done it earlier)
-        const { data: convStatus } = await supabase
+        // Verify the conversation belongs to this user (prevent IDOR)
+        const { data: conversation, error: convError } = await supabase
             .from('conversations')
-            .select('assigned_admin_id')
+            .select('id, user_id')
             .eq('id', conversationId)
             .single();
 
-        if (convStatus?.assigned_admin_id) {
-            // Admin is controlling. Just acknowledge receipt.
-            return NextResponse.json({ reply: null, status: 'manual_mode' });
+        if (convError || !conversation) {
+            return NextResponse.json({ error: 'Conversation not found' }, { status: 404 });
+        }
+        if (conversation.user_id !== user.id) {
+            return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
         }
 
-        // CHECK LIMIT: Count user messages (Checking previously stored messages)
+        // CHECK LIMIT: Count existing user messages before inserting
         const { count, error: countError } = await supabase
             .from('messages')
             .select('id', { count: 'exact', head: false })
@@ -104,31 +93,53 @@ export async function POST(req: Request) {
             });
         }
 
+        // 4. Save User Message
+        const { error: msgError } = await supabase.from('messages').insert({
+            conversation_id: conversationId,
+            sender_type: 'user',
+            content,
+        });
 
+        if (msgError) {
+            console.error('Error saving user message:', msgError);
+            return NextResponse.json({ error: 'Failed to save message' }, { status: 500 });
+        }
 
-        // Fetch User Profile for Name
-        const { data: userProfile } = await supabase
-            .from('users')
-            .select('name')
-            .eq('id', user.id)
+        // CHECK ADMIN STATUS: If admin has taken over, DO NOT Auto-Reply
+        const { data: convStatus } = await supabase
+            .from('conversations')
+            .select('assigned_admin_id')
+            .eq('id', conversationId)
             .single();
 
-        // 5. Gather Context for AI based on Intent + RAG (in parallel)
-        // Intent-based context provides structured data for known queries
-        // RAG provides semantic search for nuanced/unknown queries
-        const [context, ragContext] = await Promise.all([
-            getContextForIntent(supabase, intent, userProfile?.name || "Guest"),
-            isRAGAvailable()
-                ? retrieveContextSmart(supabase, content, { matchCount: 4, matchThreshold: 0.72 })
-                : Promise.resolve({ formattedContext: '', documents: [], totalChars: 0, truncated: false }),
-        ]);
+        if (convStatus?.assigned_admin_id) {
+            // Admin is controlling. Just acknowledge receipt.
+            return NextResponse.json({ reply: null, status: 'manual_mode' });
+        }
 
         // 6. Generate AI Response
         // TOKEN OPTIMIZATION: Check for Static Response first using Strategy Pattern
-        let aiResponse = getDeterministicResponse(intent, content, context);
+        let aiResponse = getDeterministicResponse(intent, content, {});
 
         // If no static response, use LLM with RAG context
         if (!aiResponse) {
+            // Fetch User Profile for Name
+            const { data: userProfile } = await supabase
+                .from('users')
+                .select('name')
+                .eq('id', user.id)
+                .single();
+
+            // 5. Gather Context for AI based on Intent + RAG (in parallel)
+            // Intent-based context provides structured data for known queries
+            // RAG provides semantic search for nuanced/unknown queries
+            const [context, ragContext] = await Promise.all([
+                getContextForIntent(supabase, intent, userProfile?.name || "Guest"),
+                isRAGAvailable()
+                    ? retrieveContextSmart(supabase, content, { matchCount: 4, matchThreshold: 0.72 })
+                    : Promise.resolve({ formattedContext: '', documents: [], totalChars: 0, truncated: false }),
+            ]);
+
             aiResponse = await generateLLMResponse(content, context, ragContext.formattedContext);
         }
 
@@ -148,7 +159,7 @@ export async function POST(req: Request) {
     } catch (error) {
         console.error('Chat API Error:', error);
         return NextResponse.json(
-            { error: 'Internal Server Error', details: error instanceof Error ? error.message : "Unknown error" },
+            { error: 'Internal server error. Please try again.' },
             { status: 500 }
         );
     }

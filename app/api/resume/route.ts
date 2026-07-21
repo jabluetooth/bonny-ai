@@ -35,7 +35,8 @@ export async function POST(request: Request) {
     }
 
     // Check admin email
-    if (process.env.MY_EMAIL && user.email !== process.env.MY_EMAIL) {
+    const allowedEmail = process.env.MY_EMAIL;
+    if (!allowedEmail || user.email !== allowedEmail) {
         return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
@@ -78,9 +79,9 @@ export async function POST(request: Request) {
 
         return NextResponse.json({ success: true, resume_url });
 
-    } catch (error: any) {
+    } catch (error) {
         console.error('[API] Resume update error:', error);
-        return NextResponse.json({ error: error.message || 'Failed to update resume' }, { status: 500 });
+        return NextResponse.json({ error: error instanceof Error ? error.message : 'Failed to update resume' }, { status: 500 });
     }
 }
 
@@ -96,7 +97,8 @@ export async function DELETE() {
     }
 
     // Check admin email
-    if (process.env.MY_EMAIL && user.email !== process.env.MY_EMAIL) {
+    const allowedEmail = process.env.MY_EMAIL;
+    if (!allowedEmail || user.email !== allowedEmail) {
         return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 

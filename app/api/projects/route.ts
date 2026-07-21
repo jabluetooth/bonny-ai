@@ -9,8 +9,6 @@ export async function GET(request: Request) {
 
     const supabase = await createClient();
 
-    console.log('[API] Check connection: Using Server Client');
-
     const { data: projects, error } = await supabase
         .from('projects')
         .select(`
@@ -28,19 +26,13 @@ export async function GET(request: Request) {
         return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    console.log('[API] Projects Found:', projects?.length);
-
-    // FALLBACK: If DB is empty, use Mock Data so the UI isn't broken.
-    let sourceData: any[] = projects || [];
-
-    // Transform relation to string array for frontend compatibility
-    sourceData = sourceData.map(p => ({
+    let sourceData: any[] = (projects || []).map(p => ({
         ...p,
         tech_stack: p.project_skills?.map((ps: any) => ps.skills?.name) || []
     }));
 
-    if (!sourceData || sourceData.length === 0) {
-        console.log('[API] DB Empty. Using Mock Data fallback.');
+    // Development-only fallback so the UI isn't broken with an empty DB locally
+    if (sourceData.length === 0 && process.env.NODE_ENV !== 'production') {
         sourceData = [
             {
                 title: 'E-Commerce Dashboard',
@@ -94,76 +86,41 @@ export async function GET(request: Request) {
                 type: 'AI & ML',
                 status: 'Online'
             },
-            {
-                title: 'Image Recognition Model',
-                description: 'A computer vision model capable of identifying objects in real-time video feeds.',
-                tech_stack: ['Python', 'TensorFlow', 'OpenCV', 'FastAPI'],
-                github_url: 'https://github.com/',
-                live_url: 'https://demo.com',
-                demo_url: 'https://demo.com',
-                image_url: 'https://images.unsplash.com/photo-1555949963-ff9fe0c870eb?q=80&w=1000&auto=format&fit=crop',
-                key_features: ['Real-time object detection', 'High accuracy', 'Low latency inference', 'Video stream processing'],
-                challenges_learned: 'Optimizing the model for real-time performance on edge devices.',
-                type: 'AI & ML',
-                status: 'Down'
-            },
-            {
-                title: 'Sentiment Analysis Tool',
-                description: 'An NLP tool that analyzes customer feedback to determine sentiment trends.',
-                tech_stack: ['Python', 'NLP', 'Hugging Face', 'Streamlit'],
-                github_url: 'https://github.com/',
-                live_url: 'https://demo.com',
-                demo_url: 'https://demo.com',
-                image_url: 'https://images.unsplash.com/photo-1518186285589-1f76d31d6928?q=80&w=1000&auto=format&fit=crop',
-                key_features: ['Multi-language support', 'Trend visualization', 'Exportable reports', 'Custom model fine-tuning'],
-                challenges_learned: 'Fine-tuning a BERT model on a specific industry dataset.',
-                type: 'AI & ML',
-                status: 'Work in progress'
-            }
         ];
     }
 
-    if (sourceData && sourceData.length > 0) {
-        // Map DB fields to Frontend Interface
-        let mappedProjects = sourceData.map((p: any) => ({
-            title: p.title,
-            image_url: p.image_url,
-            description: p.description,
-            github_url: p.github_url,
-            project_url: p.live_url || p.demo_url || p.project_url,
-            features: p.key_features || p.features || [],
-            tech_stack: p.tech_stack || [],
-            challenges: p.challenges_learned || p.challenges || "",
-            type: p.type, // Map 'type' column
-            status: p.status || 'Work in progress'
-        }));
+    if (sourceData.length === 0) return NextResponse.json([]);
 
-        // Filter by Category/Type
-        if (categoryQuery) {
-            mappedProjects = mappedProjects.filter((p: any) => {
-                // Check if 'type' column matches the query (flexible check for "Both")
-                if (p.type) {
-                    return p.type.toLowerCase().includes(categoryQuery);
-                }
+    let mappedProjects = sourceData.map((p: any) => ({
+        title: p.title,
+        image_url: p.image_url,
+        description: p.description,
+        github_url: p.github_url,
+        project_url: p.live_url || p.demo_url || p.project_url,
+        features: p.key_features || p.features || [],
+        tech_stack: p.tech_stack || [],
+        challenges: p.challenges_learned || p.challenges || "",
+        type: p.type,
+        status: p.status || 'Work in progress'
+    }));
 
-                // Fallback to keyword matching if type is missing
-                const text = (p.title + ' ' + p.description + ' ' + (p.tech_stack || []).join(' ')).toLowerCase();
-                if (categoryQuery === 'web') {
-                    return text.includes('react') || text.includes('next') || text.includes('vue') || text.includes('web') || text.includes('css') || text.includes('html');
-                }
-                if (categoryQuery === 'ai' || categoryQuery === 'ml') {
-                    return text.includes('ai') || text.includes('gpt') || text.includes('model') || text.includes('python') || text.includes('tensor') || text.includes('robot') || text.includes('neural') || text.includes('intelligence');
-                }
-                return true;
-            });
-        }
-
-        // Return filtered result
-        if (mappedProjects.length === 0) return NextResponse.json([]);
-
-        // Ensure enough items for looping (e.g. at least 6)
-        return NextResponse.json(mappedProjects);
+    if (categoryQuery) {
+        mappedProjects = mappedProjects.filter((p: any) => {
+            if (p.type) {
+                return p.type.toLowerCase().includes(categoryQuery);
+            }
+            const text = (p.title + ' ' + p.description + ' ' + (p.tech_stack || []).join(' ')).toLowerCase();
+            if (categoryQuery === 'web') {
+                return text.includes('react') || text.includes('next') || text.includes('vue') || text.includes('web') || text.includes('css') || text.includes('html');
+            }
+            if (categoryQuery === 'ai' || categoryQuery === 'ml') {
+                return text.includes('ai') || text.includes('gpt') || text.includes('model') || text.includes('python') || text.includes('tensor') || text.includes('robot') || text.includes('neural') || text.includes('intelligence');
+            }
+            return true;
+        });
     }
 
-    return NextResponse.json([]);
+    if (mappedProjects.length === 0) return NextResponse.json([]);
+
+    return NextResponse.json(mappedProjects);
 }

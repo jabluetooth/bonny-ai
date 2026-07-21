@@ -226,7 +226,6 @@ ${ragContext ? `\n**RELEVANT DATABASE MATCHES** (Use this for specific details):
         return completion.choices[0]?.message?.content || "I'm sorry, I couldn't generate a response.";
     } catch (error) {
         console.error('LLM Generation Error:', error);
-        const errorMessage = error instanceof Error ? error.message : "Unknown error";
-        return `I'm experiencing technical difficulties (Error: ${errorMessage}).`;
+        return "I'm temporarily unavailable. Please try again in a moment.";
     }
 }

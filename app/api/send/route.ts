@@ -75,31 +75,34 @@ export async function POST(request: Request) {
 
         // 4. Origin Check (Security Best Practice)
         const origin = request.headers.get('origin');
-        if (process.env.NODE_ENV === 'production' && origin) {
-            // Allow if matches configured app URL or Vercel deployment
+        if (process.env.NODE_ENV === 'production') {
             const allowedOrigin = process.env.NEXT_PUBLIC_APP_URL;
-            const isVercel = origin.includes('.vercel.app');
-
-            if (allowedOrigin && !origin.startsWith(allowedOrigin) && !isVercel) {
-                console.warn(`[Security] Blocked request from unauthorized origin: ${origin}`);
-                return NextResponse.json({ error: 'Forbidden Origin' }, { status: 403 });
+            if (!allowedOrigin || !origin || !origin.startsWith(allowedOrigin)) {
+                return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
             }
+        }
+
+        if (!process.env.MY_EMAIL) {
+            console.error('[send] MY_EMAIL env var is not set');
+            return NextResponse.json({ error: 'Contact form is not configured' }, { status: 503 });
         }
 
         const { data, error } = await getResend().emails.send({
             from: 'Portfolio Contact <onboarding@resend.dev>',
-            to: [process.env.MY_EMAIL || 'delivered@resend.dev'],
+            to: [process.env.MY_EMAIL!],
             subject: `New Message from Portfolio Visitor (${email})`,
             replyTo: email,
             text: message,
         });
 
         if (error) {
-            return NextResponse.json({ error }, { status: 400 });
+            console.error('[send] Resend error:', error);
+            return NextResponse.json({ error: 'Failed to send message. Please try again.' }, { status: 400 });
         }
 
-        return NextResponse.json({ data });
+        return NextResponse.json({ success: true });
     } catch (error) {
-        return NextResponse.json({ error }, { status: 500 });
+        console.error('[send] Unexpected error:', error);
+        return NextResponse.json({ error: 'Failed to send message. Please try again.' }, { status: 500 });
     }
 }

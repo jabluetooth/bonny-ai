@@ -1,9 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Outfit, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
-import { ChatProvider } from "@/components/chat-provider";
 import { Toaster } from "@/components/ui/sonner";
-import FluidCursor from "@/components/ui/fluid-cursor";
 
 const outfit = Outfit({
   variable: "--font-sans",
@@ -17,7 +15,6 @@ const jetbrainsMono = JetBrains_Mono({
 
 const siteUrl = process.env.NEXT_PUBLIC_APP_URL || "https://www.filheinzrelatorre.com";
 
-// Viewport configuration for mobile optimization
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
@@ -28,7 +25,6 @@ export const viewport: Viewport = {
   ],
 };
 
-// JSON-LD Structured Data for Person schema
 const jsonLd = {
   "@context": "https://schema.org",
   "@type": "Person",
@@ -111,13 +107,10 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-        {/* DNS Prefetch for external resources */}
         <link rel="dns-prefetch" href="https://fonts.googleapis.com" />
         <link rel="dns-prefetch" href="https://fonts.gstatic.com" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-
-        {/* JSON-LD Structured Data */}
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
@@ -126,11 +119,8 @@ export default function RootLayout({
       <body
         className={`${outfit.variable} ${jetbrainsMono.variable} font-sans antialiased`}
       >
-        <ChatProvider>
-          <FluidCursor />
-          {children}
-          <Toaster />
-        </ChatProvider>
+        {children}
+        <Toaster />
       </body>
     </html>
   );
