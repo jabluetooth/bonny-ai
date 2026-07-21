@@ -1,6 +1,28 @@
 "use client"
 
 const LETTERS = "BONNY-AI".split("")
+const TOTAL = LETTERS.length
+const DURATION = 2.4 // seconds — 0.3s per letter
+
+// Each letter gets its own keyframe that is active only during its time slot.
+// This ensures exactly one letter is filling/draining at any moment.
+function buildKeyframes(): string {
+    return LETTERS.map((_, i) => {
+        const slotStart = ((i / TOTAL) * 100).toFixed(3)
+        const fillEnd   = (((i + 0.4) / TOTAL) * 100).toFixed(3)
+        const holdEnd   = (((i + 0.6) / TOTAL) * 100).toFixed(3)
+        const slotEnd   = (((i + 1)   / TOTAL) * 100).toFixed(3)
+        return `
+@keyframes bonny-fill-${i} {
+  0%, ${slotStart}% { background-size: 0% 100%; }
+  ${fillEnd}%        { background-size: 100% 100%; }
+  ${holdEnd}%        { background-size: 100% 100%; }
+  ${slotEnd}%, 100%  { background-size: 0% 100%; }
+}`
+    }).join("\n")
+}
+
+const KEYFRAMES = buildKeyframes()
 
 export function LoadingScreen() {
     return (
@@ -12,6 +34,7 @@ export function LoadingScreen() {
                     font-family: var(--font-mono), monospace;
                     font-weight: 700;
                     line-height: 1;
+                    letter-spacing: 0.08em;
                     -webkit-text-fill-color: transparent;
                     -webkit-text-stroke: 1.5px var(--foreground);
                     background-image: linear-gradient(var(--foreground), var(--foreground));
@@ -20,22 +43,18 @@ export function LoadingScreen() {
                     background-repeat: no-repeat;
                     -webkit-background-clip: text;
                     background-clip: text;
-                    animation: bonny-letter-fill 3s ease-in-out infinite;
+                    animation-duration: ${DURATION}s;
+                    animation-timing-function: linear;
+                    animation-iteration-count: infinite;
                 }
-                @keyframes bonny-letter-fill {
-                    0%    { background-size: 0%   100%; }
-                    22%   { background-size: 100% 100%; }
-                    50%   { background-size: 100% 100%; }
-                    72%   { background-size: 0%   100%; }
-                    100%  { background-size: 0%   100%; }
-                }
+                ${KEYFRAMES}
             `}</style>
-            <div className="flex items-center tracking-widest">
+            <div className="flex items-center">
                 {LETTERS.map((char, i) => (
                     <span
                         key={i}
                         className="bonny-letter"
-                        style={{ animationDelay: `${i * 0.13}s` }}
+                        style={{ animationName: `bonny-fill-${i}` }}
                     >
                         {char}
                     </span>
