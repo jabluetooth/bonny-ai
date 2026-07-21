@@ -1,5 +1,5 @@
 import { PortfolioNavbar } from "@/components/portfolio-navbar";
-import { SiteFooter } from "@/components/portoflio-footer";
+import { SiteFooter } from "@/components/portfolio-footer";
 import { Chatbox } from "@/components/chatbox";
 import { SidebarProvider } from "@/components/ui/sidebar";
 

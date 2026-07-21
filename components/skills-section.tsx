@@ -2,6 +2,7 @@
 
 import { cn } from "@/lib/utils";
 import { useState, useEffect, useMemo } from "react";
+import Image from "next/image";
 import { Marquee, MarqueeContent, MarqueeFade, MarqueeItem } from "@/components/ui/marquee";
 import { Separator } from "@/components/ui/separator";
 import { Cpu, Globe, Database, Palette, Users } from "lucide-react";
@@ -26,7 +27,7 @@ const SkillCard = ({
                 "flex items-center justify-center"
             )}
         >
-            <img className="h-10 w-10 object-contain" alt={name} src={img} />
+            <Image width={40} height={40} className="h-10 w-10 object-contain" alt={name} src={img} />
         </figure>
     );
 };

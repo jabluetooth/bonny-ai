@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Bot, ArrowRight } from "lucide-react";
+import { Bot, ArrowRight, ChevronDown } from "lucide-react";
 import { WelcomeModal } from "./welcome-modal";
 import { SkillsSection } from "@/components/skills-section";
 import { ProjectsSection } from "@/components/projects-section";
@@ -91,6 +91,7 @@ export function Chatbox() {
     const [input, setInput] = useState("");
     const [typedMessages, setTypedMessages] = useState<Set<string | number>>(new Set());
     const [dismissedSuggestions, setDismissedSuggestions] = useState(false);
+    const [showScrollBtn, setShowScrollBtn] = useState(false);
 
     const handleTypingComplete = (id: string | number) => {
         setTypedMessages(prev => {
@@ -134,6 +135,22 @@ export function Chatbox() {
     useEffect(() => {
         scrollToBottom();
     }, [messages]);
+
+    // Show scroll-to-bottom button when user scrolls up
+    useEffect(() => {
+        if (messages.length === 0) return;
+
+        const viewport = document.getElementById('chat-scroll-area');
+        if (!viewport) return;
+
+        const handleScroll = () => {
+            const { scrollTop, scrollHeight, clientHeight } = viewport;
+            setShowScrollBtn(scrollHeight - scrollTop - clientHeight > 100);
+        };
+
+        viewport.addEventListener('scroll', handleScroll, { passive: true });
+        return () => viewport.removeEventListener('scroll', handleScroll);
+    }, [messages.length]);
 
     // Lock body scroll when chat is active
     useEffect(() => {
@@ -210,6 +227,21 @@ export function Chatbox() {
             <div className="w-full max-w-3xl flex flex-col h-full animate-in fade-in zoom-in-95 duration-500">
                 {/* Messages Area - Flexible & Transparent */}
                 <div className="flex-1 overflow-hidden relative mb-4">
+                    <AnimatePresence>
+                        {showScrollBtn && (
+                            <motion.button
+                                initial={{ opacity: 0, scale: 0.8 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                exit={{ opacity: 0, scale: 0.8 }}
+                                transition={{ duration: 0.15 }}
+                                onClick={scrollToBottom}
+                                className="absolute bottom-3 right-3 z-10 h-8 w-8 rounded-full bg-background border border-border shadow-md flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+                                aria-label="Scroll to bottom"
+                            >
+                                <ChevronDown size={14} />
+                            </motion.button>
+                        )}
+                    </AnimatePresence>
                     <ScrollArea className="h-full w-full" viewportId="chat-scroll-area">
                         <div className="flex flex-col flex-1 justify-end gap-6 pb-2 px-4">
                             {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
@@ -485,9 +517,12 @@ export function Chatbox() {
                             <ArrowRight size={20} />
                             <span className="sr-only">Send</span>
                         </Button>
-
-
                     </form>
+                    {isChatDisabled && (
+                        <p className="text-center text-xs text-muted-foreground mt-2.5">
+                            Message limit reached — use the <strong className="text-foreground/70">Contact</strong> button in the navigation to reach me directly.
+                        </p>
+                    )}
                 </div >
             </div >
         </>

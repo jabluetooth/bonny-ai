@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import Image from "next/image";
 import { CardBody, CardContainer, CardItem } from "@/components/ui/3d-card";
 import { Github, Linkedin, Twitter } from "lucide-react";
 import Link from "next/link";
@@ -134,9 +135,11 @@ export function AboutSection() {
                     <div className="w-32 h-32 sm:w-40 sm:h-40 shrink-0">
                         <TiltedCard
                             imageSrc={
-                                <img
+                                <Image
                                     src={profile.images[currentImageIndex]}
                                     alt="Profile"
+                                    width={160}
+                                    height={160}
                                     className="w-full h-full object-cover transition-opacity duration-500 rounded-xl"
                                     key={currentImageIndex}
                                 />

@@ -62,8 +62,6 @@ export function ChatManager() {
 
     // Local UI State
     const [selectedId, setSelectedId] = useState<string | null>(null)
-    const [msgInput, setMsgInput] = useState("")
-
     const selectedConv = conversations.find(c => c.id === selectedId)
 
     // Calculate online count directly from the real-time set

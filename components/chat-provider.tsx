@@ -234,24 +234,9 @@ export function ChatProvider({ children }: { children: ReactNode }) {
 
         channel.subscribe(async (status) => {
             if (status === 'SUBSCRIBED') {
-                // Fetch Location (Best Effort)
-                let location = "Unknown Location"
-                try {
-                    const res = await fetch('https://ipapi.co/json/')
-                    if (res.ok) {
-                        const data = await res.json()
-                        if (data.city && data.country_name) {
-                            location = `${data.city}, ${data.country_name}`
-                        }
-                    }
-                } catch (e) {
-                    console.warn("Location fetch failed", e)
-                }
-
                 await channel.track({
                     online_at: new Date().toISOString(),
                     conversationId: conversationId,
-                    location: location
                 })
             } else if (status === 'CHANNEL_ERROR') {
                 console.error("Presence channel error - retrying...")

@@ -93,7 +93,7 @@ export function WelcomeModal() {
     if (initializing && !isWelcomeOpen) return null
 
     return (
-        <Dialog open={isWelcomeOpen} onOpenChange={() => { /* Prevent closing */ }}>
+        <Dialog open={isWelcomeOpen} onOpenChange={(open) => { if (!open) handleSkip(); }}>
             <DialogContent
                 showCloseButton={false}
                 onOpenAutoFocus={(e) => e.preventDefault()}
@@ -137,7 +137,7 @@ export function WelcomeModal() {
                         variant="outline"
                         className="rounded-full h-11 px-8 w-full border-muted-foreground/20 hover:bg-black hover:text-white hover:border-black font-normal transition-all"
                     >
-                        Enter Anonymously
+                        Continue as Guest
                     </Button>
                 </div>
             </DialogContent>
