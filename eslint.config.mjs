@@ -30,6 +30,15 @@ const eslintConfig = defineConfig([
       "@typescript-eslint/ban-ts-comment": "off",
     },
   },
+  {
+    // Admin components display icons from user-entered URLs (arbitrary domains).
+    // next/image requires all remote domains to be whitelisted in next.config.mjs,
+    // which is impractical for user-managed icon URLs.
+    files: ["components/admin/**"],
+    rules: {
+      "@next/next/no-img-element": "off",
+    },
+  },
 ]);
 
 export default eslintConfig;

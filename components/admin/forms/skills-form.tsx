@@ -101,7 +101,6 @@ export function AdminSkillsForm() {
                                     <div key={skill.id} className="flex items-center justify-between p-3 border rounded-lg bg-card hover:bg-muted/50 transition-colors group">
                                         <div className="flex items-center gap-3">
                                             {skill.icon_url ? (
-                                                {/* eslint-disable-next-line @next/next/no-img-element */}
                                                 <img src={skill.icon_url} alt={skill.name} className="h-8 w-8 object-contain" />
                                             ) : (
                                                 <div className="h-8 w-8 rounded-full bg-secondary flex items-center justify-center text-xs font-bold text-muted-foreground">
