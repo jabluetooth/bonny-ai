@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { createServerClient, type CookieOptions } from '@supabase/ssr';
+import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 
 export async function POST(req: Request) {
@@ -52,7 +52,7 @@ export async function POST(req: Request) {
             const json = JSON.parse(body);
             name = json.name;
         }
-    } catch (e) { /* ignore invalid json */ }
+    } catch { /* ignore invalid json */ }
 
     // 2. Parallel: Upsert User & Search Conversation
     const upsertUserPromise = supabase
@@ -78,7 +78,7 @@ export async function POST(req: Request) {
 
     let conversationId = convoResult.data?.id;
     let assignedAdminId = convoResult.data?.assigned_admin_id; // Capture existing status
-    let messages: any[] = [];
+    let messages: { role: string; content: string }[] = [];
 
     if (conversationId) {
         // Fetch history (unchanged)
