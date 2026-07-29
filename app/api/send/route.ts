@@ -87,7 +87,7 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: 'Contact form is not configured' }, { status: 503 });
         }
 
-        const { data, error } = await getResend().emails.send({
+        const { error } = await getResend().emails.send({
             from: 'Portfolio Contact <onboarding@resend.dev>',
             to: [process.env.MY_EMAIL!],
             subject: `New Message from Portfolio Visitor (${email})`,
