@@ -3,6 +3,27 @@ import { createClient } from '@/lib/supabase-server';
 
 export const dynamic = 'force-dynamic';
 
+interface ProjectSkillRow {
+    skills?: { name?: string } | null;
+}
+
+interface ProjectSourceRow {
+    title?: string;
+    description?: string;
+    tech_stack?: string[];
+    github_url?: string;
+    live_url?: string;
+    demo_url?: string;
+    project_url?: string;
+    image_url?: string;
+    key_features?: string[];
+    features?: string[];
+    challenges_learned?: string;
+    challenges?: string;
+    type?: string;
+    status?: string;
+}
+
 export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const categoryQuery = searchParams.get('category')?.toLowerCase();
@@ -26,9 +47,9 @@ export async function GET(request: Request) {
         return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    let sourceData: any[] = (projects || []).map(p => ({
+    let sourceData: ProjectSourceRow[] = (projects || []).map(p => ({
         ...p,
-        tech_stack: p.project_skills?.map((ps: any) => ps.skills?.name) || []
+        tech_stack: p.project_skills?.map((ps: ProjectSkillRow) => ps.skills?.name) || []
     }));
 
     // Development-only fallback so the UI isn't broken with an empty DB locally
@@ -91,7 +112,7 @@ export async function GET(request: Request) {
 
     if (sourceData.length === 0) return NextResponse.json([]);
 
-    let mappedProjects = sourceData.map((p: any) => ({
+    let mappedProjects = sourceData.map((p) => ({
         title: p.title,
         image_url: p.image_url,
         description: p.description,
@@ -105,7 +126,7 @@ export async function GET(request: Request) {
     }));
 
     if (categoryQuery) {
-        mappedProjects = mappedProjects.filter((p: any) => {
+        mappedProjects = mappedProjects.filter((p) => {
             if (p.type) {
                 return p.type.toLowerCase().includes(categoryQuery);
             }
