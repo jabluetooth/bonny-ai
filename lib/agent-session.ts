@@ -3,7 +3,7 @@ import { randomUUID } from 'crypto'
 import { InferenceClient } from '@huggingface/inference'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { createAdminClient } from './supabase-admin'
-import { embedProjectRecord } from './embeddings'
+import { embedProjectRecord, embedProfileRecord } from './embeddings'
 
 export interface RepoPushContext {
     repoFullName: string
@@ -16,24 +16,34 @@ export interface RepoPushContext {
     deliveryId: string
 }
 
-const SYSTEM_PROMPT = `You maintain the "projects" section of a software engineer's portfolio website, stored in a Supabase database.
+const SYSTEM_PROMPT = `You maintain two parts of a software engineer's portfolio website, stored in a Supabase database: the "projects" section, and the "About Me" bio.
 
 You will be given context about a GitHub push: the repository name, URL, description, recent commit messages, README.md content, and package.json content.
 
-Your job:
+First, decide what kind of content this README actually is:
+- **A project README** — describes a specific piece of software: what it does, how it's built, how to run it. → Use the project tools.
+- **A personal/bio README** — describes the person: who they are, their background, skills as a professional, career summary, personal introduction (this is the kind of content that appears on a GitHub profile README, or an "About"/"Author" section written in first person about the person rather than the repo). → Use the about-profile tools.
+- Most repos are just project READMEs. Only treat one as a bio source when it's clearly, primarily about the person — not a repo whose README happens to mention the author's name in passing (e.g. a one-line "Author: Jane Doe" credit at the bottom of a project README is NOT enough to justify a bio update).
+- A repo can occasionally warrant both if it's your own portfolio site's repo and its README describes both the project and includes a substantial author bio section — but this should be rare. When in doubt, do less, not more.
+
+For project updates:
 1. Call list_projects to see existing portfolio entries.
 2. Decide whether this repo already has a matching entry — match strictly by github_url, never by title or fuzzy similarity.
 3. Call upsert_project to create a new entry (if none matches) or update the existing one (if one matches).
 
-Rules:
-- Only include fields in upsert_project that you have real evidence for from the provided context. Never invent features, technologies, or "challenges learned" that aren't supported by the README or package.json.
-- Write descriptions in a concise, confident, first-person-adjacent developer voice — 1 to 3 sentences.
-- tech_stack should reflect actual dependencies/languages evidenced in package.json or the README, not guesses.
-- If the push looks trivial (typo fix, dependency bump, CI config change) and there's nothing meaningful to add, it's fine to make a minimal update or none at all — you don't have to call upsert_project if nothing should change.
-- Never clear a field you don't have new information for — omit it from the upsert_project call instead so it stays unchanged.
-- Once you've made your decision and (if needed) called upsert_project, reply with a brief final summary of what you did. Do not keep calling tools after the update is made.`
+For bio updates:
+1. Call get_about_profile to see the current bio.
+2. Only call update_about_profile if the README's personal/bio content gives you genuinely new or more accurate information than what's already there. Do not rewrite a perfectly good existing bio just to rephrase it.
 
-const MAX_ITERATIONS = 6
+Rules:
+- Only include information you have real evidence for from the provided context. Never invent features, technologies, "challenges learned", or biographical details that aren't supported by the README or package.json.
+- Write descriptions and bios in a concise, confident, first-person-adjacent developer voice.
+- tech_stack should reflect actual dependencies/languages evidenced in package.json or the README, not guesses.
+- If the push looks trivial (typo fix, dependency bump, CI config change) and there's nothing meaningful to add, it's fine to make no changes at all — you don't have to call any write tool if nothing should change.
+- Never clear a field you don't have new information for — omit it from the tool call instead so it stays unchanged.
+- Once you've made your decision and (if needed) called the relevant write tool(s), reply with a brief final summary of what you did. Do not keep calling tools after that.`
+
+const MAX_ITERATIONS = 8
 
 // Groq's OpenAI-compatible tool-calling format.
 const TOOLS: OpenAI.Chat.ChatCompletionTool[] = [
@@ -76,6 +86,41 @@ const TOOLS: OpenAI.Chat.ChatCompletionTool[] = [
                     status: { type: 'string', enum: ['Work in progress', 'Online', 'Down'] },
                 },
                 required: ['github_url'],
+                additionalProperties: false,
+            },
+        },
+    },
+    {
+        type: 'function',
+        function: {
+            name: 'get_about_profile',
+            description:
+                "Read the current About Me bio text. Call this before update_about_profile so you know what's " +
+                "already there and can judge whether the README actually adds anything new.",
+            parameters: {
+                type: 'object',
+                properties: {},
+                additionalProperties: false,
+            },
+        },
+    },
+    {
+        type: 'function',
+        function: {
+            name: 'update_about_profile',
+            description:
+                "Update the About Me bio text. Only call this when a README is clearly, primarily about the " +
+                'person (not a project) and adds genuinely new or more accurate information beyond what get_about_profile ' +
+                'returned. Replaces the full bio text — write the complete bio, not just the new part.',
+            parameters: {
+                type: 'object',
+                properties: {
+                    description: {
+                        type: 'string',
+                        description: 'The full About Me bio text, written in first person, 2-5 sentences.',
+                    },
+                },
+                required: ['description'],
                 additionalProperties: false,
             },
         },
@@ -215,22 +260,100 @@ async function upsertProject(input: any, { supabase, hf, ctx, sessionId }: ToolC
     return { id: projectId, action }
 }
 
+async function getAboutProfile(supabase: SupabaseClient): Promise<ToolResult> {
+    const { data, error } = await supabase
+        .from('author_profiles')
+        .select('id, description')
+        .eq('is_active', true)
+        .maybeSingle()
+
+    if (error) return { isError: true, error: error.message }
+
+    return { description: data?.description || null }
+}
+
+async function updateAboutProfile(input: any, { supabase, hf, ctx, sessionId }: ToolContext): Promise<ToolResult> {
+    const description: string | undefined = input?.description
+    if (!description || !description.trim()) {
+        return { isError: true, error: 'description is required' }
+    }
+
+    const { data: existing, error: findError } = await supabase
+        .from('author_profiles')
+        .select('*')
+        .eq('is_active', true)
+        .maybeSingle()
+
+    if (findError) return { isError: true, error: findError.message }
+
+    const before = existing ? { ...existing } : null
+
+    let profileId: string
+    let action: 'created' | 'updated'
+
+    if (existing) {
+        const { error: updateError } = await supabase
+            .from('author_profiles')
+            .update({ description, updated_at: new Date().toISOString() })
+            .eq('id', existing.id)
+        if (updateError) return { isError: true, error: updateError.message }
+        profileId = existing.id
+        action = 'updated'
+    } else {
+        // No active profile row yet — create one. status/is_active mirror the
+        // defaults components/admin/forms/about/profile-tab.tsx uses.
+        const { data: inserted, error: insertError } = await supabase
+            .from('author_profiles')
+            .insert({ description, is_active: true, status: 'available_fulltime' })
+            .select()
+            .single()
+        if (insertError) return { isError: true, error: insertError.message }
+        profileId = inserted.id
+        action = 'created'
+    }
+
+    const { data: after } = await supabase.from('author_profiles').select('*').eq('id', profileId).single()
+
+    const { error: logError } = await supabase.from('content_edits_log').insert({
+        table_name: 'author_profiles',
+        record_id: profileId,
+        action,
+        before,
+        after,
+        github_delivery_id: ctx.deliveryId,
+        session_id: sessionId,
+    })
+    if (logError) console.error('[agent-session] failed writing audit log:', logError.message)
+
+    try {
+        await embedProfileRecord(supabase, hf, { id: profileId, description })
+    } catch (embedError) {
+        console.error('[agent-session] re-embed failed:', embedError)
+    }
+
+    return { id: profileId, action }
+}
+
 async function handleCustomTool(name: string, input: unknown, toolCtx: ToolContext): Promise<ToolResult> {
     switch (name) {
         case 'list_projects':
             return listProjects(toolCtx.supabase)
         case 'upsert_project':
             return upsertProject(input, toolCtx)
+        case 'get_about_profile':
+            return getAboutProfile(toolCtx.supabase)
+        case 'update_about_profile':
+            return updateAboutProfile(input, toolCtx)
         default:
             return { isError: true, error: `Unknown tool: ${name}` }
     }
 }
 
 function buildKickoffMessage(ctx: RepoPushContext): string {
-    return `A push was just made to the GitHub repository below. Review the context, call list_projects to check ` +
-        `for an existing entry matching this github_url, then call upsert_project to create or update the portfolio ` +
-        `entry accordingly. Only change fields you have real evidence for — do not invent features, technologies, ` +
-        `or challenges that aren't supported by the README or package.json below.
+    return `A push was just made to the GitHub repository below. First judge whether the README is describing a ` +
+        `project or is primarily a personal bio (see the system prompt's criteria), then use the matching tool set. ` +
+        `Only change fields you have real evidence for — do not invent features, technologies, challenges, or ` +
+        `biographical details that aren't supported by the README or package.json below.
 
 Repository: ${ctx.repoFullName}
 GitHub URL: ${ctx.repoUrl}

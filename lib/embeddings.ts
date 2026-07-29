@@ -26,31 +26,66 @@ interface EmbeddableProject {
     challenges_learned?: string | null
 }
 
+interface Chunk {
+    content: string
+    chunk_type: string
+    extraMetadata?: Record<string, unknown>
+}
+
 /**
- * Re-embeds a single project's RAG chunks (overview, tech stack, challenges),
- * replacing any existing chunks for that record first so incremental updates
- * (e.g. from the GitHub content agent) don't accumulate duplicates. Mirrors
- * the per-project chunking scripts/embed-data.ts does during a full rebuild.
+ * Replaces all RAG chunks for one (source_table, record_id) with a fresh
+ * set, so incremental updates (e.g. from the GitHub content agent) don't
+ * accumulate duplicates the way a full rebuild's upfront wipe does.
+ */
+async function replaceRecordChunks(
+    supabase: SupabaseClient,
+    hf: InferenceClient,
+    sourceTable: string,
+    recordId: string,
+    chunks: Chunk[]
+): Promise<void> {
+    const { error: deleteError } = await supabase
+        .from('document_embeddings')
+        .delete()
+        .eq('metadata->>source_table', sourceTable)
+        .eq('metadata->>record_id', recordId)
+
+    if (deleteError) {
+        console.error(`[embeddings] failed to clear old ${sourceTable} chunks for ${recordId}:`, deleteError.message)
+    }
+
+    for (const chunk of chunks) {
+        const embedding = await generateEmbedding(hf, chunk.content)
+        const { error } = await supabase.from('document_embeddings').insert({
+            content: chunk.content,
+            embedding,
+            metadata: {
+                source_table: sourceTable,
+                record_id: recordId,
+                chunk_type: chunk.chunk_type,
+                ...chunk.extraMetadata,
+            },
+        })
+        if (error) {
+            console.error(`[embeddings] failed to insert ${chunk.chunk_type} chunk for ${sourceTable} ${recordId}:`, error.message)
+        }
+    }
+}
+
+/**
+ * Re-embeds a single project's RAG chunks (overview, tech stack, challenges).
+ * Mirrors the per-project chunking scripts/embed-data.ts does during a full rebuild.
  */
 export async function embedProjectRecord(
     supabase: SupabaseClient,
     hf: InferenceClient,
     project: EmbeddableProject
 ): Promise<void> {
-    const { error: deleteError } = await supabase
-        .from('document_embeddings')
-        .delete()
-        .eq('metadata->>source_table', 'projects')
-        .eq('metadata->>record_id', project.id)
-
-    if (deleteError) {
-        console.error(`[embeddings] failed to clear old chunks for project ${project.id}:`, deleteError.message)
-    }
-
-    const chunks: { content: string; chunk_type: string }[] = [
+    const chunks: Chunk[] = [
         {
             content: `Project: ${project.title}. Type: ${project.type || 'Unknown'}. Description: ${project.description || ''}.`,
             chunk_type: 'overview',
+            extraMetadata: { title: project.title },
         },
     ]
 
@@ -58,6 +93,7 @@ export async function embedProjectRecord(
         chunks.push({
             content: `Project ${project.title} uses the following technologies: ${project.tech_stack.join(', ')}.`,
             chunk_type: 'tech_stack',
+            extraMetadata: { title: project.title },
         })
     }
 
@@ -68,20 +104,25 @@ export async function embedProjectRecord(
         })
     }
 
-    for (const chunk of chunks) {
-        const embedding = await generateEmbedding(hf, chunk.content)
-        const { error } = await supabase.from('document_embeddings').insert({
-            content: chunk.content,
-            embedding,
-            metadata: {
-                source_table: 'projects',
-                record_id: project.id,
-                chunk_type: chunk.chunk_type,
-                title: project.title,
-            },
-        })
-        if (error) {
-            console.error(`[embeddings] failed to insert ${chunk.chunk_type} chunk for project ${project.id}:`, error.message)
-        }
-    }
+    await replaceRecordChunks(supabase, hf, 'projects', project.id, chunks)
+}
+
+interface EmbeddableProfile {
+    id: string
+    description?: string | null
+}
+
+/**
+ * Re-embeds the "About Me" bio chunk for the author profile. Mirrors the
+ * main_bio chunk scripts/embed-data.ts's processProfiles() produces.
+ */
+export async function embedProfileRecord(
+    supabase: SupabaseClient,
+    hf: InferenceClient,
+    profile: EmbeddableProfile
+): Promise<void> {
+    const content = `About Me - Personal Introduction and Biography: ${profile.description || ''}`.trim()
+    await replaceRecordChunks(supabase, hf, 'author_profiles', profile.id, [
+        { content, chunk_type: 'main_bio' },
+    ])
 }
