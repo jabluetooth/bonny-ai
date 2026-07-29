@@ -46,6 +46,7 @@ Reference/
 
 # SQL files
 *.sql
+!supabase/sql/*.sql
 
 # Text files (scratch notes, generated)
 *.txt

@@ -9,6 +9,7 @@ import {
     BarChart3,
     MessageSquare,
     Settings,
+    Sparkles,
     LogOut,
     Command,
 } from "lucide-react"
@@ -75,6 +76,12 @@ const data = {
             url: "/admin?view=analytics",
             view: "analytics",
             icon: BarChart3,
+        },
+        {
+            title: "AI Agent",
+            url: "/admin?view=ai-agent",
+            view: "ai-agent",
+            icon: Sparkles,
         },
         {
             title: "Settings",

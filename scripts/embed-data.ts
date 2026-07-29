@@ -3,6 +3,7 @@ import { createClient } from '@supabase/supabase-js';
 import { InferenceClient } from '@huggingface/inference';
 import * as dotenv from 'dotenv';
 import { join } from 'path';
+import { generateEmbedding as sharedGenerateEmbedding, embedProjectRecord } from '../lib/embeddings';
 
 // Load environment variables from .env.local
 dotenv.config({ path: join(process.cwd(), '.env.local') });
@@ -20,21 +21,9 @@ if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 const hf = new InferenceClient(HF_API_KEY || undefined);
 
-// Configuration matching lib/rag.ts
-const EMBEDDING_MODEL = 'sentence-transformers/all-MiniLM-L6-v2';
-
 async function generateEmbedding(text: string): Promise<number[]> {
     try {
-        const response = await hf.featureExtraction({
-            model: EMBEDDING_MODEL,
-            inputs: text,
-        });
-
-        if (Array.isArray(response) && Array.isArray(response[0])) {
-            // Handle batched response (though we send one string)
-            return response[0] as number[];
-        }
-        return Array.from(response as number[] | Float32Array);
+        return await sharedGenerateEmbedding(hf, text);
     } catch (error) {
         console.error(`Error generating embedding for: "${text.substring(0, 50)}..."`, error);
         throw error;
@@ -87,46 +76,21 @@ async function processProfiles() {
 
 async function processProjects() {
     console.log('Processing Projects...');
-    const { data: projects } = await supabase.from('projects').select('*');
-    if (!projects) return;
+    // tech_stack isn't a column on `projects` itself — it's derived via the
+    // project_skills join, same as app/api/projects/route.ts.
+    const { data: projects, error } = await supabase
+        .from('projects')
+        .select('*, project_skills(skills(name))');
+    if (error || !projects) {
+        if (error) console.error('  Error fetching projects:', error.message);
+        return;
+    }
 
     for (const p of projects) {
-        // Chunk 1: General Info
-        const contentMain = `Project: ${p.title}. Type: ${p.type}. Description: ${p.description}.`;
-        const embeddingMain = await generateEmbedding(contentMain);
-
-        const { error: mainError } = await supabase.from('document_embeddings').insert({
-            content: contentMain,
-            embedding: embeddingMain,
-            metadata: { source_table: 'projects', record_id: p.id, chunk_type: 'overview', title: p.title }
-        });
-        if (mainError) console.error(`  Error inserting project overview (${p.title}):`, mainError.message);
-
-        // Chunk 2: Tech Stack
-        if (p.tech_stack && p.tech_stack.length > 0) {
-            const contentTech = `Project ${p.title} uses the following technologies: ${p.tech_stack.join(', ')}.`;
-            const embeddingTech = await generateEmbedding(contentTech);
-
-            const { error: techError } = await supabase.from('document_embeddings').insert({
-                content: contentTech,
-                embedding: embeddingTech,
-                metadata: { source_table: 'projects', record_id: p.id, chunk_type: 'tech_stack', title: p.title }
-            });
-            if (techError) console.error(`  Error inserting project tech stack (${p.title}):`, techError.message);
-        }
-
-        // Chunk 3: Challenges/Features
-        if (p.challenges_learned) {
-            const contentChallenges = `Challenges and learnings from project ${p.title}: ${p.challenges_learned}`;
-            const embeddingChallenges = await generateEmbedding(contentChallenges);
-
-            const { error: challengeError } = await supabase.from('document_embeddings').insert({
-                content: contentChallenges,
-                embedding: embeddingChallenges,
-                metadata: { source_table: 'projects', record_id: p.id, chunk_type: 'challenges' }
-            });
-            if (challengeError) console.error(`  Error inserting project challenges (${p.title}):`, challengeError.message);
-        }
+        const techStack = (p.project_skills || [])
+            .map((ps: any) => ps.skills?.name)
+            .filter(Boolean);
+        await embedProjectRecord(supabase, hf, { ...p, tech_stack: techStack });
     }
     console.log(`  Embedded ${projects.length} projects.`);
 }

@@ -7,6 +7,7 @@ import { ChatManager } from "@/components/admin/chat-manager";
 import { DashboardOverview } from "@/components/admin/dashboard-overview";
 import { AnalyticsView } from "@/components/admin/analytics-view";
 import { SettingsView } from "@/components/admin/settings-view";
+import { AiAgentView } from "@/components/admin/ai-agent-view";
 
 export default async function AdminDashboardPage({
     searchParams,
@@ -25,6 +26,7 @@ export default async function AdminDashboardPage({
             {view === "experiences" && <AdminExperiencesForm />}
             {view === "chats" && <ChatManager />}
             {view === "analytics" && <AnalyticsView />}
+            {view === "ai-agent" && <AiAgentView />}
             {view === "settings" && <SettingsView />}
         </div>
     );
