@@ -52,11 +52,15 @@ export async function POST(request: NextRequest) {
 
     // Admin dashboard on/off switch (Settings → AI Agent) — checked before
     // any other work so a disabled agent costs nothing beyond this lookup.
-    const { data: settings } = await supabase
+    const { data: settings, error: settingsError } = await supabase
         .from('agent_settings')
         .select('enabled')
         .eq('id', 1)
         .maybeSingle()
+
+    if (settingsError) {
+        console.error('[github-webhook] agent_settings lookup failed (treating as enabled):', settingsError)
+    }
 
     if (settings?.enabled === false) {
         return NextResponse.json({ ok: true, skipped: 'agent disabled' })
@@ -96,13 +100,22 @@ export async function POST(request: NextRequest) {
     }
 
     // Idempotency: GitHub retries deliveries; a unique-constraint violation
-    // here means this delivery was already accepted, so treat it as a no-op.
+    // (Postgres 23505) means this delivery was already accepted, so treat it
+    // as a no-op. Any OTHER error (missing table, RLS, connection issue) is a
+    // real failure — surface it instead of silently swallowing every delivery.
     const { error: idempotencyError } = await supabase
         .from('webhook_events')
         .insert({ delivery_id: deliveryId })
 
     if (idempotencyError) {
-        return NextResponse.json({ ok: true, skipped: 'duplicate delivery' })
+        if (idempotencyError.code === '23505') {
+            return NextResponse.json({ ok: true, skipped: 'duplicate delivery' })
+        }
+        console.error('[github-webhook] webhook_events insert failed:', idempotencyError)
+        return NextResponse.json(
+            { error: 'Idempotency check failed', detail: idempotencyError.message },
+            { status: 500 }
+        )
     }
 
     const repoUrl: string = payload.repository?.html_url || ''
