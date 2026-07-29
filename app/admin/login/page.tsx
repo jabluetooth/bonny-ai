@@ -30,7 +30,7 @@ export default function AdminLogin() {
                 setIsLoading(false);
             }
             // Note: No explicit routing here because OAuth redirects the whole window
-        } catch (error) {
+        } catch {
             toast.error("An unexpected error occurred");
             setIsLoading(false);
         }
@@ -55,7 +55,7 @@ export default function AdminLogin() {
             toast.success("Welcome back!");
             router.push("/admin");
             router.refresh();
-        } catch (error) {
+        } catch {
             toast.error("An unexpected error occurred");
             setIsLoading(false);
         }
