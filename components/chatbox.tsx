@@ -128,8 +128,20 @@ export function Chatbox() {
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
     const scrollToBottom = () => {
-        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+        // block: "end" aligns the target at the bottom of the viewport —
+        // without it, scrollIntoView defaults to block: "start" (aligning
+        // to the top), which overshoots past the conversation and the
+        // sticky composer, revealing the footer below.
+        messagesEndRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
     };
+
+    // Always start at the top of the page (the conversation/hero area), not
+    // wherever the browser happened to leave the scroll position (e.g. its
+    // own scroll restoration on reload) — the footer living further down
+    // the now-normally-scrolling page should never be what greets a visitor.
+    useEffect(() => {
+        window.scrollTo(0, 0);
+    }, []);
 
     // Auto-scroll to bottom when messages change
     useEffect(() => {
@@ -449,7 +461,7 @@ export function Chatbox() {
                 {/* Composer - sticky so it stays reachable at the bottom of
                     the viewport while a long conversation's history scrolls
                     normally above it. */}
-                <div className="sticky bottom-0 z-20 pt-3 pb-6">
+                <div className="sticky bottom-0 z-20 pt-3 pb-6 bg-background">
                     {/* Suggestion Chips */}
                     <AnimatePresence>
                         {!dismissedSuggestions && !isChatDisabled && (
