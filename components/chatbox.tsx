@@ -453,8 +453,6 @@ export function Chatbox() {
                                     </div>
                                 </div>
                             )}
-                            {/* Invisible div to scroll to */}
-                            <div ref={messagesEndRef} />
                     </div>
                 </div>
 
@@ -535,6 +533,12 @@ export function Chatbox() {
                         )}
                     </div>
                 </div>
+                {/* Invisible marker placed after the composer (not right
+                    after the messages) so scrollIntoView's block: "end"
+                    brings the pills/input into view along with the latest
+                    message, instead of aligning just the message and
+                    leaving the composer below the fold. */}
+                <div ref={messagesEndRef} />
             </div>
         </>
     );
