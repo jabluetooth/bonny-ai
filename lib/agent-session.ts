@@ -384,7 +384,7 @@ export async function runContentAgentSession(ctx: RepoPushContext): Promise<void
         throw new Error('GROQ_API_KEY not configured — the content agent needs it to run.')
     }
 
-    const model = process.env.AGENT_GROQ_MODEL || 'llama-3.3-70b-versatile'
+    const model = process.env.AGENT_GROQ_MODEL || 'openai/gpt-oss-120b'
     const groq = new OpenAI({ apiKey, baseURL: 'https://api.groq.com/openai/v1' })
     const supabase = createAdminClient()
     const hf = new InferenceClient(process.env.HF_API_KEY || undefined)

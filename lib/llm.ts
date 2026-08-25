@@ -214,7 +214,7 @@ ${ragContext ? `\n**RELEVANT DATABASE MATCHES** (Use this for specific details):
 `;
 
         const completion = await openai.chat.completions.create({
-            model: baseURL ? 'llama-3.1-8b-instant' : 'gpt-4o-mini',
+            model: baseURL ? 'openai/gpt-oss-20b' : 'gpt-4o-mini',
             messages: [
                 { role: 'system', content: systemPrompt },
                 { role: 'user', content: userMessage },
