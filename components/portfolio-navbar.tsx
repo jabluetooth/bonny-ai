@@ -203,7 +203,7 @@ export function PortfolioNavbar() {
                         </div>
 
                         <Avatar onClick={() => handleNavClick("Hello! Tell me about this portfolio.")} className="hidden md:flex cursor-pointer hover:scale-105 transition-transform rounded-none bg-transparent">
-                            <AvatarImage src="/avatar.png" alt="Profile" />
+                            <AvatarImage src="/bot-avatar.png" alt="Bonny AI" />
                             <AvatarFallback>Ad</AvatarFallback>
                         </Avatar>
                     </div>

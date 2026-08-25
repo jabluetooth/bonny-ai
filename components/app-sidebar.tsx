@@ -51,7 +51,7 @@ export function AppSidebar({ onNavClick, ...props }: AppSidebarProps) {
                         className="h-10 w-10 cursor-pointer hover:scale-105 transition-transform rounded-none bg-transparent"
                         onClick={() => onNavClick("Hello! Tell me about this portfolio.")}
                     >
-                        <AvatarImage src="/avatar.png" alt="Bonny AI" />
+                        <AvatarImage src="/bot-avatar.png" alt="Bonny AI" />
                         <AvatarFallback>AI</AvatarFallback>
                     </Avatar>
                     <div className="flex flex-col items-start gap-0.5">

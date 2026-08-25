@@ -30,7 +30,7 @@ const jsonLd = {
   "@type": "Person",
   name: "Fil Heinz O. Re La Torre",
   url: siteUrl,
-  image: `${siteUrl}/avatar.png`,
+  image: `${siteUrl}/bot-avatar.png`,
   jobTitle: "Software Engineer",
   description: "Software Engineer specializing in web development and AI/ML",
   sameAs: [
@@ -67,7 +67,7 @@ export const metadata: Metadata = {
     siteName: "Fil Heinz Portfolio",
     images: [
       {
-        url: `${siteUrl}/avatar.png`,
+        url: `${siteUrl}/bot-avatar.png`,
         width: 1200,
         height: 630,
         alt: "Fil Heinz - Software Engineer Portfolio",
@@ -78,7 +78,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Fil Heinz - Software Engineer Portfolio",
     description: "Check out my portfolio website! AI-powered interactive portfolio showcasing projects, skills, and experience.",
-    images: [`${siteUrl}/avatar.png`],
+    images: [`${siteUrl}/bot-avatar.png`],
     creator: "@filheinz",
   },
   robots: {
@@ -93,9 +93,9 @@ export const metadata: Metadata = {
     },
   },
   icons: {
-    icon: "/avatar.png",
-    shortcut: "/avatar.png",
-    apple: "/avatar.png",
+    icon: "/bot-avatar.png",
+    shortcut: "/bot-avatar.png",
+    apple: "/bot-avatar.png",
   },
 };
 
