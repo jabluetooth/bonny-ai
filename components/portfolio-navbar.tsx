@@ -152,7 +152,7 @@ export function PortfolioNavbar() {
     }
 
     return (
-        <div className="relative z-50 w-full flex-none">
+        <div className="sticky top-0 z-50 w-full flex-none">
             {/* Toggle Trigger (Desktop Only) */}
             {!isMobile && messages.length > 0 && !navValue && (
                 <div
