@@ -131,7 +131,7 @@ export function Chatbox() {
         // block: "end" aligns the target at the bottom of the viewport —
         // without it, scrollIntoView defaults to block: "start" (aligning
         // to the top), which overshoots past the conversation and the
-        // sticky composer, revealing the footer below.
+        // composer, revealing the footer below.
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
     };
 
@@ -246,18 +246,7 @@ export function Chatbox() {
                             </motion.button>
                         )}
                     </AnimatePresence>
-                    <div
-                        className="flex flex-col gap-6 pb-2 px-4"
-                        style={{
-                            // Fades the last ~96px of message content to
-                            // transparent so it visually stops before the
-                            // composer's pills/input, instead of showing
-                            // through the gaps around them (both are only
-                            // translucent, not backed by an opaque box).
-                            maskImage: "linear-gradient(to bottom, black calc(100% - 96px), transparent 100%)",
-                            WebkitMaskImage: "linear-gradient(to bottom, black calc(100% - 96px), transparent 100%)",
-                        }}
-                    >
+                    <div className="flex flex-col gap-6 pb-2 px-4">
                         {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
                         {parsedMessages.map((msg: any, i) => {
                                 // Use pre-parsed data from memoized array
@@ -469,10 +458,14 @@ export function Chatbox() {
                     </div>
                 </div>
 
-                {/* Composer - sticky so it stays reachable at the bottom of
-                    the viewport while a long conversation's history scrolls
-                    normally above it. */}
-                <div className="sticky bottom-0 z-20 pt-3 pb-6 bg-background/90 backdrop-blur-xl">
+                {/* Composer - normal document flow, right after the message
+                    list. Deliberately not sticky/fixed: pinning it over the
+                    scrolling conversation meant it had to paint over
+                    whatever scrolled underneath (tried both an opaque and a
+                    frosted-glass backing) to stop message text bleeding
+                    through, which wasn't wanted. Living in normal flow means
+                    there's nothing left for it to overlap. */}
+                <div className="pt-3 pb-6">
                     {/* Suggestion Chips */}
                     <AnimatePresence>
                         {!dismissedSuggestions && !isChatDisabled && (
