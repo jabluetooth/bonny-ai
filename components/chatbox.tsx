@@ -472,7 +472,7 @@ export function Chatbox() {
                 {/* Composer - sticky so it stays reachable at the bottom of
                     the viewport while a long conversation's history scrolls
                     normally above it. */}
-                <div className="sticky bottom-0 z-20 pt-3 pb-6">
+                <div className="sticky bottom-0 z-20 pt-3 pb-6 bg-background">
                     {/* Suggestion Chips */}
                     <AnimatePresence>
                         {!dismissedSuggestions && !isChatDisabled && (
