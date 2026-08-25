@@ -12,7 +12,6 @@ import {
     NavigationMenuList,
     NavigationMenuTrigger,
 } from "@/components/ui/navigation-menu"
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import {
     Drawer,
@@ -195,17 +194,20 @@ export function PortfolioNavbar() {
                 </div>
                 <div className="max-w-6xl mx-auto flex items-center justify-between h-16 px-4 relative z-10 w-full">
 
-                    {/* LEFT: Mobile Sidebar Trigger + Avatar */}
+                    {/* LEFT: Mobile Sidebar Trigger + Wordmark */}
                     <div className="flex items-center gap-2">
                         {/* Mobile Sidebar Trigger */}
                         <div className="md:hidden">
                             <SidebarTrigger className="ml-2 h-9 w-9" />
                         </div>
 
-                        <Avatar onClick={() => handleNavClick("Hello! Tell me about this portfolio.")} className="hidden md:flex cursor-pointer hover:scale-105 transition-transform rounded-none bg-transparent">
-                            <AvatarImage src="/bot-avatar.png" alt="Bonny AI" />
-                            <AvatarFallback>Ad</AvatarFallback>
-                        </Avatar>
+                        <button
+                            type="button"
+                            onClick={() => handleNavClick("Hello! Tell me about this portfolio.")}
+                            className="hidden md:flex items-center cursor-pointer hover:opacity-80 transition-opacity font-bold text-lg tracking-tight"
+                        >
+                            Bonny-Ai
+                        </button>
                     </div>
 
                     {/* CENTER: Navigation Menu (Desktop) */}
