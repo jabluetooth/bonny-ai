@@ -5,6 +5,7 @@ import { Status, StatusLabel } from "@/components/ui/shadcn-io/status"
 import { VisitorCounter } from './visitor-counter';
 import { useChat } from "@/components/chat-provider"
 import { Github, Linkedin, Instagram, Globe } from "lucide-react"
+import Image from "next/image"
 import { useState, useEffect } from 'react';
 
 const SOCIAL_LINKS = [
@@ -76,11 +77,20 @@ export function SiteFooter() {
             <div className="max-w-6xl mx-auto px-4 pt-6 flex flex-wrap items-stretch justify-between gap-4">
                 {/* Brand panel */}
                 <div className="flex-1 min-w-[240px] flex flex-col justify-between gap-6 rounded-t-2xl bg-primary text-primary-foreground px-6 pt-6 pb-5">
-                    <span className="text-xl font-bold tracking-tight">Bonny-Ai</span>
+                    <div className="flex items-center gap-2">
+                        <Image
+                            src="/bot-avatar.png"
+                            alt=""
+                            width={28}
+                            height={28}
+                            className="h-7 w-7 rounded-full object-cover"
+                        />
+                        <span className="text-xl font-bold tracking-tight">Bonny-Ai</span>
+                    </div>
 
                     <div className="flex flex-col gap-3">
                         <p className="text-sm font-medium opacity-80 max-w-[34ch]">
-                            An AI-powered portfolio &mdash; ask Bonny anything about Fil Heinz&apos;s work.
+                            Skip the scrolling. Just ask Bonny.
                         </p>
 
                         <div className="flex items-center gap-1">
@@ -109,7 +119,7 @@ export function SiteFooter() {
                             </Status>
                         </div>
 
-                        <p className="text-xs opacity-65">&copy; {year} Bonny AI</p>
+                        <p className="text-xs opacity-65">&copy; {year} Bonny AI by Fil Heinz Re La Torre</p>
                     </div>
                 </div>
 
