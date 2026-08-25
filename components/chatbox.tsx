@@ -246,7 +246,18 @@ export function Chatbox() {
                             </motion.button>
                         )}
                     </AnimatePresence>
-                    <div className="flex flex-col gap-6 pb-2 px-4">
+                    <div
+                        className="flex flex-col gap-6 pb-2 px-4"
+                        style={{
+                            // Fades the last ~96px of message content to
+                            // transparent so it visually stops before the
+                            // composer's pills/input, instead of showing
+                            // through the gaps around them (both are only
+                            // translucent, not backed by an opaque box).
+                            maskImage: "linear-gradient(to bottom, black calc(100% - 96px), transparent 100%)",
+                            WebkitMaskImage: "linear-gradient(to bottom, black calc(100% - 96px), transparent 100%)",
+                        }}
+                    >
                         {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
                         {parsedMessages.map((msg: any, i) => {
                                 // Use pre-parsed data from memoized array
@@ -480,7 +491,7 @@ export function Chatbox() {
                                             type="button"
                                             onClick={() => handleSuggestion(s)}
                                             disabled={isLoading || !conversationId}
-                                            className="shrink-0 rounded-full border border-border/40 px-3.5 py-1.5 text-xs text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-all duration-150 disabled:opacity-30 disabled:cursor-not-allowed whitespace-nowrap"
+                                            className="shrink-0 rounded-full border border-border/40 bg-background/60 backdrop-blur-sm px-3.5 py-1.5 text-xs text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-all duration-150 disabled:opacity-30 disabled:cursor-not-allowed whitespace-nowrap"
                                         >
                                             {s}
                                         </button>
@@ -511,7 +522,7 @@ export function Chatbox() {
                                     setTimeout(scrollToBottom, 300); // Delay for keyboard animation
                                 }}
                                 placeholder={isChatDisabled ? "Message limit reached." : "Type a message..."}
-                                className="w-full h-14 pl-6 pr-16 rounded-full shadow-md border-border/40 focus-visible:ring-1 focus-visible:ring-primary/30 transition-shadow hover:shadow-lg text-lg relative z-10"
+                                className="w-full h-14 pl-6 pr-16 rounded-full shadow-md border-border/40 bg-background/80 backdrop-blur-md focus-visible:ring-1 focus-visible:ring-primary/30 transition-shadow hover:shadow-lg text-lg relative z-10"
                                 disabled={!conversationId || isLoading || isChatDisabled}
                             />
                             <Button
