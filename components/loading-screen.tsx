@@ -37,7 +37,7 @@ ${buildKeyframes()}
 
 export function LoadingScreen() {
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-md">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-background">
             {/* eslint-disable-next-line react/no-danger */}
             <style dangerouslySetInnerHTML={{ __html: BASE_CSS }} />
             <div className="flex items-center text-foreground">
