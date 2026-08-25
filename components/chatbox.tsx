@@ -4,7 +4,6 @@ import { useState, useRef, useEffect, useMemo } from "react";
 import { useChat } from "@/components/chat-provider";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Bot, ArrowRight, ChevronDown } from "lucide-react";
 import { WelcomeModal } from "./welcome-modal";
@@ -137,32 +136,22 @@ export function Chatbox() {
         scrollToBottom();
     }, [messages]);
 
-    // Show scroll-to-bottom button when user scrolls up
+    // Show scroll-to-bottom button when the user has scrolled away from the
+    // bottom of the page — the conversation now flows in normal page scroll
+    // (not an internally-scrolling box), so this watches window scroll.
     useEffect(() => {
         if (messages.length === 0) return;
 
-        const viewport = document.getElementById('chat-scroll-area');
-        if (!viewport) return;
-
         const handleScroll = () => {
-            const { scrollTop, scrollHeight, clientHeight } = viewport;
+            const scrollTop = window.scrollY;
+            const scrollHeight = document.documentElement.scrollHeight;
+            const clientHeight = window.innerHeight;
             setShowScrollBtn(scrollHeight - scrollTop - clientHeight > 100);
         };
 
-        viewport.addEventListener('scroll', handleScroll, { passive: true });
-        return () => viewport.removeEventListener('scroll', handleScroll);
-    }, [messages.length]);
-
-    // Lock body scroll when chat is active
-    useEffect(() => {
-        if (messages.length > 0) {
-            document.body.style.overflow = "hidden";
-        } else {
-            document.body.style.overflow = "";
-        }
-        return () => {
-            document.body.style.overflow = "";
-        };
+        handleScroll();
+        window.addEventListener('scroll', handleScroll, { passive: true });
+        return () => window.removeEventListener('scroll', handleScroll);
     }, [messages.length]);
 
     // 1. Loading State (Global / Start)
@@ -225,9 +214,11 @@ export function Chatbox() {
     return (
         <>
             <WelcomeModal />
-            <div className="w-full max-w-3xl flex flex-col h-full animate-in fade-in zoom-in-95 duration-500">
-                {/* Messages Area - Flexible & Transparent */}
-                <div className="flex-1 overflow-hidden relative mb-4">
+            <div className="w-full max-w-4xl flex flex-col animate-in fade-in zoom-in-95 duration-500">
+                {/* Messages Area - flows in normal page scroll, growing the
+                    page's height as the conversation gets longer, instead of
+                    scrolling inside a fixed-height box. */}
+                <div className="relative mb-4">
                     <AnimatePresence>
                         {showScrollBtn && (
                             <motion.button
@@ -236,17 +227,16 @@ export function Chatbox() {
                                 exit={{ opacity: 0, scale: 0.8 }}
                                 transition={{ duration: 0.15 }}
                                 onClick={scrollToBottom}
-                                className="absolute bottom-3 right-3 z-10 h-8 w-8 rounded-full bg-background border border-border shadow-md flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+                                className="fixed bottom-28 right-4 md:right-8 z-30 h-8 w-8 rounded-full bg-background border border-border shadow-md flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
                                 aria-label="Scroll to bottom"
                             >
                                 <ChevronDown size={14} />
                             </motion.button>
                         )}
                     </AnimatePresence>
-                    <ScrollArea className="h-full w-full" viewportId="chat-scroll-area">
-                        <div className="flex flex-col flex-1 justify-end gap-6 pb-2 px-4">
-                            {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                            {parsedMessages.map((msg: any, i) => {
+                    <div className="flex flex-col gap-6 pb-2 px-4">
+                        {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+                        {parsedMessages.map((msg: any, i) => {
                                 // Use pre-parsed data from memoized array
                                 const { cleanContent, highlightSkill, highlightCategory, showSkills, showProjects, projectCategory, showExperiences, experienceCategory, showAbout, showInterests, showVision, showBackground } = msg.parsed;
 
@@ -453,79 +443,83 @@ export function Chatbox() {
                             )}
                             {/* Invisible div to scroll to */}
                             <div ref={messagesEndRef} />
-                        </div>
-                    </ScrollArea>
-                </div >
+                    </div>
+                </div>
 
-                {/* Suggestion Chips */}
-                <AnimatePresence>
-                    {!dismissedSuggestions && !isChatDisabled && (
-                        <motion.div
-                            key="suggestions"
-                            initial={{ opacity: 0, y: 8 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: 4, transition: { duration: 0.15 } }}
-                            transition={{ duration: 0.3, delay: 0.2 }}
-                            className="w-full pb-2"
-                        >
-                            <div className="flex gap-2 overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-                                {SUGGESTIONS.map((s) => (
-                                    <button
-                                        key={s}
-                                        type="button"
-                                        onClick={() => handleSuggestion(s)}
-                                        disabled={isLoading || !conversationId}
-                                        className="shrink-0 rounded-full border border-border/40 bg-background/60 backdrop-blur-sm px-3.5 py-1.5 text-xs text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-all duration-150 disabled:opacity-30 disabled:cursor-not-allowed whitespace-nowrap"
-                                    >
-                                        {s}
-                                    </button>
-                                ))}
-                            </div>
-                        </motion.div>
-                    )}
-                </AnimatePresence>
+                {/* Composer - sticky so it stays reachable at the bottom of
+                    the viewport while a long conversation's history scrolls
+                    normally above it. */}
+                <div className="sticky bottom-0 z-20 pt-3 pb-1 bg-gradient-to-t from-background via-background/95 to-background/0">
+                    {/* Suggestion Chips */}
+                    <AnimatePresence>
+                        {!dismissedSuggestions && !isChatDisabled && (
+                            <motion.div
+                                key="suggestions"
+                                initial={{ opacity: 0, y: 8 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: 4, transition: { duration: 0.15 } }}
+                                transition={{ duration: 0.3, delay: 0.2 }}
+                                className="w-full pb-2"
+                            >
+                                <div className="flex gap-2 overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+                                    {SUGGESTIONS.map((s) => (
+                                        <button
+                                            key={s}
+                                            type="button"
+                                            onClick={() => handleSuggestion(s)}
+                                            disabled={isLoading || !conversationId}
+                                            className="shrink-0 rounded-full border border-border/40 bg-background/60 backdrop-blur-sm px-3.5 py-1.5 text-xs text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-all duration-150 disabled:opacity-30 disabled:cursor-not-allowed whitespace-nowrap"
+                                        >
+                                            {s}
+                                        </button>
+                                    ))}
+                                </div>
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
 
-                {/* Input Area - Wide & Clean */}
-                < div className="w-full" >
-                    <form
-                        onSubmit={(e) => {
-                            e.preventDefault();
-                            handleSend();
-                        }}
-                        className="relative flex items-center w-full rounded-full transition-all duration-300"
-                    >
-                        <Input
-                            id="chat-input"
-                            name="message"
-                            autoComplete="off"
-                            autoCorrect="off"
-                            spellCheck={false}
-                            value={input}
-                            onChange={(e) => setInput(e.target.value)}
-                            onFocus={() => {
-                                setTimeout(scrollToBottom, 300); // Delay for keyboard animation
+                    {/* Input Area - Wide & Clean */}
+                    <div className="w-full">
+                        <form
+                            onSubmit={(e) => {
+                                e.preventDefault();
+                                handleSend();
                             }}
-                            placeholder={isChatDisabled ? "Message limit reached." : "Type a message..."}
-                            className="w-full h-14 pl-6 pr-16 rounded-full shadow-md border-border/40 bg-background/80 backdrop-blur-md focus-visible:ring-1 focus-visible:ring-primary/30 transition-shadow hover:shadow-lg text-lg relative z-10"
-                            disabled={!conversationId || isLoading || isChatDisabled}
-                        />
-                        <Button
-                            type="submit"
-                            size="icon"
-                            disabled={!conversationId || isLoading || !input.trim() || isChatDisabled}
-                            className="absolute right-1.5 h-11 w-11 rounded-full bg-blue-500 hover:bg-blue-600 text-white shadow-sm transition-transform hover:scale-105 active:scale-95 z-20"
+                            className="relative flex items-center w-full rounded-full transition-all duration-300"
                         >
-                            <ArrowRight size={20} />
-                            <span className="sr-only">Send</span>
-                        </Button>
-                    </form>
-                    {isChatDisabled && (
-                        <p className="text-center text-xs text-muted-foreground mt-2.5">
-                            Message limit reached — use the <strong className="text-foreground/70">Contact</strong> button in the navigation to reach me directly.
-                        </p>
-                    )}
-                </div >
-            </div >
+                            <Input
+                                id="chat-input"
+                                name="message"
+                                autoComplete="off"
+                                autoCorrect="off"
+                                spellCheck={false}
+                                value={input}
+                                onChange={(e) => setInput(e.target.value)}
+                                onFocus={() => {
+                                    setTimeout(scrollToBottom, 300); // Delay for keyboard animation
+                                }}
+                                placeholder={isChatDisabled ? "Message limit reached." : "Type a message..."}
+                                className="w-full h-14 pl-6 pr-16 rounded-full shadow-md border-border/40 bg-background/80 backdrop-blur-md focus-visible:ring-1 focus-visible:ring-primary/30 transition-shadow hover:shadow-lg text-lg relative z-10"
+                                disabled={!conversationId || isLoading || isChatDisabled}
+                            />
+                            <Button
+                                type="submit"
+                                size="icon"
+                                disabled={!conversationId || isLoading || !input.trim() || isChatDisabled}
+                                className="absolute right-1.5 h-11 w-11 rounded-full bg-blue-500 hover:bg-blue-600 text-white shadow-sm transition-transform hover:scale-105 active:scale-95 z-20"
+                            >
+                                <ArrowRight size={20} />
+                                <span className="sr-only">Send</span>
+                            </Button>
+                        </form>
+                        {isChatDisabled && (
+                            <p className="text-center text-xs text-muted-foreground mt-2.5">
+                                Message limit reached — use the <strong className="text-foreground/70">Contact</strong> button in the navigation to reach me directly.
+                            </p>
+                        )}
+                    </div>
+                </div>
+            </div>
         </>
     );
 }
