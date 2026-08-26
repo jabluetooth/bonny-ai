@@ -4,6 +4,7 @@ import { InferenceClient } from '@huggingface/inference'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { createAdminClient } from './supabase-admin'
 import { embedProjectRecord, embedProfileRecord } from './embeddings'
+import { getRepoMetadata, updateRepoMetadata } from './github-api'
 
 export interface RepoPushContext {
     repoFullName: string
@@ -35,6 +36,11 @@ For bio updates:
 1. Call get_about_profile to see the current bio.
 2. Only call update_about_profile if the README's personal/bio content gives you genuinely new or more accurate information than what's already there. Do not rewrite a perfectly good existing bio just to rephrase it.
 
+For the GitHub repo's own page (separate from anything above):
+- The repo itself has its own short description and topics (tags) shown on its GitHub page — distinct from the portfolio project card's description. This applies to any repo, project or bio, independent of the project-vs-bio decision above.
+- If you have real evidence from the README/package.json and the repo's current description or topics are missing or clearly outdated, call update_github_repo to set them. If they already look accurate, leave them alone.
+- Topics must be lowercase with hyphens instead of spaces (e.g. "nextjs", "machine-learning", "portfolio") — pick ones that reflect the actual languages/frameworks/domain, not generic filler.
+
 Rules:
 - Only include information you have real evidence for from the provided context. Never invent features, technologies, "challenges learned", or biographical details that aren't supported by the README or package.json.
 - Write descriptions and bios in a concise, confident, first-person-adjacent developer voice.
@@ -43,7 +49,7 @@ Rules:
 - Never clear a field you don't have new information for — omit it from the tool call instead so it stays unchanged.
 - Once you've made your decision and (if needed) called the relevant write tool(s), reply with a brief final summary of what you did. Do not keep calling tools after that.`
 
-const MAX_ITERATIONS = 8
+const MAX_ITERATIONS = 10
 
 // Groq's OpenAI-compatible tool-calling format.
 const TOOLS: OpenAI.Chat.ChatCompletionTool[] = [
@@ -121,6 +127,32 @@ const TOOLS: OpenAI.Chat.ChatCompletionTool[] = [
                     },
                 },
                 required: ['description'],
+                additionalProperties: false,
+            },
+        },
+    },
+    {
+        type: 'function',
+        function: {
+            name: 'update_github_repo',
+            description:
+                "Update the GitHub repository's own description and/or topics (the tags shown on its GitHub page) — " +
+                'separate from the portfolio project card. Provide at least one of description or topics. Only set ' +
+                "values you have real evidence for from the README or package.json, and only when the repo's current " +
+                'description/topics are missing or clearly stale.',
+            parameters: {
+                type: 'object',
+                properties: {
+                    description: {
+                        type: 'string',
+                        description: "A short one-line summary for the repo's GitHub description field (not the portfolio card).",
+                    },
+                    topics: {
+                        type: 'array',
+                        items: { type: 'string' },
+                        description: 'Lowercase, hyphenated topic tags reflecting languages/frameworks/domain (e.g. "nextjs", "typescript").',
+                    },
+                },
                 additionalProperties: false,
             },
         },
@@ -334,6 +366,32 @@ async function updateAboutProfile(input: any, { supabase, hf, ctx, sessionId }: 
     return { id: profileId, action }
 }
 
+async function updateGithubRepo(input: any, { ctx, supabase, sessionId }: ToolContext): Promise<ToolResult> {
+    const description: string | undefined = input?.description
+    const topics: string[] | undefined = Array.isArray(input?.topics) ? input.topics : undefined
+
+    if (description === undefined && topics === undefined) {
+        return { isError: true, error: 'Provide at least one of description or topics' }
+    }
+
+    const before = await getRepoMetadata(ctx.repoFullName)
+    const result = await updateRepoMetadata(ctx.repoFullName, { description, topics })
+    const after = await getRepoMetadata(ctx.repoFullName)
+
+    const { error: logError } = await supabase.from('content_edits_log').insert({
+        table_name: 'github_repo',
+        record_id: ctx.repoFullName,
+        action: 'updated',
+        before,
+        after,
+        github_delivery_id: ctx.deliveryId,
+        session_id: sessionId,
+    })
+    if (logError) console.error('[agent-session] failed writing audit log for github_repo update:', logError.message)
+
+    return { ...result }
+}
+
 async function handleCustomTool(name: string, input: unknown, toolCtx: ToolContext): Promise<ToolResult> {
     switch (name) {
         case 'list_projects':
@@ -344,6 +402,8 @@ async function handleCustomTool(name: string, input: unknown, toolCtx: ToolConte
             return getAboutProfile(toolCtx.supabase)
         case 'update_about_profile':
             return updateAboutProfile(input, toolCtx)
+        case 'update_github_repo':
+            return updateGithubRepo(input, toolCtx)
         default:
             return { isError: true, error: `Unknown tool: ${name}` }
     }

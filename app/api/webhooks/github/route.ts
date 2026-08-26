@@ -2,37 +2,13 @@ import { NextRequest, NextResponse, after } from 'next/server'
 import { verifyGithubSignature } from '@/lib/github-webhook'
 import { createAdminClient } from '@/lib/supabase-admin'
 import { runContentAgentSession } from '@/lib/agent-session'
+import { fetchRepoFile } from '@/lib/github-api'
 
 export const dynamic = 'force-dynamic'
 // Agent turns for a single project upsert should be quick, but container
 // spin-up + model latency need headroom. >60s requires Vercel Pro — on
 // Hobby, cap this lower and expect less margin.
 export const maxDuration = 300
-
-async function fetchRepoFile(repoFullName: string, ref: string, path: string): Promise<string | null> {
-    const token = process.env.GITHUB_TOKEN
-    try {
-        const res = await fetch(
-            `https://api.github.com/repos/${repoFullName}/contents/${path}?ref=${encodeURIComponent(ref)}`,
-            {
-                headers: {
-                    Accept: 'application/vnd.github+json',
-                    'X-GitHub-Api-Version': '2022-11-28',
-                    ...(token ? { Authorization: `Bearer ${token}` } : {}),
-                },
-            }
-        )
-        if (!res.ok) return null
-        const data = await res.json()
-        if (data.encoding === 'base64' && typeof data.content === 'string') {
-            return Buffer.from(data.content, 'base64').toString('utf-8')
-        }
-        return null
-    } catch (error) {
-        console.error(`[github-webhook] failed fetching ${path}:`, error)
-        return null
-    }
-}
 
 export async function POST(request: NextRequest) {
     const rawBody = await request.text()
