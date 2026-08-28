@@ -3,9 +3,9 @@
 import { supabase } from "@/lib/supabase-client"
 import { Status, StatusLabel } from "@/components/ui/shadcn-io/status"
 import { VisitorCounter } from './visitor-counter';
-import { useChat } from "@/components/chat-provider"
 import { Github, Linkedin, Instagram, Globe } from "lucide-react"
 import Image from "next/image"
+import Link from "next/link"
 import { useState, useEffect } from 'react';
 
 const SOCIAL_LINKS = [
@@ -16,10 +16,10 @@ const SOCIAL_LINKS = [
 ]
 
 const EXPLORE_LINKS = [
-    { label: "About", query: "Tell me about yourself." },
-    { label: "Projects", query: "Show me your projects." },
-    { label: "Skills", query: "What are your skills?" },
-    { label: "Experiences", query: "Tell me about your work history and education." },
+    { label: "About", href: "/about" },
+    { label: "Projects", href: "/projects" },
+    { label: "Skills", href: "/skills" },
+    { label: "Experiences", href: "/experiences" },
 ]
 
 /**
@@ -31,7 +31,6 @@ const EXPLORE_LINKS = [
  */
 export function SiteFooter() {
     const [status, setStatus] = useState<string>("available_fulltime")
-    const { startChat, conversationId, sendMessage } = useChat()
 
     useEffect(() => {
         async function fetchStatus() {
@@ -60,17 +59,6 @@ export function SiteFooter() {
 
     const config = getStatusConfig(status)
     const year = new Date().getFullYear()
-
-    const handleExploreClick = async (query: string) => {
-        let activeId = conversationId
-        if (!activeId) {
-            const newId = await startChat("Guest")
-            if (newId) activeId = newId
-        }
-        if (activeId) {
-            sendMessage(query, undefined, activeId)
-        }
-    }
 
     return (
         <footer className="w-full mt-auto">
@@ -131,13 +119,12 @@ export function SiteFooter() {
                     <ul className="flex flex-col gap-2">
                         {EXPLORE_LINKS.map((item) => (
                             <li key={item.label}>
-                                <button
-                                    type="button"
-                                    onClick={() => handleExploreClick(item.query)}
-                                    className="text-sm text-muted-foreground hover:text-foreground transition-colors text-left cursor-pointer"
+                                <Link
+                                    href={item.href}
+                                    className="text-sm text-muted-foreground hover:text-foreground transition-colors"
                                 >
                                     {item.label}
-                                </button>
+                                </Link>
                             </li>
                         ))}
                     </ul>
