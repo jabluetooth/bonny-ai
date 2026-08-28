@@ -1,4 +1,5 @@
 import OpenAI from 'openai';
+import { observeOpenAI } from '@langfuse/openai';
 
 // --- Data Interfaces ---
 export interface ProjectContext {
@@ -59,10 +60,18 @@ export interface LLMContext {
     [key: string]: any; // Allow extensibility
 }
 
+export interface LLMTraceContext {
+    /** Groups every turn of a conversation into one Langfuse session. */
+    sessionId?: string;
+    /** The authenticated visitor, for per-user filtering in Langfuse. */
+    userId?: string;
+}
+
 export async function generateLLMResponse(
     userMessage: string,
     context: LLMContext,
-    ragContext?: string
+    ragContext?: string,
+    traceContext?: LLMTraceContext
 ): Promise<string> {
     const apiKey = process.env.GROQ_API_KEY || process.env.OPENAI_API_KEY;
     const baseURL = process.env.GROQ_API_KEY ? 'https://api.groq.com/openai/v1' : undefined;
@@ -148,10 +157,18 @@ export async function generateLLMResponse(
     };
 
     try {
-        const openai = new OpenAI({
-            apiKey: apiKey,
-            baseURL: baseURL,
-        });
+        const openai = observeOpenAI(
+            new OpenAI({
+                apiKey: apiKey,
+                baseURL: baseURL,
+            }),
+            {
+                generationName: 'portfolio-chat-response',
+                sessionId: traceContext?.sessionId,
+                userId: traceContext?.userId,
+                tags: ['portfolio-chat', baseURL ? 'groq' : 'openai'],
+            }
+        );
 
         const systemPrompt = `
 You are **Fil Heinz O. Re La Torre**, a passionate and innovative Software Engineer. 

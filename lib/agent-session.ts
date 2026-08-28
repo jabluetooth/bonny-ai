@@ -2,6 +2,8 @@ import OpenAI from 'openai'
 import { randomUUID } from 'crypto'
 import { InferenceClient } from '@huggingface/inference'
 import type { SupabaseClient } from '@supabase/supabase-js'
+import { observeOpenAI } from '@langfuse/openai'
+import { startActiveObservation, propagateAttributes } from '@langfuse/tracing'
 import { createAdminClient } from './supabase-admin'
 import { embedProjectRecord, embedProfileRecord } from './embeddings'
 import { getRepoMetadata, updateRepoMetadata } from './github-api'
@@ -445,10 +447,17 @@ export async function runContentAgentSession(ctx: RepoPushContext): Promise<void
     }
 
     const model = process.env.AGENT_GROQ_MODEL || 'openai/gpt-oss-120b'
-    const groq = new OpenAI({ apiKey, baseURL: 'https://api.groq.com/openai/v1' })
     const supabase = createAdminClient()
     const hf = new InferenceClient(process.env.HF_API_KEY || undefined)
     const sessionId = randomUUID()
+
+    // One Langfuse session groups every model call this push triggers; the
+    // agent step below nests each completion as a child generation of it.
+    const groq = observeOpenAI(new OpenAI({ apiKey, baseURL: 'https://api.groq.com/openai/v1' }), {
+        generationName: 'content-agent-step',
+        sessionId,
+        tags: ['content-agent', ctx.repoFullName],
+    })
 
     const toolCtx: ToolContext = { supabase, hf, ctx, sessionId }
 
@@ -459,44 +468,76 @@ export async function runContentAgentSession(ctx: RepoPushContext): Promise<void
 
     console.log(`[agent-session] starting content sync for ${ctx.repoFullName} (session ${sessionId})`)
 
-    for (let iteration = 0; iteration < MAX_ITERATIONS; iteration++) {
-        const completion = await groq.chat.completions.create({
-            model,
-            messages,
-            tools: TOOLS,
-            tool_choice: 'auto',
-            temperature: 0.3,
-        })
+    await propagateAttributes(
+        {
+            traceName: 'content-agent-session',
+            sessionId,
+            tags: ['content-agent', ctx.repoFullName],
+            metadata: { repoFullName: ctx.repoFullName, defaultBranch: ctx.defaultBranch, deliveryId: ctx.deliveryId },
+        },
+        () =>
+            startActiveObservation(
+                'content-agent-session',
+                async (span) => {
+                    span.update({ input: { repoFullName: ctx.repoFullName, commitMessages: ctx.commitMessages } })
 
-        const message = completion.choices[0]?.message
-        if (!message) break
+                    let finalSummary = ''
 
-        messages.push(message)
+                    for (let iteration = 0; iteration < MAX_ITERATIONS; iteration++) {
+                        const completion = await groq.chat.completions.create({
+                            model,
+                            messages,
+                            tools: TOOLS,
+                            tool_choice: 'auto',
+                            temperature: 0.3,
+                        })
 
-        const toolCalls = message.tool_calls
-        if (!toolCalls || toolCalls.length === 0) {
-            console.log(`[agent-session] session ${sessionId} finished: ${(message.content || '').slice(0, 300)}`)
-            break
-        }
+                        const message = completion.choices[0]?.message
+                        if (!message) break
 
-        for (const toolCall of toolCalls) {
-            if (toolCall.type !== 'function') continue
+                        messages.push(message)
 
-            let parsedInput: unknown = {}
-            try {
-                parsedInput = toolCall.function.arguments ? JSON.parse(toolCall.function.arguments) : {}
-            } catch {
-                parsedInput = {}
-            }
+                        const toolCalls = message.tool_calls
+                        if (!toolCalls || toolCalls.length === 0) {
+                            finalSummary = message.content || ''
+                            console.log(`[agent-session] session ${sessionId} finished: ${finalSummary.slice(0, 300)}`)
+                            break
+                        }
 
-            const result = await handleCustomTool(toolCall.function.name, parsedInput, toolCtx)
-            messages.push({
-                role: 'tool',
-                tool_call_id: toolCall.id,
-                content: JSON.stringify(result),
-            })
-        }
-    }
+                        for (const toolCall of toolCalls) {
+                            if (toolCall.type !== 'function') continue
+
+                            let parsedInput: unknown = {}
+                            try {
+                                parsedInput = toolCall.function.arguments ? JSON.parse(toolCall.function.arguments) : {}
+                            } catch {
+                                parsedInput = {}
+                            }
+
+                            const result = await startActiveObservation(
+                                `tool:${toolCall.function.name}`,
+                                async (toolSpan) => {
+                                    toolSpan.update({ input: parsedInput })
+                                    const toolResult = await handleCustomTool(toolCall.function.name, parsedInput, toolCtx)
+                                    toolSpan.update({ output: toolResult })
+                                    return toolResult
+                                },
+                                { asType: 'tool' }
+                            )
+
+                            messages.push({
+                                role: 'tool',
+                                tool_call_id: toolCall.id,
+                                content: JSON.stringify(result),
+                            })
+                        }
+                    }
+
+                    span.update({ output: { summary: finalSummary } })
+                },
+                { asType: 'agent' }
+            )
+    )
 
     console.log(`[agent-session] finished content sync for ${ctx.repoFullName} (session ${sessionId})`)
 }

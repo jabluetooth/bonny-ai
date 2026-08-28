@@ -1,4 +1,5 @@
-import { NextResponse } from 'next/server';
+import { NextResponse, after } from 'next/server';
+import { langfuseSpanProcessor } from '@/instrumentation';
 import { createClient } from '@/lib/supabase-server';
 import { generateLLMResponse } from '@/lib/llm';
 import { getContextForIntent } from '@/lib/chat-context';
@@ -16,6 +17,13 @@ const sendSchema = z.object({
 });
 
 export async function POST(req: Request) {
+    // Flushes any Langfuse spans queued during this request. Serverless
+    // functions can freeze/exit before OTel's background batch export runs,
+    // so this must happen explicitly rather than relying on a timer.
+    after(async () => {
+        await langfuseSpanProcessor?.forceFlush();
+    });
+
     const supabase = await createClient();
 
     // 1. Authenticate User
@@ -140,7 +148,10 @@ export async function POST(req: Request) {
                     : Promise.resolve({ formattedContext: '', documents: [], totalChars: 0, truncated: false }),
             ]);
 
-            aiResponse = await generateLLMResponse(content, context, ragContext.formattedContext);
+            aiResponse = await generateLLMResponse(content, context, ragContext.formattedContext, {
+                sessionId: conversationId,
+                userId: user.id,
+            });
         }
 
         // 7. Save Bot Message

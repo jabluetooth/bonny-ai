@@ -3,6 +3,7 @@ import { verifyGithubSignature } from '@/lib/github-webhook'
 import { createAdminClient } from '@/lib/supabase-admin'
 import { runContentAgentSession } from '@/lib/agent-session'
 import { fetchRepoFile } from '@/lib/github-api'
+import { langfuseSpanProcessor } from '@/instrumentation'
 
 export const dynamic = 'force-dynamic'
 // Agent turns for a single project upsert should be quick, but container
@@ -119,6 +120,11 @@ export async function POST(request: NextRequest) {
             })
         } catch (error) {
             console.error('[github-webhook] background agent run failed:', error)
+        } finally {
+            // The function instance can freeze/exit right after this
+            // callback returns, so flush explicitly rather than relying on
+            // OTel's background batch export timer.
+            await langfuseSpanProcessor?.forceFlush()
         }
     })
 
