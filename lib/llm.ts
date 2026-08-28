@@ -1,5 +1,6 @@
 import OpenAI from 'openai';
 import { observeOpenAI } from '@langfuse/openai';
+import { startActiveObservation, propagateAttributes, type LangfuseSpan } from '@langfuse/tracing';
 
 // --- Data Interfaces ---
 export interface ProjectContext {
@@ -73,104 +74,124 @@ export async function generateLLMResponse(
     ragContext?: string,
     traceContext?: LLMTraceContext
 ): Promise<string> {
-    const apiKey = process.env.GROQ_API_KEY || process.env.OPENAI_API_KEY;
-    const baseURL = process.env.GROQ_API_KEY ? 'https://api.groq.com/openai/v1' : undefined;
+    // One trace per chatbot turn (best practice: a trace is "one
+    // self-contained unit of work"). Root input/output stay human-readable
+    // (just the user message / final reply) so a reviewer can scan the
+    // Traces view at a glance; the full system prompt + RAG context lives on
+    // the nested generation below, captured automatically by observeOpenAI.
+    return propagateAttributes(
+        {
+            traceName: 'portfolio-chat-turn',
+            sessionId: traceContext?.sessionId,
+            userId: traceContext?.userId,
+            tags: ['portfolio-chat'],
+        },
+        () => startActiveObservation('portfolio-chat-turn', (span) => runTurn(span))
+    );
 
-    if (!apiKey) {
-        console.error('LLM Config Error: No API Key found (GROQ_API_KEY or OPENAI_API_KEY)');
-        return "I'm currently unable to process requests due to a configuration error (Missing API Key).";
-    }
+    async function runTurn(span: LangfuseSpan): Promise<string> {
+        span.update({ input: userMessage });
 
-    // Helper to format context as token-efficient text (Pseudo-YAML/Markdown)
-    const formatContext = (data: LLMContext): string => {
-        let output = "";
-        if (data.userName) output += `User Name: ${data.userName}\n`;
+        const apiKey = process.env.GROQ_API_KEY || process.env.OPENAI_API_KEY;
+        const baseURL = process.env.GROQ_API_KEY ? 'https://api.groq.com/openai/v1' : undefined;
 
-        if (data?.skills && data.skills.length > 0) {
-            output += "\n-- MY SKILLS --\n";
-            const grouped = data.skills.reduce((acc, skill) => {
-                const cat = skill.category || 'Other';
-                if (!acc[cat]) acc[cat] = [];
-                acc[cat].push(skill.name);
-                return acc;
-            }, {} as Record<string, string[]>);
-
-            Object.entries(grouped).forEach(([cat, names]) => {
-                output += `${cat}: ${names.join(', ')}\n`;
-            });
+        if (!apiKey) {
+            console.error('LLM Config Error: No API Key found (GROQ_API_KEY or OPENAI_API_KEY)');
+            const reply = "I'm currently unable to process requests due to a configuration error (Missing API Key).";
+            span.update({ output: reply });
+            return reply;
         }
 
-        if (data?.projects && data.projects.length > 0) {
-            output += "\n-- MY PROJECTS --\n";
-            data.projects.forEach(p => {
-                output += `- ${p.title}: ${p.description}\n  Tech: ${p.tech_stack.join(', ')}\n`;
-            });
-        }
+        // Helper to format context as token-efficient text (Pseudo-YAML/Markdown)
+        const formatContext = (data: LLMContext): string => {
+            let output = "";
+            if (data.userName) output += `User Name: ${data.userName}\n`;
 
-        if (data?.experience && data.experience.length > 0) {
-            output += "\n-- EXPERIENCE --\n";
-            data.experience.forEach(e => {
-                output += `- ${e.role} @ ${e.company} (${e.date})\n  ${e.description.join(' ')}\n`;
-            });
-        }
+            if (data?.skills && data.skills.length > 0) {
+                output += "\n-- MY SKILLS --\n";
+                const grouped = data.skills.reduce((acc, skill) => {
+                    const cat = skill.category || 'Other';
+                    if (!acc[cat]) acc[cat] = [];
+                    acc[cat].push(skill.name);
+                    return acc;
+                }, {} as Record<string, string[]>);
 
-        if (data?.about && data.about.length > 0) {
-            output += "\n-- ABOUT ME --\n";
-            data.about.forEach(a => {
-                output += `${a.content}\n`;
-            });
-        }
-
-        // NEW: Interests/Hobbies
-        if (data?.interests && data.interests.length > 0) {
-            output += "\n-- MY HOBBIES & INTERESTS --\n";
-            data.interests.forEach(i => {
-                output += `- ${i.title}${i.description ? `: ${i.description}` : ''}\n`;
-            });
-        }
-
-        // NEW: Vision/Goals/Inspirations
-        if (data?.vision && data.vision.length > 0) {
-            output += "\n-- MY VISION & INSPIRATIONS --\n";
-            data.vision.forEach(v => {
-                output += `- "${v.quote}"${v.author ? ` - ${v.author}` : ''}${v.category ? ` [${v.category}]` : ''}\n`;
-            });
-        }
-
-        // NEW: Background/Journey
-        if (data?.background && data.background.length > 0) {
-            output += "\n-- MY JOURNEY & BACKGROUND --\n";
-            data.background.forEach(b => {
-                output += `- ${b.title}${b.dateRange ? ` (${b.dateRange})` : ''}${b.category ? ` [${b.category}]` : ''}${b.description ? `: ${b.description}` : ''}\n`;
-            });
-        }
-
-        if (data?.contactLinks && data.contactLinks.length > 0) {
-            output += "\n-- CONTACT LINKS --\n";
-            // @ts-expect-error -- contactLinks is dynamically added to LLMContext at runtime
-            data.contactLinks.forEach(l => {
-                output += `- ${l.platform}: ${l.url}\n`;
-            });
-        }
-
-        return output;
-    };
-
-    try {
-        const openai = observeOpenAI(
-            new OpenAI({
-                apiKey: apiKey,
-                baseURL: baseURL,
-            }),
-            {
-                generationName: 'portfolio-chat-response',
-                sessionId: traceContext?.sessionId,
-                userId: traceContext?.userId,
-                tags: ['portfolio-chat', baseURL ? 'groq' : 'openai'],
+                Object.entries(grouped).forEach(([cat, names]) => {
+                    output += `${cat}: ${names.join(', ')}\n`;
+                });
             }
-        );
 
-        const systemPrompt = `
+            if (data?.projects && data.projects.length > 0) {
+                output += "\n-- MY PROJECTS --\n";
+                data.projects.forEach(p => {
+                    output += `- ${p.title}: ${p.description}\n  Tech: ${p.tech_stack.join(', ')}\n`;
+                });
+            }
+
+            if (data?.experience && data.experience.length > 0) {
+                output += "\n-- EXPERIENCE --\n";
+                data.experience.forEach(e => {
+                    output += `- ${e.role} @ ${e.company} (${e.date})\n  ${e.description.join(' ')}\n`;
+                });
+            }
+
+            if (data?.about && data.about.length > 0) {
+                output += "\n-- ABOUT ME --\n";
+                data.about.forEach(a => {
+                    output += `${a.content}\n`;
+                });
+            }
+
+            // NEW: Interests/Hobbies
+            if (data?.interests && data.interests.length > 0) {
+                output += "\n-- MY HOBBIES & INTERESTS --\n";
+                data.interests.forEach(i => {
+                    output += `- ${i.title}${i.description ? `: ${i.description}` : ''}\n`;
+                });
+            }
+
+            // NEW: Vision/Goals/Inspirations
+            if (data?.vision && data.vision.length > 0) {
+                output += "\n-- MY VISION & INSPIRATIONS --\n";
+                data.vision.forEach(v => {
+                    output += `- "${v.quote}"${v.author ? ` - ${v.author}` : ''}${v.category ? ` [${v.category}]` : ''}\n`;
+                });
+            }
+
+            // NEW: Background/Journey
+            if (data?.background && data.background.length > 0) {
+                output += "\n-- MY JOURNEY & BACKGROUND --\n";
+                data.background.forEach(b => {
+                    output += `- ${b.title}${b.dateRange ? ` (${b.dateRange})` : ''}${b.category ? ` [${b.category}]` : ''}${b.description ? `: ${b.description}` : ''}\n`;
+                });
+            }
+
+            if (data?.contactLinks && data.contactLinks.length > 0) {
+                output += "\n-- CONTACT LINKS --\n";
+                // @ts-expect-error -- contactLinks is dynamically added to LLMContext at runtime
+                data.contactLinks.forEach(l => {
+                    output += `- ${l.platform}: ${l.url}\n`;
+                });
+            }
+
+            return output;
+        };
+
+        try {
+            const openai = observeOpenAI(
+                new OpenAI({
+                    apiKey: apiKey,
+                    baseURL: baseURL,
+                }),
+                {
+                    generationName: 'portfolio-chat-response',
+                    sessionId: traceContext?.sessionId,
+                    userId: traceContext?.userId,
+                    tags: ['portfolio-chat', baseURL ? 'groq' : 'openai'],
+                }
+            );
+
+            const systemPrompt = `
 You are **Fil Heinz O. Re La Torre**, a passionate and innovative Software Engineer. 
 This is YOUR portfolio website. You are chatting with a visitor who is interested in your work.
 
@@ -230,19 +251,24 @@ ${formatContext(context)}
 ${ragContext ? `\n**RELEVANT DATABASE MATCHES** (Use this for specific details):\n${ragContext}` : ''}
 `;
 
-        const completion = await openai.chat.completions.create({
-            model: baseURL ? 'openai/gpt-oss-20b' : 'gpt-4o-mini',
-            messages: [
-                { role: 'system', content: systemPrompt },
-                { role: 'user', content: userMessage },
-            ],
-            temperature: 0.7,
-            max_tokens: 500,
-        });
+            const completion = await openai.chat.completions.create({
+                model: baseURL ? 'openai/gpt-oss-20b' : 'gpt-4o-mini',
+                messages: [
+                    { role: 'system', content: systemPrompt },
+                    { role: 'user', content: userMessage },
+                ],
+                temperature: 0.7,
+                max_tokens: 500,
+            });
 
-        return completion.choices[0]?.message?.content || "I'm sorry, I couldn't generate a response.";
-    } catch (error) {
-        console.error('LLM Generation Error:', error);
-        return "I'm temporarily unavailable. Please try again in a moment.";
+            const reply = completion.choices[0]?.message?.content || "I'm sorry, I couldn't generate a response.";
+            span.update({ output: reply });
+            return reply;
+        } catch (error) {
+            console.error('LLM Generation Error:', error);
+            const reply = "I'm temporarily unavailable. Please try again in a moment.";
+            span.update({ output: reply });
+            return reply;
+        }
     }
 }
