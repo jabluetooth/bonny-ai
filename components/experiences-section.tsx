@@ -21,18 +21,9 @@ interface Experience {
     tech_stack: string[];
 }
 
-// Wrapper component handles data fetching and finding the scroll container
+// Wrapper component handles data fetching
 export function ExperiencesSection({ category }: { category?: string }) {
     const [experiences, setExperiences] = useState<Experience[]>([]);
-    const [container, setContainer] = useState<HTMLElement | null>(null);
-
-    useEffect(() => {
-        // Find the chat scroll container by the ID we assigned
-        const scrollElement = document.getElementById("chat-scroll-area");
-        if (scrollElement) {
-            setContainer(scrollElement);
-        }
-    }, []);
 
     useEffect(() => {
         async function fetchExperiences() {
@@ -54,7 +45,7 @@ export function ExperiencesSection({ category }: { category?: string }) {
         ? experiences.filter(exp => exp.category === category || (!exp.category && category === 'work'))
         : experiences;
 
-    if (!container || filteredExperiences.length === 0) {
+    if (filteredExperiences.length === 0) {
         return (
             <div className="w-full max-w-7xl mx-auto px-4 py-20" id="experiences">
                 {/* Title Skeleton */}
@@ -107,17 +98,17 @@ export function ExperiencesSection({ category }: { category?: string }) {
         );
     }
 
-    return <ExperiencesContent container={container} experiences={filteredExperiences} category={category} />;
+    return <ExperiencesContent experiences={filteredExperiences} category={category} />;
 }
 
-// Content component handles the animation, now guaranteed to have a valid container
-function ExperiencesContent({ container, experiences, category }: { container: HTMLElement, experiences: Experience[], category?: string }) {
+// Content component handles the animation, now guaranteed to have data
+function ExperiencesContent({ experiences, category }: { experiences: Experience[], category?: string }) {
     const containerRef = useRef<HTMLDivElement>(null);
 
-    // safe to useScroll here via the container prop
+    // The chat scrolls with the page now (no fixed inner scroll box), so
+    // track window scroll instead of a specific container.
     const { scrollYProgress } = useScroll({
         target: containerRef,
-        container: { current: container },
         offset: ["start center", "end end"]
     });
 
