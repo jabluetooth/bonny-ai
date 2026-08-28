@@ -22,7 +22,7 @@ interface Experience {
 }
 
 // Wrapper component handles data fetching
-export function ExperiencesSection({ category }: { category?: string }) {
+export function ExperiencesSection({ category, scrollContainer }: { category?: string; scrollContainer?: React.RefObject<HTMLElement | null> }) {
     const [experiences, setExperiences] = useState<Experience[]>([]);
 
     useEffect(() => {
@@ -98,17 +98,21 @@ export function ExperiencesSection({ category }: { category?: string }) {
         );
     }
 
-    return <ExperiencesContent experiences={filteredExperiences} category={category} />;
+    return <ExperiencesContent experiences={filteredExperiences} category={category} scrollContainer={scrollContainer} />;
 }
 
 // Content component handles the animation, now guaranteed to have data
-function ExperiencesContent({ experiences, category }: { experiences: Experience[], category?: string }) {
+function ExperiencesContent({ experiences, category, scrollContainer }: { experiences: Experience[], category?: string; scrollContainer?: React.RefObject<HTMLElement | null> }) {
     const containerRef = useRef<HTMLDivElement>(null);
 
-    // The chat scrolls with the page now (no fixed inner scroll box), so
-    // track window scroll instead of a specific container.
+    // Renders inside chatbox's internally-scrolling message list — track
+    // that container's scroll (passed down as a ref, not looked up by DOM
+    // id) so the timeline fill tracks the actual scroll that moves this
+    // element. Falls back to window scroll if no container was passed
+    // (e.g. this component is ever used outside the chat).
     const { scrollYProgress } = useScroll({
         target: containerRef,
+        container: scrollContainer,
         offset: ["start center", "end end"]
     });
 

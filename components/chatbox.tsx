@@ -126,19 +126,20 @@ export function Chatbox() {
     }, [messages]);
 
     const messagesEndRef = useRef<HTMLDivElement>(null);
+    const scrollContainerRef = useRef<HTMLDivElement>(null);
+    const chatInputRef = useRef<HTMLInputElement>(null);
 
     const scrollToBottom = () => {
-        // block: "end" aligns the target at the bottom of the viewport —
-        // without it, scrollIntoView defaults to block: "start" (aligning
-        // to the top), which overshoots past the conversation and the
-        // composer, revealing the footer below.
+        // block: "end" aligns the target at the bottom of its scrolling
+        // ancestor — the message list's own overflow-y-auto box, not the
+        // page (the composer lives outside that box now, so it's always
+        // visible regardless of scroll position).
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
     };
 
-    // Always start at the top of the page (the conversation/hero area), not
-    // wherever the browser happened to leave the scroll position (e.g. its
-    // own scroll restoration on reload) — the footer living further down
-    // the now-normally-scrolling page should never be what greets a visitor.
+    // Always start at the top of the page, not wherever the browser happened
+    // to leave the scroll position (e.g. its own scroll restoration on
+    // reload) — the page can still scroll a little to reach the footer.
     useEffect(() => {
         window.scrollTo(0, 0);
     }, []);
@@ -149,21 +150,21 @@ export function Chatbox() {
     }, [messages]);
 
     // Show scroll-to-bottom button when the user has scrolled away from the
-    // bottom of the page — the conversation now flows in normal page scroll
-    // (not an internally-scrolling box), so this watches window scroll.
+    // bottom of the message list's own scroll box.
     useEffect(() => {
         if (messages.length === 0) return;
 
+        const container = scrollContainerRef.current;
+        if (!container) return;
+
         const handleScroll = () => {
-            const scrollTop = window.scrollY;
-            const scrollHeight = document.documentElement.scrollHeight;
-            const clientHeight = window.innerHeight;
+            const { scrollTop, scrollHeight, clientHeight } = container;
             setShowScrollBtn(scrollHeight - scrollTop - clientHeight > 100);
         };
 
         handleScroll();
-        window.addEventListener('scroll', handleScroll, { passive: true });
-        return () => window.removeEventListener('scroll', handleScroll);
+        container.addEventListener('scroll', handleScroll, { passive: true });
+        return () => container.removeEventListener('scroll', handleScroll);
     }, [messages.length]);
 
     // 1. Loading State (Global / Start)
@@ -226,27 +227,14 @@ export function Chatbox() {
     return (
         <>
             <WelcomeModal />
-            <div className="w-full max-w-4xl flex flex-col animate-in fade-in zoom-in-95 duration-500">
-                {/* Messages Area - flows in normal page scroll, growing the
-                    page's height as the conversation gets longer, instead of
-                    scrolling inside a fixed-height box. */}
-                <div className="relative mb-4">
-                    <AnimatePresence>
-                        {showScrollBtn && (
-                            <motion.button
-                                initial={{ opacity: 0, scale: 0.8 }}
-                                animate={{ opacity: 1, scale: 1 }}
-                                exit={{ opacity: 0, scale: 0.8 }}
-                                transition={{ duration: 0.15 }}
-                                onClick={scrollToBottom}
-                                className="fixed bottom-28 right-4 md:right-8 z-30 h-8 w-8 rounded-full bg-background border border-border shadow-md flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
-                                aria-label="Scroll to bottom"
-                            >
-                                <ChevronDown size={14} />
-                            </motion.button>
-                        )}
-                    </AnimatePresence>
-                    <div className="flex flex-col gap-6 pb-2 px-4">
+            <div className="w-full h-full max-w-4xl flex flex-col min-h-0 animate-in fade-in zoom-in-95 duration-500">
+                {/* Messages Area - a bounded box that scrolls internally, so
+                    a long conversation never grows the page. The composer
+                    below lives outside this box in normal flex flow, so it
+                    never has to overlap or paint over scrolled content. */}
+                <div className="relative flex-1 min-h-0">
+                    <div ref={scrollContainerRef} className="h-full overflow-y-auto">
+                        <div className="flex flex-col gap-6 pb-2 px-4">
                         {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
                         {parsedMessages.map((msg: any, i) => {
                                 // Use pre-parsed data from memoized array
@@ -362,7 +350,7 @@ export function Chatbox() {
                                                             }}
                                                             className="mt-1 w-full grid grid-cols-1 min-w-0 overflow-hidden rounded-xl bg-background/50 backdrop-blur-sm"
                                                         >
-                                                            <ExperiencesSection category={experienceCategory} />
+                                                            <ExperiencesSection category={experienceCategory} scrollContainer={scrollContainerRef} />
                                                         </motion.div>
                                                     )}
 
@@ -453,17 +441,38 @@ export function Chatbox() {
                                     </div>
                                 </div>
                             )}
+                            {/* Invisible marker at the very bottom of the
+                                scrollable list — scrollIntoView's block:
+                                "end" targets this to bring the latest
+                                message flush to the bottom of the box. */}
+                            <div ref={messagesEndRef} />
+                        </div>
                     </div>
+
+                    <AnimatePresence>
+                        {showScrollBtn && (
+                            <motion.button
+                                initial={{ opacity: 0, scale: 0.8 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                exit={{ opacity: 0, scale: 0.8 }}
+                                transition={{ duration: 0.15 }}
+                                onClick={scrollToBottom}
+                                className="absolute bottom-4 right-4 z-30 h-8 w-8 rounded-full bg-background border border-border shadow-md flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+                                aria-label="Scroll to bottom"
+                            >
+                                <ChevronDown size={14} />
+                            </motion.button>
+                        )}
+                    </AnimatePresence>
                 </div>
 
-                {/* Composer - normal document flow, right after the message
-                    list. Deliberately not sticky/fixed: pinning it over the
-                    scrolling conversation meant it had to paint over
-                    whatever scrolled underneath (tried both an opaque and a
-                    frosted-glass backing) to stop message text bleeding
-                    through, which wasn't wanted. Living in normal flow means
-                    there's nothing left for it to overlap. */}
-                <div className="pt-3 pb-6">
+                {/* Composer - a normal flex child below the (bounded,
+                    internally-scrolling) message list, not flex-1, so it
+                    just takes its content height. Since it no longer
+                    overlaps scrolled content, it needs no sticky/fixed
+                    positioning or opaque/frosted backing to stop message
+                    text bleeding through. */}
+                <div className="pt-3 pb-6 shrink-0">
                     {/* Suggestion Chips */}
                     <AnimatePresence>
                         {!dismissedSuggestions && !isChatDisabled && (
@@ -502,6 +511,7 @@ export function Chatbox() {
                             className="relative flex items-center w-full rounded-full transition-all duration-300"
                         >
                             <Input
+                                ref={chatInputRef}
                                 id="chat-input"
                                 name="message"
                                 autoComplete="off"
@@ -510,7 +520,16 @@ export function Chatbox() {
                                 value={input}
                                 onChange={(e) => setInput(e.target.value)}
                                 onFocus={() => {
-                                    setTimeout(scrollToBottom, 300); // Delay for keyboard animation
+                                    // Snap the input itself into view once the
+                                    // on-screen keyboard finishes opening (the
+                                    // delay lets its animation settle first) —
+                                    // it lives outside the message list now,
+                                    // so scrolling the messages to their
+                                    // bottom no longer guarantees the input is
+                                    // visible on its own.
+                                    setTimeout(() => {
+                                        chatInputRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+                                    }, 300);
                                 }}
                                 placeholder={isChatDisabled ? "Message limit reached." : "Type a message..."}
                                 className="w-full h-14 pl-6 pr-16 rounded-full shadow-md border-border/40 bg-background/80 backdrop-blur-md focus-visible:ring-1 focus-visible:ring-primary/30 transition-shadow hover:shadow-lg text-lg relative z-10"
@@ -533,12 +552,6 @@ export function Chatbox() {
                         )}
                     </div>
                 </div>
-                {/* Invisible marker placed after the composer (not right
-                    after the messages) so scrollIntoView's block: "end"
-                    brings the pills/input into view along with the latest
-                    message, instead of aligning just the message and
-                    leaving the composer below the fold. */}
-                <div ref={messagesEndRef} />
             </div>
         </>
     );
