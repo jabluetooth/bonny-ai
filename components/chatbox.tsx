@@ -5,7 +5,7 @@ import { useChat } from "@/components/chat-provider";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Bot, ArrowRight, ChevronDown } from "lucide-react";
+import { Bot, ArrowRight } from "lucide-react";
 import { WelcomeModal } from "./welcome-modal";
 import { SkillsSection } from "@/components/skills-section";
 import { ProjectsSection } from "@/components/projects-section";
@@ -90,7 +90,6 @@ export function Chatbox() {
     const [input, setInput] = useState("");
     const [typedMessages, setTypedMessages] = useState<Set<string | number>>(new Set());
     const [dismissedSuggestions, setDismissedSuggestions] = useState(false);
-    const [showScrollBtn, setShowScrollBtn] = useState(false);
 
     const handleTypingComplete = (id: string | number) => {
         setTypedMessages(prev => {
@@ -148,24 +147,6 @@ export function Chatbox() {
     useEffect(() => {
         scrollToBottom();
     }, [messages]);
-
-    // Show scroll-to-bottom button when the user has scrolled away from the
-    // bottom of the message list's own scroll box.
-    useEffect(() => {
-        if (messages.length === 0) return;
-
-        const container = scrollContainerRef.current;
-        if (!container) return;
-
-        const handleScroll = () => {
-            const { scrollTop, scrollHeight, clientHeight } = container;
-            setShowScrollBtn(scrollHeight - scrollTop - clientHeight > 100);
-        };
-
-        handleScroll();
-        container.addEventListener('scroll', handleScroll, { passive: true });
-        return () => container.removeEventListener('scroll', handleScroll);
-    }, [messages.length]);
 
     // 1. Loading State (Global / Start)
     if (isLoading && messages.length === 0) {
@@ -232,8 +213,8 @@ export function Chatbox() {
                     a long conversation never grows the page. The composer
                     below lives outside this box in normal flex flow, so it
                     never has to overlap or paint over scrolled content. */}
-                <div className="relative flex-1 min-h-0">
-                    <div ref={scrollContainerRef} className="h-full overflow-y-auto">
+                <div className="flex-1 min-h-0">
+                    <div ref={scrollContainerRef} className="h-full overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
                         <div className="flex flex-col gap-6 pb-2 px-4">
                         {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
                         {parsedMessages.map((msg: any, i) => {
@@ -448,22 +429,6 @@ export function Chatbox() {
                             <div ref={messagesEndRef} />
                         </div>
                     </div>
-
-                    <AnimatePresence>
-                        {showScrollBtn && (
-                            <motion.button
-                                initial={{ opacity: 0, scale: 0.8 }}
-                                animate={{ opacity: 1, scale: 1 }}
-                                exit={{ opacity: 0, scale: 0.8 }}
-                                transition={{ duration: 0.15 }}
-                                onClick={scrollToBottom}
-                                className="absolute bottom-4 right-4 z-30 h-8 w-8 rounded-full bg-background border border-border shadow-md flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
-                                aria-label="Scroll to bottom"
-                            >
-                                <ChevronDown size={14} />
-                            </motion.button>
-                        )}
-                    </AnimatePresence>
                 </div>
 
                 {/* Composer - a normal flex child below the (bounded,
