@@ -25,49 +25,62 @@ export const viewport: Viewport = {
   ],
 };
 
-const jsonLd = {
-  "@context": "https://schema.org",
-  "@type": "Person",
-  name: "Fil Heinz O. Re La Torre",
-  url: siteUrl,
-  image: `${siteUrl}/bot-avatar.png`,
-  jobTitle: "Software Engineer",
-  description: "Software Engineer specializing in web development and AI/ML",
-  sameAs: [
-    "https://github.com/filheinzrelatorre",
-    "https://linkedin.com/in/filheinzrelatorre",
-  ],
-  knowsAbout: [
-    "Software Engineering",
-    "Web Development",
-    "React",
-    "Next.js",
-    "TypeScript",
-    "AI/Machine Learning",
-    "Full Stack Development",
-  ],
-};
+const jsonLd = [
+  {
+    "@context": "https://schema.org",
+    "@type": "Person",
+    name: "Fil Heinz O. Re La Torre",
+    url: siteUrl,
+    image: `${siteUrl}/bot-avatar.png`,
+    jobTitle: "Software Engineer",
+    description: "Software Engineer specializing in full-stack web development and AI/ML",
+    sameAs: [
+      "https://github.com/jabluetooth",
+      "https://ph.linkedin.com/in/filheinzrelatorre",
+      "https://www.instagram.com/fil.tower",
+    ],
+    knowsAbout: [
+      "Software Engineering",
+      "Web Development",
+      "React",
+      "Next.js",
+      "TypeScript",
+      "AI/Machine Learning",
+      "Full Stack Development",
+    ],
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    name: "Fil Heinz Portfolio",
+    url: siteUrl,
+    description: "Fil Heinz O. Re La Torre - Software Engineer specializing in full-stack web development and AI/ML. Ask the AI chatbot about my work, skills, and experience.",
+  },
+];
 
 export const metadata: Metadata = {
   title: {
     default: "Fil Heinz",
     template: "%s | Fil Heinz",
   },
-  description: "Check out my portfolio website! AI-powered interactive portfolio of Fil Heinz O. Re La Torre - Software Engineer specializing in web development and AI/ML.",
+  description: "Fil Heinz O. Re La Torre - Software Engineer specializing in full-stack web development and AI/ML. Ask the AI chatbot about my work, skills, and experience.",
   keywords: ["Software Engineer", "Web Developer", "AI", "Machine Learning", "React", "Next.js", "Portfolio", "Fil Heinz", "Full Stack Developer"],
   authors: [{ name: "Fil Heinz O. Re La Torre" }],
   creator: "Fil Heinz O. Re La Torre",
   metadataBase: new URL(siteUrl),
+  alternates: {
+    canonical: "/",
+  },
   openGraph: {
     type: "website",
     locale: "en_US",
     url: siteUrl,
-    title: "Fil Heinz - Software Engineer Portfolio",
-    description: "Check out my portfolio website! AI-powered interactive portfolio showcasing projects, skills, and experience.",
+    title: "Fil Heinz | Talk to My Portfolio",
+    description: "Skip the scrolling. Ask the AI anything about my projects, skills, and experience. Get a real answer back.",
     siteName: "Fil Heinz Portfolio",
     images: [
       {
-        url: `${siteUrl}/bot-avatar.png`,
+        url: `${siteUrl}/og-image.png`,
         width: 1200,
         height: 630,
         alt: "Fil Heinz - Software Engineer Portfolio",
@@ -76,9 +89,9 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Fil Heinz - Software Engineer Portfolio",
-    description: "Check out my portfolio website! AI-powered interactive portfolio showcasing projects, skills, and experience.",
-    images: [`${siteUrl}/bot-avatar.png`],
+    title: "Fil Heinz | Talk to My Portfolio",
+    description: "Skip the scrolling. Ask the AI anything about my projects, skills, and experience. Get a real answer back.",
+    images: [`${siteUrl}/og-image.png`],
     creator: "@filheinz",
   },
   robots: {
