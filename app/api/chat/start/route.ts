@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
+import { allowRequest, RATE_LIMITS } from '@/lib/rate-limit';
 
 export async function POST(req: Request) {
     const cookieStore = await cookies();
@@ -96,6 +97,16 @@ export async function POST(req: Request) {
             }));
         }
     } else {
+        // New conversations are cheap for a script to mint (each one resets
+        // the per-conversation message cap), so they're limited per IP.
+        // Resuming an existing conversation isn't counted.
+        if (!(await allowRequest(req, RATE_LIMITS.chatStart))) {
+            return NextResponse.json(
+                { error: 'Too many new chats from your network. Try again in a little while.' },
+                { status: 429 }
+            );
+        }
+
         // Create new
         const { data: convo, error: convoError } = await supabase
             .from('conversations')
