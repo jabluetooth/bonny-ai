@@ -88,7 +88,6 @@ export function ChromaVideo({
     const glRef = useRef<WebGLRenderingContext | null>(null);
     const programRef = useRef<WebGLProgram | null>(null);
     const textureRef = useRef<WebGLTexture | null>(null);
-    const animationRef = useRef<number | null>(null);
     const [isVideoReady, setIsVideoReady] = useState(false);
 
     // Helper to calculate capped dimensions while maintaining aspect ratio
@@ -104,55 +103,45 @@ export function ChromaVideo({
         }
     };
 
+    // Depend on the colour's numbers, not the object: callers pass an inline
+    // literal, and a new object on every render used to tear the whole GL
+    // pipeline down and rebuild it on each keystroke in the chat input.
+    const keyR = greenColor.r;
+    const keyG = greenColor.g;
+    const keyB = greenColor.b;
+
     useEffect(() => {
         const video = videoRef.current;
         const canvas = canvasRef.current;
         if (!video || !canvas) return;
 
-        // Initialize WebGL
         const gl = canvas.getContext("webgl", { premultipliedAlpha: false, alpha: true });
-        if (!gl) {
-            console.error("WebGL not supported");
-            return;
-        }
+        if (!gl) return; // No WebGL: the poster (if any) stays visible.
         glRef.current = gl;
 
-        // Create shaders
         const vertexShader = createShader(gl, gl.VERTEX_SHADER, vertexShaderSource);
         const fragmentShader = createShader(gl, gl.FRAGMENT_SHADER, fragmentShaderSource);
         if (!vertexShader || !fragmentShader) return;
-
-        // Create program
         const program = createProgram(gl, vertexShader, fragmentShader);
         if (!program) return;
         programRef.current = program;
         gl.useProgram(program);
 
-        // Set up geometry (full-screen quad)
+        // Full-screen quad
         const positionBuffer = gl.createBuffer();
         gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
-        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
-            -1, -1, 1, -1, -1, 1,
-            -1, 1, 1, -1, 1, 1,
-        ]), gl.STATIC_DRAW);
-
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, -1, 1, 1, -1, 1, 1]), gl.STATIC_DRAW);
         const positionLocation = gl.getAttribLocation(program, "a_position");
         gl.enableVertexAttribArray(positionLocation);
         gl.vertexAttribPointer(positionLocation, 2, gl.FLOAT, false, 0, 0);
 
-        // Set up texture coordinates
         const texCoordBuffer = gl.createBuffer();
         gl.bindBuffer(gl.ARRAY_BUFFER, texCoordBuffer);
-        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
-            0, 1, 1, 1, 0, 0,
-            0, 0, 1, 1, 1, 0,
-        ]), gl.STATIC_DRAW);
-
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([0, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 0]), gl.STATIC_DRAW);
         const texCoordLocation = gl.getAttribLocation(program, "a_texCoord");
         gl.enableVertexAttribArray(texCoordLocation);
         gl.vertexAttribPointer(texCoordLocation, 2, gl.FLOAT, false, 0, 0);
 
-        // Create texture
         const texture = gl.createTexture();
         textureRef.current = texture;
         gl.bindTexture(gl.TEXTURE_2D, texture);
@@ -161,78 +150,104 @@ export function ChromaVideo({
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
 
-        // Enable blending for transparency
         gl.enable(gl.BLEND);
         gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
 
-        // Convert parameters
-        const similarityNorm = (similarity / 100) * 1.732; // Max RGB distance is sqrt(3)
-        const smoothnessNorm = (smoothness / 100) * 0.5;
+        gl.uniform3f(gl.getUniformLocation(program, "u_keyColor"), keyR / 255, keyG / 255, keyB / 255);
+        gl.uniform1f(gl.getUniformLocation(program, "u_similarity"), (similarity / 100) * 1.732); // max RGB distance is sqrt(3)
+        gl.uniform1f(gl.getUniformLocation(program, "u_smoothness"), (smoothness / 100) * 0.5);
 
-        // Set uniforms
-        const keyColorLocation = gl.getUniformLocation(program, "u_keyColor");
-        const similarityLocation = gl.getUniformLocation(program, "u_similarity");
-        const smoothnessLocation = gl.getUniformLocation(program, "u_smoothness");
+        const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        let running = false;
+        let disposed = false;
+        let readyReported = false;
+        let rafId: number | null = null;
+        let vfcId: number | null = null;
+        // requestVideoFrameCallback draws once per decoded frame (~30/s)
+        // instead of once per display frame (60+/s). Fall back to rAF.
+        const hasVFC = "requestVideoFrameCallback" in HTMLVideoElement.prototype;
 
-        gl.uniform3f(keyColorLocation, greenColor.r / 255, greenColor.g / 255, greenColor.b / 255);
-        gl.uniform1f(similarityLocation, similarityNorm);
-        gl.uniform1f(smoothnessLocation, smoothnessNorm);
-
-        const render = () => {
-            if (!video.paused && !video.ended && video.readyState >= 2) {
-                // Update canvas size if needed (capped by maxResolution)
-                const size = getCanvasSize(video.videoWidth, video.videoHeight);
-                if (canvas.width !== size.width || canvas.height !== size.height) {
-                    canvas.width = size.width;
-                    canvas.height = size.height;
-                    gl.viewport(0, 0, canvas.width, canvas.height);
-                }
-
-                // Upload video frame to texture
-                gl.bindTexture(gl.TEXTURE_2D, texture);
-                gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, video);
-
-                // Clear and draw
-                gl.clearColor(0, 0, 0, 0);
-                gl.clear(gl.COLOR_BUFFER_BIT);
-                gl.drawArrays(gl.TRIANGLES, 0, 6);
-
-                // Signal that video is rendering
+        const draw = () => {
+            if (video.readyState < 2) return;
+            const size = getCanvasSize(video.videoWidth, video.videoHeight);
+            if (canvas.width !== size.width || canvas.height !== size.height) {
+                canvas.width = size.width;
+                canvas.height = size.height;
+                gl.viewport(0, 0, canvas.width, canvas.height);
+            }
+            gl.bindTexture(gl.TEXTURE_2D, texture);
+            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, video);
+            gl.clearColor(0, 0, 0, 0);
+            gl.clear(gl.COLOR_BUFFER_BIT);
+            gl.drawArrays(gl.TRIANGLES, 0, 6);
+            if (!readyReported) {
+                readyReported = true;
                 setIsVideoReady(true);
             }
-            animationRef.current = requestAnimationFrame(render);
         };
 
-        const handleCanPlay = () => {
-            const size = getCanvasSize(video.videoWidth, video.videoHeight);
-            canvas.width = size.width;
-            canvas.height = size.height;
-            gl.viewport(0, 0, canvas.width, canvas.height);
-            render();
+        const tick = () => {
+            if (!running || disposed) return;
+            draw();
+            if (hasVFC) vfcId = video.requestVideoFrameCallback(tick);
+            else rafId = requestAnimationFrame(tick);
         };
 
-        video.addEventListener("canplay", handleCanPlay);
-        video.addEventListener("playing", handleCanPlay);
+        // Exactly one loop at a time, however many media events fire.
+        const start = () => {
+            if (running || disposed) return;
+            running = true;
+            tick();
+        };
+        const stop = () => {
+            running = false;
+            if (rafId !== null) cancelAnimationFrame(rafId);
+            if (vfcId !== null && hasVFC) video.cancelVideoFrameCallback(vfcId);
+            rafId = vfcId = null;
+        };
 
-        // Start if already ready
-        if (video.readyState >= 3) {
-            handleCanPlay();
-        }
+        const onPlaying = () => start();
+        const onPause = () => stop();
+        // Reduced motion: show one keyed still frame instead of a loop.
+        const onLoaded = () => {
+            draw();
+            if (reduceMotion) video.pause();
+        };
 
-        // iOS autoplay workaround - try to play on load
-        video.play().catch(() => {
-            // Autoplay blocked - will start on user interaction
+        video.addEventListener("playing", onPlaying);
+        video.addEventListener("pause", onPause);
+        video.addEventListener("loadeddata", onLoaded);
+        if (video.readyState >= 2) onLoaded();
+
+        // Only play while on screen.
+        const observer = new IntersectionObserver(([entry]) => {
+            if (reduceMotion) return;
+            if (entry.isIntersecting) video.play().catch(() => { /* autoplay blocked; stays on poster */ });
+            else video.pause();
         });
+        observer.observe(canvas);
+
+        if (!reduceMotion) video.play().catch(() => { /* autoplay blocked */ });
+        if (!video.paused) start();
 
         return () => {
-            video.removeEventListener("canplay", handleCanPlay);
-            video.removeEventListener("playing", handleCanPlay);
-            if (animationRef.current) {
-                cancelAnimationFrame(animationRef.current);
-            }
+            disposed = true;
+            stop();
+            observer.disconnect();
+            video.removeEventListener("playing", onPlaying);
+            video.removeEventListener("pause", onPause);
+            video.removeEventListener("loadeddata", onLoaded);
+            gl.deleteTexture(texture);
+            gl.deleteBuffer(positionBuffer);
+            gl.deleteBuffer(texCoordBuffer);
+            gl.deleteProgram(program);
+            gl.deleteShader(vertexShader);
+            gl.deleteShader(fragmentShader);
             setIsVideoReady(false);
         };
-    }, [similarity, smoothness, greenColor, maxResolution]);
+        // getCanvasSize only reads maxResolution, which is listed.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [similarity, smoothness, keyR, keyG, keyB, maxResolution]);
 
     return (
         <div className={className} style={{ position: "relative" }}>
@@ -240,7 +255,8 @@ export function ChromaVideo({
                 ref={videoRef}
                 src={src}
                 poster={poster}
-                autoPlay
+                preload="auto"
+                aria-hidden="true"
                 loop
                 muted
                 playsInline
@@ -248,6 +264,8 @@ export function ChromaVideo({
             />
             {/* Poster fallback - shown until video is ready */}
             {poster && !isVideoReady && (
+                // Tiny static fallback shown only until the first frame draws.
+                // eslint-disable-next-line @next/next/no-img-element
                 <img
                     src={poster}
                     alt=""

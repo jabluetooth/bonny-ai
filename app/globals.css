@@ -215,3 +215,14 @@
 @utility animate-accordion-up {
   animation: accordion-up 0.2s ease-out;
 }
+/* Reduced motion: keep state changes, drop the movement. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

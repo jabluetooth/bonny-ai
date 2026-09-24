@@ -903,14 +903,42 @@ const useFluidCursor = () => {
     let lastUpdateTime = Date.now();
     let colorUpdateTimer = 0.0;
 
+    // Idle pause: the simulation used to run every frame forever, even with
+    // the pointer still, which costs battery and competes with the hero video
+    // for the GPU. The dye fades within ~2s (DENSITY_DISSIPATION), so the loop
+    // stops a few seconds after the last input, clears the canvas, and starts
+    // again on the next pointer event.
+    const IDLE_MS = 4000;
+    let lastInputTime = Date.now();
+    let loopRunning = true;
+
+    function wake() {
+        lastInputTime = Date.now();
+        if (!loopRunning) {
+            loopRunning = true;
+            lastUpdateTime = Date.now();
+            requestAnimationFrame(update);
+        }
+    }
+    window.addEventListener('mousemove', wake, { passive: true });
+    window.addEventListener('mousedown', wake, { passive: true });
+    window.addEventListener('touchstart', wake, { passive: true });
+    window.addEventListener('touchmove', wake, { passive: true });
+
     function update() {
         const dt = calcDeltaTime();
-        // console.log(dt)
         if (resizeCanvas()) initFramebuffers();
         updateColors(dt);
         applyInputs();
         step(dt);
         render(null);
+        if (Date.now() - lastInputTime > IDLE_MS) {
+            loopRunning = false;
+            gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+            gl.clearColor(0, 0, 0, 0);
+            gl.clear(gl.COLOR_BUFFER_BIT);
+            return;
+        }
         requestAnimationFrame(update);
     }
 
