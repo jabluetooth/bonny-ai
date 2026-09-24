@@ -1,11 +1,12 @@
-import { createClient } from '@/lib/supabase-server';
+import { createPublicClient as createClient } from '@/lib/supabase-public';
 import { NextResponse } from 'next/server';
 
-export const dynamic = 'force-dynamic';
+
+// Public content, cached for five minutes (see lib/supabase-public.ts).
+export const revalidate = 300;
 
 export async function GET() {
     const supabase = await createClient();
-    console.log("API: Fetching vision cards...");
 
     try {
         const { data, error } = await supabase
@@ -14,51 +15,14 @@ export async function GET() {
             .order('created_at', { ascending: true });
 
         if (error) {
-            console.error("Supabase error:", error);
-            // Fallback to mock data if table doesn't exist yet
-            return NextResponse.json({ data: fallbackData });
-        }
-
-        if (!data || data.length === 0) {
-            return NextResponse.json({ data: fallbackData });
+            console.error('[about/vision]', error.message);
+            return NextResponse.json({ data: [] });
         }
 
         return NextResponse.json({ data });
     } catch (err) {
         console.error("Internal Server Error:", err);
-        return NextResponse.json({ data: fallbackData });
+        return NextResponse.json({ data: [] });
     }
 }
 
-const fallbackData = [
-    {
-        quote: "The future belongs to those who believe in the beauty of their dreams.",
-        name: "Eleanor Roosevelt",
-        title: "Inspiration",
-        row_position: "top"
-    },
-    {
-        quote: "Artificial intelligence is not a substitute for human intelligence; it is a tool to amplify human creativity and ingenuity.",
-        name: "Fei-Fei Li",
-        title: "AI & Humanity",
-        row_position: "top"
-    },
-    {
-        quote: "Any sufficiently advanced technology is indistinguishable from magic.",
-        name: "Arthur C. Clarke",
-        title: "Technology",
-        row_position: "top"
-    },
-    {
-        quote: "The best way to predict the future is to invent it.",
-        name: "Alan Kay",
-        title: "Computed Science",
-        row_position: "bottom"
-    },
-    {
-        quote: "Creativity is intelligence having fun.",
-        name: "Albert Einstein",
-        title: "Innovation",
-        row_position: "bottom"
-    }
-];
