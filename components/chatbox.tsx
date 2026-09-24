@@ -6,11 +6,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Bot, ArrowRight } from "lucide-react";
-import { WelcomeModal } from "./welcome-modal";
 import { SkillsSection } from "@/components/skills-section";
 import { ProjectsSection } from "@/components/projects-section";
 import { AboutSection } from "@/components/about-section";
-import { LoadingScreen } from "@/components/loading-screen";
 import { InterestsSection } from "@/components/interests-section";
 import { VisionSection } from "@/components/vision-section";
 
@@ -66,7 +64,10 @@ function getMessageData(content: string): ParsedMessageData {
     const projectCategory = projectMatch ? projectMatch[1].toLowerCase() : undefined;
 
     // Clean the tag out of the displayed text (remove all types of tags)
-    let cleanContent = content.replace(/\[\[(?:SHOW_)?SKILL:\s*.*?\]\]/g, "");
+    // While a reply streams in, a tag can arrive in pieces ("[[SHOW_SK").
+    // Drop an unfinished tag at the very end so it never flashes as text.
+    let cleanContent = content.replace(/\[\[[^\]]*\]?$/, "");
+    cleanContent = cleanContent.replace(/\[\[(?:SHOW_)?SKILL:\s*.*?\]\]/g, "");
     cleanContent = cleanContent.replace(/\[\[(?:SHOW_)?CATEGORY:\s*.*?\]\]/g, "");
     cleanContent = cleanContent.replace(/\[\[(?:SHOW_)?EXPERIENCE:\s*.*?\]\]/g, "");
     cleanContent = cleanContent.replace(/\[\[(?:SHOW_)?PROJECTS:\s*.*?\]\]/g, "");
@@ -86,7 +87,7 @@ function getMessageData(content: string): ParsedMessageData {
 }
 
 export function Chatbox() {
-    const { conversationId, sendMessage, messages, isLoading, isWelcomeOpen, isChatDisabled } = useChat();
+    const { sendMessage, messages, isLoading, isChatDisabled } = useChat();
     const [input, setInput] = useState("");
     const [typedMessages, setTypedMessages] = useState<Set<string | number>>(new Set());
     const [dismissedSuggestions, setDismissedSuggestions] = useState(false);
@@ -148,16 +149,10 @@ export function Chatbox() {
         scrollToBottom();
     }, [messages]);
 
-    // 1. Loading State (Global / Start)
-    if (isLoading && messages.length === 0) {
-        return <LoadingScreen />;
-    }
-
     // 2. Hero / Initial State
     if (messages.length === 0) {
         return (
             <>
-                <WelcomeModal />
 
                 <div className="relative w-full max-w-2xl aspect-video mb-0 translate-y-12 -mb-12">
                     <ChromaVideo
@@ -187,12 +182,12 @@ export function Chatbox() {
                             onChange={(e) => setInput(e.target.value)}
                             placeholder={isChatDisabled ? "Message limit reached." : "Ask me anything..."}
                             className="w-full h-14 pl-6 pr-16 rounded-full text-lg shadow-lg border-muted-foreground/20 bg-background focus-visible:ring-1 focus-visible:ring-primary/50 transition-all hover:shadow-xl relative z-10"
-                            disabled={!conversationId || isLoading || isChatDisabled}
+                            disabled={isLoading || isChatDisabled}
                         />
                         <Button
                             type="submit"
                             size="icon"
-                            disabled={!conversationId || isLoading || !input.trim() || isChatDisabled}
+                            disabled={isLoading || !input.trim() || isChatDisabled}
                             className="absolute right-1.5 h-11 w-11 rounded-full bg-blue-500 hover:bg-blue-600 text-white shadow-sm transition-transform hover:scale-105 active:scale-95 z-20"
                         >
                             <ArrowRight size={20} />
@@ -207,7 +202,6 @@ export function Chatbox() {
     // 2. Chat Interface State (Minimalist)
     return (
         <>
-            <WelcomeModal />
             <div className="w-full h-full max-w-4xl flex flex-col min-h-0 animate-in fade-in zoom-in-95 duration-500">
                 {/* Messages Area - a bounded box that scrolls internally, so
                     a long conversation never grows the page. The composer
@@ -227,7 +221,12 @@ export function Chatbox() {
 
                                 const messageId = msg.id || i;
                                 const hasTyped = typedMessages.has(messageId);
-                                const shouldAnimate = isLatestBotMessage && !hasTyped;
+                                // Streamed replies already arrive a few words at a time, so
+                                // they render as-is; the typing effect is only for replies
+                                // that arrive whole (static answers).
+                                const isStreamed = typeof msg.id === 'string' && msg.id.startsWith('bot-');
+                                const isStreaming = !!msg.streaming;
+                                const shouldAnimate = isLatestBotMessage && !hasTyped && !isStreamed;
 
                                 // Heuristic for About Section if not explicitly tagged
                                 const prevMsg = parsedMessages[i - 1];
@@ -273,7 +272,7 @@ export function Chatbox() {
                                             </div>
 
                                             {/* Component Display - Outside Message Bubble */}
-                                            {!shouldAnimate && (
+                                            {!shouldAnimate && !isStreaming && (
                                                 <>
                                                     {/* 1. Explicit Component (e.g. forced via code) */}
                                                     {msg.component && (
@@ -455,7 +454,7 @@ export function Chatbox() {
                                             key={s}
                                             type="button"
                                             onClick={() => handleSuggestion(s)}
-                                            disabled={isLoading || !conversationId}
+                                            disabled={isLoading}
                                             className="shrink-0 rounded-full border border-border/40 bg-background/60 backdrop-blur-sm px-3.5 py-1.5 text-xs text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-all duration-150 disabled:opacity-30 disabled:cursor-not-allowed whitespace-nowrap"
                                         >
                                             {s}
@@ -498,12 +497,12 @@ export function Chatbox() {
                                 }}
                                 placeholder={isChatDisabled ? "Message limit reached." : "Type a message..."}
                                 className="w-full h-14 pl-6 pr-16 rounded-full shadow-md border-border/40 bg-background/80 backdrop-blur-md focus-visible:ring-1 focus-visible:ring-primary/30 transition-shadow hover:shadow-lg text-lg relative z-10"
-                                disabled={!conversationId || isLoading || isChatDisabled}
+                                disabled={isLoading || isChatDisabled}
                             />
                             <Button
                                 type="submit"
                                 size="icon"
-                                disabled={!conversationId || isLoading || !input.trim() || isChatDisabled}
+                                disabled={isLoading || !input.trim() || isChatDisabled}
                                 className="absolute right-1.5 h-11 w-11 rounded-full bg-blue-500 hover:bg-blue-600 text-white shadow-sm transition-transform hover:scale-105 active:scale-95 z-20"
                             >
                                 <ArrowRight size={20} />

@@ -39,7 +39,7 @@ import { VisitorCounter } from "@/components/visitor-counter"
 import { Status, StatusIndicator, StatusLabel } from "@/components/ui/shadcn-io/status"
 
 interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
-    onNavClick: (query: string, intent?: string) => void
+    onNavClick: (query: string, intent?: string, href?: string) => void
 }
 
 export function AppSidebar({ onNavClick, ...props }: AppSidebarProps) {
@@ -49,7 +49,7 @@ export function AppSidebar({ onNavClick, ...props }: AppSidebarProps) {
                 <div className="flex items-center gap-3 px-4 py-2">
                     <Avatar
                         className="h-10 w-10 cursor-pointer hover:scale-105 transition-transform rounded-none bg-transparent"
-                        onClick={() => onNavClick("Hello! Tell me about this portfolio.")}
+                        onClick={() => onNavClick("Hello! Tell me about this portfolio.", undefined, "/")}
                     >
                         <AvatarImage src="/bot-avatar.png" alt="Bonny AI" />
                         <AvatarFallback>AI</AvatarFallback>
@@ -79,19 +79,19 @@ export function AppSidebar({ onNavClick, ...props }: AppSidebarProps) {
                                 <CollapsibleContent>
                                     <SidebarMenuSub>
                                         <SidebarMenuSubItem>
-                                            <SidebarMenuSubButton onClick={() => onNavClick("Tell me about yourself.")}>
+                                            <SidebarMenuSubButton onClick={() => onNavClick("Tell me about yourself.", undefined, "/about")}>
                                                 <User />
                                                 <span>Author</span>
                                             </SidebarMenuSubButton>
                                         </SidebarMenuSubItem>
                                         <SidebarMenuSubItem>
-                                            <SidebarMenuSubButton onClick={() => onNavClick("What is your professional background?", ChatIntents.BACKGROUND)}>
+                                            <SidebarMenuSubButton onClick={() => onNavClick("What is your professional background?", ChatIntents.BACKGROUND, "/about#background-heading")}>
                                                 <Briefcase />
                                                 <span>Background</span>
                                             </SidebarMenuSubButton>
                                         </SidebarMenuSubItem>
                                         <SidebarMenuSubItem>
-                                            <SidebarMenuSubButton onClick={() => onNavClick("What are your interests outside of work?", ChatIntents.INTERESTS)}>
+                                            <SidebarMenuSubButton onClick={() => onNavClick("What are your interests outside of work?", ChatIntents.INTERESTS, "/about#interests-heading")}>
                                                 <Palette />
                                                 <span>Interests</span>
                                             </SidebarMenuSubButton>
@@ -113,13 +113,13 @@ export function AppSidebar({ onNavClick, ...props }: AppSidebarProps) {
                                 <CollapsibleContent>
                                     <SidebarMenuSub>
                                         <SidebarMenuSubItem>
-                                            <SidebarMenuSubButton onClick={() => onNavClick("Show me your web development projects.", ChatIntents.PROJECTS_WEB)}>
+                                            <SidebarMenuSubButton onClick={() => onNavClick("Show me your web development projects.", ChatIntents.PROJECTS_WEB, "/projects")}>
                                                 <Code2 />
                                                 <span>Web Development</span>
                                             </SidebarMenuSubButton>
                                         </SidebarMenuSubItem>
                                         <SidebarMenuSubItem>
-                                            <SidebarMenuSubButton onClick={() => onNavClick("Tell me about your AI and Machine Learning projects.", ChatIntents.PROJECTS_AI)}>
+                                            <SidebarMenuSubButton onClick={() => onNavClick("Tell me about your AI and Machine Learning projects.", ChatIntents.PROJECTS_AI, "/projects")}>
                                                 <Cpu />
                                                 <span>AI & ML</span>
                                             </SidebarMenuSubButton>
@@ -141,25 +141,25 @@ export function AppSidebar({ onNavClick, ...props }: AppSidebarProps) {
                                 <CollapsibleContent>
                                     <SidebarMenuSub>
                                         <SidebarMenuSubItem>
-                                            <SidebarMenuSubButton onClick={() => onNavClick("What are your Frontend Development skills?", ChatIntents.SKILLS_FRONTEND)}>
+                                            <SidebarMenuSubButton onClick={() => onNavClick("What are your Frontend Development skills?", ChatIntents.SKILLS_FRONTEND, "/skills")}>
                                                 <Code2 />
                                                 <span>Frontend</span>
                                             </SidebarMenuSubButton>
                                         </SidebarMenuSubItem>
                                         <SidebarMenuSubItem>
-                                            <SidebarMenuSubButton onClick={() => onNavClick("What are your Backend Development skills?", ChatIntents.SKILLS_BACKEND)}>
+                                            <SidebarMenuSubButton onClick={() => onNavClick("What are your Backend Development skills?", ChatIntents.SKILLS_BACKEND, "/skills")}>
                                                 <Database />
                                                 <span>Backend</span>
                                             </SidebarMenuSubButton>
                                         </SidebarMenuSubItem>
                                         <SidebarMenuSubItem>
-                                            <SidebarMenuSubButton onClick={() => onNavClick("What are your Design skills?", ChatIntents.SKILLS_DESIGN)}>
+                                            <SidebarMenuSubButton onClick={() => onNavClick("What are your Design skills?", ChatIntents.SKILLS_DESIGN, "/skills")}>
                                                 <Palette />
                                                 <span>Design</span>
                                             </SidebarMenuSubButton>
                                         </SidebarMenuSubItem>
                                         <SidebarMenuSubItem>
-                                            <SidebarMenuSubButton onClick={() => onNavClick("What are your Other Skills?", ChatIntents.SKILLS_OTHER)}>
+                                            <SidebarMenuSubButton onClick={() => onNavClick("What are your Other Skills?", ChatIntents.SKILLS_OTHER, "/skills")}>
                                                 <Layers />
                                                 <span>Other</span>
                                             </SidebarMenuSubButton>
@@ -181,13 +181,13 @@ export function AppSidebar({ onNavClick, ...props }: AppSidebarProps) {
                                 <CollapsibleContent>
                                     <SidebarMenuSub>
                                         <SidebarMenuSubItem>
-                                            <SidebarMenuSubButton onClick={() => onNavClick("Tell me about your work history.", ChatIntents.WORK_HISTORY)}>
+                                            <SidebarMenuSubButton onClick={() => onNavClick("Tell me about your work history.", ChatIntents.WORK_HISTORY, "/experiences")}>
                                                 <Briefcase />
                                                 <span>Work History</span>
                                             </SidebarMenuSubButton>
                                         </SidebarMenuSubItem>
                                         <SidebarMenuSubItem>
-                                            <SidebarMenuSubButton onClick={() => onNavClick("What is your educational background?", ChatIntents.EDUCATION)}>
+                                            <SidebarMenuSubButton onClick={() => onNavClick("What is your educational background?", ChatIntents.EDUCATION, "/experiences")}>
                                                 <GraduationCap />
                                                 <span>Education</span>
                                             </SidebarMenuSubButton>
