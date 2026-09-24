@@ -30,7 +30,6 @@ import {
     Code2,
     Palette,
     Database,
-    Users,
     ChevronDown,
     ChevronUp,
     Layers,
@@ -42,7 +41,6 @@ import { ProgressiveBlur } from "@/components/ui/progressive-blur"
 import { toast } from "sonner"
 import { AuthorCard } from "@/components/author-card"
 import {
-    SidebarProvider,
     SidebarTrigger,
 } from "@/components/ui/sidebar"
 import { AppSidebar } from "@/components/app-sidebar"

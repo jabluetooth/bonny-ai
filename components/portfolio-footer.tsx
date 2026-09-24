@@ -3,7 +3,7 @@
 import { supabase } from "@/lib/supabase-client"
 import { Status, StatusLabel } from "@/components/ui/shadcn-io/status"
 import { VisitorCounter } from './visitor-counter';
-import { Github, Linkedin, Instagram, Globe } from "lucide-react"
+import { Github, Linkedin, Instagram } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
 import { useState, useEffect } from 'react';
@@ -12,7 +12,6 @@ const SOCIAL_LINKS = [
     { label: "GitHub", href: "https://github.com/jabluetooth", Icon: Github },
     { label: "LinkedIn", href: "https://ph.linkedin.com/in/filheinzrelatorre", Icon: Linkedin },
     { label: "Instagram", href: "https://www.instagram.com/fil.tower", Icon: Instagram },
-    { label: "Portfolio", href: "https://www.filheinzrelatorre.com/", Icon: Globe },
 ]
 
 const EXPLORE_LINKS = [
@@ -73,7 +72,7 @@ export function SiteFooter() {
                             height={28}
                             className="h-7 w-7 rounded-full object-cover"
                         />
-                        <span className="text-xl font-bold tracking-tight">Bonny-Ai</span>
+                        <span className="text-xl font-bold tracking-tight">Bonny-AI</span>
                     </div>
 
                     <div className="flex flex-col gap-3">
@@ -103,11 +102,11 @@ export function SiteFooter() {
                                     <span className={`absolute inline-flex h-full w-full animate-ping rounded-full opacity-75 ${config.color}`}></span>
                                     <span className={`relative inline-flex h-2 w-2 rounded-full ${config.color}`}></span>
                                 </span>
-                                <StatusLabel className="text-xs">{config.text}</StatusLabel>
+                                <StatusLabel className="text-xs text-secondary-foreground">{config.text}</StatusLabel>
                             </Status>
                         </div>
 
-                        <p className="text-xs opacity-65">&copy; {year} Bonny AI by Fil Heinz Re La Torre</p>
+                        <p className="text-xs opacity-65">&copy; {year} Bonny-AI by Fil Heinz Re La Torre</p>
                     </div>
                 </div>
 

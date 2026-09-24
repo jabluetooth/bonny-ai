@@ -23,7 +23,7 @@ export const AuthorCard = React.forwardRef<HTMLAnchorElement, React.ComponentPro
     useEffect(() => {
         async function fetchProfile() {
             try {
-                const { data, error } = await supabase
+                const { data } = await supabase
                     .from('author_profiles')
                     .select('description, images')
                     .eq('is_active', true)
@@ -41,20 +41,19 @@ export const AuthorCard = React.forwardRef<HTMLAnchorElement, React.ComponentPro
         fetchProfile();
     }, []);
 
-    const images = profile?.images && profile.images.length > 0
-        ? profile.images
-        : ["https://images.unsplash.com/photo-1510915228340-29c85a43dcfe?q=80&w=800&auto=format&fit=crop"]; // Fallback
+    // Falls back to your own avatar, never a stock photo of someone else.
+    const images: string[] = profile?.images && profile.images.length > 0 ? profile.images : ["/icon-512.png"];
+    const imageCount = images.length;
 
     useEffect(() => {
-        if (images.length <= 1) return;
+        if (imageCount <= 1) return;
 
-        console.log("Starting animation with", images.length, "images");
 
         const interval = setInterval(() => {
-            setCurrentImageIndex((prev) => (prev + 1) % images.length)
+            setCurrentImageIndex((prev) => (prev + 1) % imageCount)
         }, 2000);
         return () => clearInterval(interval)
-    }, [images])
+    }, [imageCount])
 
     const handleNavClick = async (query: string, intent?: string) => {
         let activeId = conversationId;

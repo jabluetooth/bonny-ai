@@ -29,8 +29,8 @@ export default async function SkillsPage() {
                     <p className="text-muted-foreground">Skills coming soon.</p>
                 ) : (
                     categories.map((category) => (
-                        <section key={category.title} aria-labelledby={`${category.title}-heading`}>
-                            <h2 id={`${category.title}-heading`} className="text-xl font-semibold mb-4">
+                        <section key={category.title} aria-labelledby={`${slug(category.title)}-heading`}>
+                            <h2 id={`${slug(category.title)}-heading`} className="text-xl font-semibold mb-4">
                                 {category.title}
                             </h2>
                             <ul className="flex flex-wrap gap-2">
@@ -49,4 +49,9 @@ export default async function SkillsPage() {
             </article>
         </PortfolioPageShell>
     );
+}
+
+/** A title as a valid id (aria-labelledby is a space-separated list, so ids can't contain spaces). */
+function slug(text: string) {
+    return text.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
 }

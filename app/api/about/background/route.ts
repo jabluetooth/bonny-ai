@@ -7,7 +7,6 @@ export const revalidate = 300;
 
 export async function GET() {
     const supabase = await createClient();
-    console.log("API: Fetching background cards...");
 
     try {
         const { data, error } = await supabase
@@ -15,7 +14,6 @@ export async function GET() {
             .select('*')
             .order('display_order', { ascending: true });
 
-        console.log(`API: Found ${data?.length || 0} cards`);
 
         if (error) {
             console.error("Supabase error:", error);

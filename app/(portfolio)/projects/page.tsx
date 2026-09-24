@@ -35,10 +35,10 @@ export default async function ProjectsPage() {
                             <section
                                 key={project.title}
                                 className="rounded-xl border border-border bg-card/50 p-6"
-                                aria-labelledby={`${project.title}-heading`}
+                                aria-labelledby={`${slug(project.title)}-heading`}
                             >
                                 <div className="flex flex-wrap items-start justify-between gap-4 mb-3">
-                                    <h2 id={`${project.title}-heading`} className="text-xl font-semibold">
+                                    <h2 id={`${slug(project.title)}-heading`} className="text-xl font-semibold">
                                         {project.title}
                                     </h2>
                                     <div className="flex items-center gap-3">
@@ -100,4 +100,9 @@ export default async function ProjectsPage() {
             </article>
         </PortfolioPageShell>
     );
+}
+
+/** A title as a valid id (aria-labelledby is a space-separated list, so ids can't contain spaces). */
+function slug(text: string) {
+    return text.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
 }

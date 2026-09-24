@@ -42,13 +42,15 @@ Ask it about a specific technology, a past project, or how a particular system w
 
 ## How it works
 
+Replies stream token by token, so answers start appearing within a few hundred milliseconds. The LLM path is rate-limited per IP, and the contact form works without a chat session (exact origin check, honeypot, per-IP limit).
+
 The chat pipeline does intent detection on each message first, deciding whether the response needs to pull specific context (a project, a skill set) from Postgres before generating an answer, and whether that response should also trigger a UI component. This keeps responses grounded in real stored data rather than the model inventing details about my own background, and keeps AI usage balanced between deterministic lookups and generative phrasing rather than defaulting to "just ask the LLM everything."
 
 ## Tech stack
 
 | Layer | Choice |
 |---|---|
-| Framework | Next.js 15, React, TypeScript |
+| Framework | Next.js 16, React 19, TypeScript |
 | Styling | Tailwind CSS, shadcn/ui, Framer Motion |
 | Database | Supabase (PostgreSQL, Auth, RLS) |
 | LLM | Groq |
@@ -60,9 +62,16 @@ The chat pipeline does intent detection on each message first, deciding whether 
 git clone https://github.com/jabluetooth/bonny-ai.git
 cd bonny-ai
 npm install
-cp .env.example .env
+cp .env.example .env.local   # fill in the values
 npm run dev
 ```
+
+**Database.** The SQL in [`supabase/sql/`](supabase/sql/) is meant to be run in the Supabase SQL editor:
+
+- `content-agent.sql`: tables for the GitHub content agent.
+- `security-hardening.sql`: admin-only writes on every content table, plus the per-IP rate-limit function. Replace `YOUR_ADMIN_EMAIL` with your `MY_EMAIL` value first; the script refuses to run with the placeholder. Every visitor gets an anonymous Supabase session to chat, and anonymous users carry the `authenticated` role, so this is what stops a visitor from editing content from the browser console.
+
+The core content tables (projects, skills, experiences, the About tables, conversations and messages) aren't scripted yet; they were created in the Supabase dashboard.
 
 ---
 

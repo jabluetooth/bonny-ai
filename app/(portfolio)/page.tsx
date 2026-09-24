@@ -7,6 +7,9 @@ export default function Home() {
   return (
     <SidebarProvider defaultOpen={false} style={{ "--sidebar-width": "18rem" } as React.CSSProperties}>
       <main className="min-h-[100dvh] flex flex-col bg-background w-full">
+        {/* The hero is a video and a chat box, so the page heading is for
+            screen readers and search engines. */}
+        <h1 className="sr-only">Fil Heinz O. Re La Torre: ask my portfolio anything</h1>
         <PortfolioNavbar />
         {/* Bounded height instead of open-ended flex-1: caps the chat area
             so a long conversation scrolls internally (see chatbox.tsx)

@@ -7,7 +7,6 @@ export const revalidate = 300;
 
 export async function GET() {
     const supabase = await createClient();
-    console.log("API: Fetching author profile...");
 
     try {
         const { data, error } = await supabase
