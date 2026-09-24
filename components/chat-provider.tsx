@@ -13,8 +13,6 @@ interface ChatContextType {
     userName: string | null
     setUserName: (name: string) => void
     startChat: (name?: string) => Promise<string | null>
-    isWelcomeOpen: boolean
-    setIsWelcomeOpen: (open: boolean) => void
     isChatDisabled: boolean
     isAdminMode: boolean
 }
@@ -29,8 +27,6 @@ const ChatContext = createContext<ChatContextType>({
     userName: null,
     setUserName: () => { },
     startChat: async () => { return null },
-    isWelcomeOpen: false,
-    setIsWelcomeOpen: () => { },
     isChatDisabled: false,
     isAdminMode: false
 })
@@ -39,20 +35,17 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     const [conversationId, setConversationId] = useState<string | null>(null)
     const [userId, setUserId] = useState<string | null>(null)
     const [messages, setMessages] = useState<{ role: 'user' | 'bot' | 'admin', content: string, component?: ReactNode, id?: string }[]>([])
-    const [isLoading, setIsLoading] = useState(true) // Default to true to prevent flash
+    // True only while waiting for Bonny's reply (drives the typing indicator).
+    // Starting a session is quick and happens behind the first message, so it
+    // no longer blocks the page behind a loader.
+    const [isLoading, setIsLoading] = useState(false)
     const [userName, setUserName] = useState<string | null>(null)
     const [isChatDisabled, setIsChatDisabled] = useState(false)
     const [isAdminMode, setIsAdminMode] = useState(false)
 
-    // Welcome modal state (animation is handled locally in WelcomeModal)
-    const [isWelcomeOpen, setIsWelcomeOpen] = useState(false)
-
     // Expose startChat for manual initialization
     const startChat = async (name?: string, forceReset: boolean = true): Promise<string | null> => {
         try {
-            // Only set loading if we are resetting or don't have an ID
-            if (forceReset || !conversationId) setIsLoading(true)
-
             if (forceReset) {
                 // Clear previous state immediately to prevent "flashing" old data
                 setMessages([])
@@ -109,14 +102,11 @@ export function ChatProvider({ children }: { children: ReactNode }) {
             if (data.messages && data.messages.length > 0) {
                 setMessages(data.messages)
             }
-            console.log("ChatProvider: Session started (or recovered)", data.conversationId)
             return data.conversationId
 
         } catch (err) {
             console.error("ChatProvider: Initialization error", err)
             return null
-        } finally {
-            setIsLoading(false)
         }
     }
 
@@ -134,15 +124,10 @@ export function ChatProvider({ children }: { children: ReactNode }) {
                     if (mounted && !conversationId) {
                         await startChat(undefined, false); // Resume, don't reset
                     }
-                } else {
-                    // User is new (No session) -> Do NOT auto-start.
-                    if (mounted) {
-                        setIsLoading(false); // Stop loading so Modal can appear
-                    }
                 }
+                // New visitors get a session with their first message.
             } catch (error) {
                 console.error("ChatProvider: Init error", error);
-                if (mounted) setIsLoading(false);
             }
         };
 
@@ -324,68 +309,82 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     }, [conversationId])
 
     const sendMessage = async (content: string, intent?: string, activeId?: string) => {
-        const currentId = activeId || conversationId;
-
-        if (!currentId) {
-            console.error("ChatProvider: No active conversation")
-            return
-        }
         if (!content.trim()) return
 
         // Optimistic UI for user message
         const optimisticId = Date.now().toString()
         setMessages(prev => [...prev, { role: 'user', content, id: optimisticId } as any])
 
-        // ONLY show loading if NOT in admin mode
-        if (!isAdminMode) {
-            setIsLoading(true)
-        }
+        // ONLY show the typing indicator if NOT in admin mode
+        if (!isAdminMode) setIsLoading(true)
+
+        const botError = (text: string) =>
+            setMessages(prev => [...prev, { role: 'bot', content: text }])
 
         try {
-            let res = await fetch('/api/chat/send', {
+            // First message from a new visitor: start their session now.
+            let currentId = activeId || conversationId
+            if (!currentId) {
+                currentId = await startChat(undefined, false)
+                if (!currentId) {
+                    botError("I couldn't connect just now. Check your connection and send that again.")
+                    return
+                }
+            }
+
+            const post = (id: string) => fetch('/api/chat/send', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ conversationId: currentId, content, intent })
+                body: JSON.stringify({ conversationId: id, content, intent })
             })
 
-            // Retry Logic for 401 (Expired/Invalid Session)
+            let res = await post(currentId)
+
+            // Retry once on 401 (expired/invalid session)
             if (res.status === 401) {
-                console.log("ChatProvider: Session expired, refreshing...");
-                const newId = await startChat(); // Refresh session
-                if (newId) {
-                    // Retry send with new ID
-                    res = await fetch('/api/chat/send', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ conversationId: newId, content, intent })
-                    })
-                }
+                const newId = await startChat()
+                if (newId) res = await post(newId)
             }
 
-            const data = await res.json()
+            // Streamed LLM reply: show it as it arrives.
+            if (res.ok && res.headers.get('content-type')?.startsWith('text/plain') && res.body) {
+                const replyId = `bot-${optimisticId}`
+                const reader = res.body.getReader()
+                const decoder = new TextDecoder()
+                let text = ''
+                let started = false
+                for (;;) {
+                    const { value, done } = await reader.read()
+                    if (done) break
+                    text += decoder.decode(value, { stream: true })
+                    if (!started) {
+                        started = true
+                        setIsLoading(false)
+                        setMessages(prev => [...prev, { role: 'bot', content: text, id: replyId, streaming: true } as any])
+                    } else {
+                        setMessages(prev => prev.map(m => (m as any).id === replyId ? { ...m, content: text } : m))
+                    }
+                }
+                text += decoder.decode()
+                setMessages(prev => prev.map(m => (m as any).id === replyId ? { ...m, content: text, streaming: false } as any : m))
+                if (!started) botError("I didn't get a reply that time. Please ask again.")
+                return
+            }
+
+            const data = await res.json().catch(() => ({}))
 
             if (res.ok) {
-                if (data.limitReached) {
-                    setIsChatDisabled(true)
-                }
-
+                if (data.limitReached) setIsChatDisabled(true)
                 // If the backend says manual_mode, update our local state
-                if (data.status === 'manual_mode') {
-                    setIsAdminMode(true)
-                }
-
-                // Determine if we should add bot reply
-                if (data.reply) {
-                    setMessages(prev => [...prev, { role: 'bot', content: data.reply }])
-                }
+                if (data.status === 'manual_mode') setIsAdminMode(true)
+                if (data.reply) setMessages(prev => [...prev, { role: 'bot', content: data.reply }])
             } else {
                 console.error("ChatProvider: Send error", data.error)
-                setMessages(prev => [...prev, { role: 'bot', content: "Error: Could not send message." }])
+                botError(data.error && res.status === 429 ? data.error : "That message didn't go through. Please try again.")
             }
-
         } catch (err) {
             console.error("ChatProvider: Network error", err)
-            setMessages(prev => [...prev, { role: 'bot', content: "Network error." }])
+            botError("I couldn't reach the server. Check your connection and try again.")
         } finally {
             setIsLoading(false)
         }
@@ -402,8 +401,6 @@ export function ChatProvider({ children }: { children: ReactNode }) {
             userName,
             setUserName,
             startChat,
-            isWelcomeOpen,
-            setIsWelcomeOpen,
             isChatDisabled,
             isAdminMode
         }}>

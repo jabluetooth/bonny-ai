@@ -2,6 +2,8 @@
 
 import * as React from "react"
 import { useState, useEffect } from "react"
+import Link from "next/link"
+import { usePathname, useRouter } from "next/navigation"
 import { cn } from "@/lib/utils"
 import { useChat } from "@/components/chat-provider"
 import {
@@ -48,7 +50,7 @@ import { useIsMobile } from "@/hooks/use-mobile"
 
 export function PortfolioNavbar() {
     const [resumeOpen, setResumeOpen] = useState(false)
-    const { messages, isWelcomeOpen, startChat, conversationId, sendMessage } = useChat()
+    const { messages, sendMessage } = useChat()
     const [isOpen, setIsOpen] = useState(true)
     const [isHoveringTrigger, setIsHoveringTrigger] = useState(false)
     const [navValue, setNavValue] = useState("")
@@ -57,6 +59,8 @@ export function PortfolioNavbar() {
     const [email, setEmail] = useState("")
     const [message, setMessage] = useState("")
     const [isSending, setIsSending] = useState(false)
+    // Honeypot: hidden from people, filled in by bots. See app/api/send.
+    const [website, setWebsite] = useState("")
     const prevMsgLength = React.useRef(messages.length)
 
     // Resume State
@@ -65,23 +69,28 @@ export function PortfolioNavbar() {
     // Check mobile for conditional Sidebar rendering
     const isMobile = useIsMobile()
 
-    const handleNavClick = async (query: string, intent?: string) => {
-        let activeId = conversationId;
-        // Ensure chat is started
-        if (!activeId) {
-            const newId = await startChat("Guest");
-            if (newId) activeId = newId;
+    const pathname = usePathname()
+    const router = useRouter()
+    const isHome = pathname === "/"
+
+    // On the homepage a menu item asks the chat; everywhere else the chat
+    // isn't on screen, so it goes to the page that holds that content.
+    const handleNavClick = async (query: string, intent?: string, href: string = "/") => {
+        if (!isHome) {
+            setNavValue("")
+            router.push(href)
+            return
         }
 
-        if (activeId) {
-            sendMessage(query, intent, activeId);
-            setNavValue("");
-        }
+        // sendMessage starts the visitor's session if there isn't one yet.
+        setNavValue("")
+        await sendMessage(query, intent)
     }
 
-    const handleSendMessage = async () => {
+    const handleSendMessage = async (e?: React.FormEvent) => {
+        e?.preventDefault()
         if (!email.trim() || !message.trim()) {
-            toast.error("Please fill in both email and message fields.")
+            toast.error("Add your email and a message, then send.")
             return
         }
 
@@ -90,24 +99,23 @@ export function PortfolioNavbar() {
             const res = await fetch("/api/send", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ email, message }),
+                body: JSON.stringify({ email, message, website }),
             })
 
             const data = await res.json()
 
             if (!res.ok) {
-                throw new Error(data.error || "Failed to send message")
+                throw new Error(data.error || "The message couldn’t be sent. Please try again in a minute.")
             }
 
-            toast.success("Message sent successfully!", {
-                description: "I'll get back to you as soon as possible.",
+            toast.success("Message sent", {
+                description: "Thanks! I'll reply to the email you gave.",
             })
             setEmail("")
             setMessage("")
             setResumeOpen(false)
         } catch (error) {
-            console.error("Failed to send message", error)
-            toast.error("Failed to send message. Please try again later.")
+            toast.error(error instanceof Error ? error.message : "The message couldn’t be sent. Please try again in a minute.")
         } finally {
             setIsSending(false)
         }
@@ -179,7 +187,7 @@ export function PortfolioNavbar() {
                 className={cn(
                     "relative transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] pointer-events-auto w-full",
                     (isOpen || isMobile) ? "h-16 opacity-100" : "h-0 opacity-0 pointer-events-none overflow-hidden",
-                    (resumeOpen || isWelcomeOpen) && "blur-sm"
+                    resumeOpen && "blur-sm"
                 )}
             >
                 {/* Progressive Blur Background - Extended to curtain over messages */}
@@ -201,13 +209,12 @@ export function PortfolioNavbar() {
                             <SidebarTrigger className="ml-2 h-9 w-9" />
                         </div>
 
-                        <button
-                            type="button"
-                            onClick={() => handleNavClick("Hello! Tell me about this portfolio.")}
-                            className="hidden md:flex items-center cursor-pointer hover:opacity-80 transition-opacity font-bold text-lg tracking-tight"
+                        <Link
+                            href="/"
+                            className="flex items-center hover:opacity-80 transition-opacity font-bold text-lg tracking-tight rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                         >
-                            Bonny-Ai
-                        </button>
+                            Bonny-AI
+                        </Link>
                     </div>
 
                     {/* CENTER: Navigation Menu (Desktop) */}
@@ -225,13 +232,13 @@ export function PortfolioNavbar() {
                                                     {navValue === "about" ? <AuthorCard /> : <div className="h-full w-full min-h-[200px]" />}
                                                 </NavigationMenuLink>
                                             </li>
-                                            <ListItem title="Background" onClick={() => handleNavClick("What is your professional background?", ChatIntents.BACKGROUND)}>
+                                            <ListItem title="Background" href="/about#background-heading" onClick={(e) => { if (isHome) { e.preventDefault(); handleNavClick("What is your professional background?", ChatIntents.BACKGROUND) } else setNavValue("") }}>
                                                 My journey and career path.
                                             </ListItem>
-                                            <ListItem title="Interests" onClick={() => handleNavClick("What are your interests outside of work?", ChatIntents.INTERESTS)}>
+                                            <ListItem title="Interests" href="/about#interests-heading" onClick={(e) => { if (isHome) { e.preventDefault(); handleNavClick("What are your interests outside of work?", ChatIntents.INTERESTS) } else setNavValue("") }}>
                                                 Hobbies and personal passions.
                                             </ListItem>
-                                            <ListItem title="Vision" onClick={() => handleNavClick("What is your vision for the future?", ChatIntents.VISION)}>
+                                            <ListItem title="Vision" href="/about#vision-heading" onClick={(e) => { if (isHome) { e.preventDefault(); handleNavClick("What is your vision for the future?", ChatIntents.VISION) } else setNavValue("") }}>
                                                 Future goals and aspirations.
                                             </ListItem>
                                         </ul>
@@ -243,10 +250,10 @@ export function PortfolioNavbar() {
                                     <NavigationMenuTrigger className="bg-transparent hover:bg-primary/10 focus:bg-primary/10 data-[state=open]:bg-primary/10 rounded-full hover:text-primary relative after:absolute after:-top-1 after:left-1/2 after:-translate-x-1/2 after:w-8 after:h-[2px] after:bg-primary after:shadow-[0_0_8px_var(--primary)] after:opacity-0 hover:after:opacity-100 after:transition-all after:duration-300">Projects</NavigationMenuTrigger>
                                     <NavigationMenuContent>
                                         <ul className="grid w-[400px] gap-3 p-4 md:w-[500px] md:grid-cols-2 lg:w-[600px] ">
-                                            <ListItem title="Web Development" onClick={() => handleNavClick("Show me your web development projects.", ChatIntents.PROJECTS_WEB)}>
+                                            <ListItem title="Web Development" href="/projects" onClick={(e) => { if (isHome) { e.preventDefault(); handleNavClick("Show me your web development projects.", ChatIntents.PROJECTS_WEB) } else setNavValue("") }}>
                                                 Full-stack web applications.
                                             </ListItem>
-                                            <ListItem title="AI & ML" onClick={() => handleNavClick("Tell me about your AI and Machine Learning projects.", ChatIntents.PROJECTS_AI)}>
+                                            <ListItem title="AI & ML" href="/projects" onClick={(e) => { if (isHome) { e.preventDefault(); handleNavClick("Tell me about your AI and Machine Learning projects.", ChatIntents.PROJECTS_AI) } else setNavValue("") }}>
                                                 Machine learning models.
                                             </ListItem>
                                         </ul>
@@ -258,16 +265,16 @@ export function PortfolioNavbar() {
                                     <NavigationMenuTrigger className="bg-transparent hover:bg-primary/10 focus:bg-primary/10 data-[state=open]:bg-primary/10 rounded-full hover:text-primary relative after:absolute after:-top-1 after:left-1/2 after:-translate-x-1/2 after:w-8 after:h-[2px] after:bg-primary after:shadow-[0_0_8px_var(--primary)] after:opacity-0 hover:after:opacity-100 after:transition-all after:duration-300">Skills</NavigationMenuTrigger>
                                     <NavigationMenuContent>
                                         <ul className="grid w-[400px] gap-3 p-4 md:w-[500px] md:grid-cols-2 lg:w-[600px] ">
-                                            <ListItem icon={<Code2 className="w-4 h-4" />} title="Frontend" onClick={() => handleNavClick("What are your Frontend Development skills?", ChatIntents.SKILLS_FRONTEND)}>
+                                            <ListItem icon={<Code2 className="w-4 h-4" />} title="Frontend" href="/skills" onClick={(e) => { if (isHome) { e.preventDefault(); handleNavClick("What are your Frontend Development skills?", ChatIntents.SKILLS_FRONTEND) } else setNavValue("") }}>
                                                 React, Next.js, TypeScript.
                                             </ListItem>
-                                            <ListItem icon={<Database className="w-4 h-4" />} title="Backend" onClick={() => handleNavClick("What are your Backend Development skills?", ChatIntents.SKILLS_BACKEND)}>
+                                            <ListItem icon={<Database className="w-4 h-4" />} title="Backend" href="/skills" onClick={(e) => { if (isHome) { e.preventDefault(); handleNavClick("What are your Backend Development skills?", ChatIntents.SKILLS_BACKEND) } else setNavValue("") }}>
                                                 Node.js, PostgreSQL.
                                             </ListItem>
-                                            <ListItem icon={<Palette className="w-4 h-4" />} title="Design" onClick={() => handleNavClick("What are your Design skills?", ChatIntents.SKILLS_DESIGN)}>
+                                            <ListItem icon={<Palette className="w-4 h-4" />} title="Design" href="/skills" onClick={(e) => { if (isHome) { e.preventDefault(); handleNavClick("What are your Design skills?", ChatIntents.SKILLS_DESIGN) } else setNavValue("") }}>
                                                 Tailwind CSS, Figma.
                                             </ListItem>
-                                            <ListItem icon={<Layers className="w-4 h-4" />} title="Other" onClick={() => handleNavClick("What are your Other Skills?", ChatIntents.SKILLS_OTHER)}>
+                                            <ListItem icon={<Layers className="w-4 h-4" />} title="Other" href="/skills" onClick={(e) => { if (isHome) { e.preventDefault(); handleNavClick("What are your Other Skills?", ChatIntents.SKILLS_OTHER) } else setNavValue("") }}>
                                                 Teamwork, Communication
                                             </ListItem>
                                         </ul>
@@ -279,10 +286,10 @@ export function PortfolioNavbar() {
                                     <NavigationMenuTrigger className="bg-transparent hover:bg-primary/10 focus:bg-primary/10 data-[state=open]:bg-primary/10 rounded-full hover:text-primary relative after:absolute after:-top-1 after:left-1/2 after:-translate-x-1/2 after:w-8 after:h-[2px] after:bg-primary after:shadow-[0_0_8px_var(--primary)] after:opacity-0 hover:after:opacity-100 after:transition-all after:duration-300">Experiences</NavigationMenuTrigger>
                                     <NavigationMenuContent>
                                         <ul className="grid w-[400px] gap-3 p-4 md:w-[500px] md:grid-cols-2 lg:w-[600px] ">
-                                            <ListItem title="Work History" onClick={() => handleNavClick("Tell me about your work history.", ChatIntents.WORK_HISTORY)}>
+                                            <ListItem title="Work History" href="/experiences" onClick={(e) => { if (isHome) { e.preventDefault(); handleNavClick("Tell me about your work history.", ChatIntents.WORK_HISTORY) } else setNavValue("") }}>
                                                 Professional roles and companies.
                                             </ListItem>
-                                            <ListItem title="Education" onClick={() => handleNavClick("What is your educational background?", ChatIntents.EDUCATION)}>
+                                            <ListItem title="Education" href="/experiences" onClick={(e) => { if (isHome) { e.preventDefault(); handleNavClick("What is your educational background?", ChatIntents.EDUCATION) } else setNavValue("") }}>
                                                 Degrees and certifications.
                                             </ListItem>
                                         </ul>
@@ -311,29 +318,52 @@ export function PortfolioNavbar() {
 
                         <div className="p-4 space-y-4">
                             {/* Message Form */}
-                            <div className="space-y-3">
-                                <div className="space-y-1">
+                            <form className="space-y-3" onSubmit={handleSendMessage}>
+                                <div className="space-y-1.5">
+                                    <label htmlFor="contact-email" className="text-sm font-medium">Your email</label>
                                     <Input
-                                        placeholder="Your Email"
+                                        id="contact-email"
+                                        name="email"
+                                        placeholder="you@company.com"
                                         type="email"
+                                        autoComplete="email"
+                                        required
                                         value={email}
                                         onChange={(e) => setEmail(e.target.value)}
                                         disabled={isSending}
                                     />
                                 </div>
-                                <div className="space-y-1">
+                                <div className="space-y-1.5">
+                                    <label htmlFor="contact-message" className="text-sm font-medium">Message</label>
                                     <Textarea
-                                        placeholder="Type your message here..."
+                                        id="contact-message"
+                                        name="message"
+                                        placeholder="What would you like to talk about?"
                                         className="min-h-[100px]"
+                                        required
+                                        maxLength={5000}
                                         value={message}
                                         onChange={(e) => setMessage(e.target.value)}
                                         disabled={isSending}
                                     />
                                 </div>
-                                <Button className="w-full" onClick={handleSendMessage} disabled={isSending}>
-                                    {isSending ? "Sending..." : "Send Message"}
+                                {/* Honeypot, kept off-screen and out of the tab order. */}
+                                <div aria-hidden="true" className="absolute -left-[9999px] h-0 w-0 overflow-hidden">
+                                    <label htmlFor="contact-website">Website</label>
+                                    <input
+                                        id="contact-website"
+                                        name="website"
+                                        type="text"
+                                        tabIndex={-1}
+                                        autoComplete="off"
+                                        value={website}
+                                        onChange={(e) => setWebsite(e.target.value)}
+                                    />
+                                </div>
+                                <Button type="submit" className="w-full" disabled={isSending}>
+                                    {isSending ? "Sending…" : "Send message"}
                                 </Button>
-                            </div>
+                            </form>
 
                             <div className="relative">
                                 <div className="absolute inset-0 flex items-center">
@@ -369,12 +399,13 @@ export function PortfolioNavbar() {
 
 const ListItem = React.forwardRef<
     React.ElementRef<"a">,
-    React.ComponentPropsWithoutRef<"a"> & { icon?: React.ReactNode }
->(({ className, title, children, icon, ...props }, ref) => {
+    Omit<React.ComponentPropsWithoutRef<"a">, "href"> & { icon?: React.ReactNode; href: string }
+>(({ className, title, children, icon, href, ...props }, ref) => {
     return (
         <li>
             <NavigationMenuLink asChild>
-                <a
+                <Link
+                    href={href}
                     ref={ref}
                     className={cn(
                         "block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground cursor-pointer",
@@ -389,7 +420,7 @@ const ListItem = React.forwardRef<
                     <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
                         {children}
                     </p>
-                </a>
+                </Link>
             </NavigationMenuLink>
         </li>
     )

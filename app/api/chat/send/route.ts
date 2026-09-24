@@ -1,13 +1,13 @@
 import { NextResponse, after } from 'next/server';
 import { langfuseSpanProcessor } from '@/instrumentation';
 import { createClient } from '@/lib/supabase-server';
-import { generateLLMResponse } from '@/lib/llm';
+import { streamLLMResponse } from '@/lib/llm';
 import { getContextForIntent } from '@/lib/chat-context';
 import { getDeterministicResponse } from '@/lib/chat-responses';
 import { retrieveContextSmart, isRAGAvailable } from '@/lib/rag';
 import { detectIntent } from '@/lib/intents';
 import { z } from 'zod';
-import xss from 'xss';
+import { allowRequest, RATE_LIMITS } from '@/lib/rate-limit';
 
 // Schema for request validation
 const sendSchema = z.object({
@@ -53,8 +53,10 @@ export async function POST(req: Request) {
 
         const { conversationId, content: rawContent, intent: clientIntent } = result.data;
 
-        // 3. Sanitize Content (XSS Protection)
-        const content = xss(rawContent);
+        // Stored and sent to the model as plain text. React escapes it on
+        // render, so HTML-escaping here would only mangle questions about
+        // code ("<Suspense>" became "&lt;Suspense&gt;" in the prompt).
+        const content = rawContent.trim();
 
         // Auto-detect intent if not provided by client
         const intent = clientIntent || detectIntent(content);
@@ -76,7 +78,7 @@ export async function POST(req: Request) {
         // CHECK LIMIT: Count existing user messages before inserting
         const { count, error: countError } = await supabase
             .from('messages')
-            .select('id', { count: 'exact', head: false })
+            .select('id', { count: 'exact', head: true })
             .eq('conversation_id', conversationId)
             .eq('sender_type', 'user');
 
@@ -127,45 +129,65 @@ export async function POST(req: Request) {
 
         // 6. Generate AI Response
         // TOKEN OPTIMIZATION: Check for Static Response first using Strategy Pattern
-        let aiResponse = getDeterministicResponse(intent, content, {});
+        const staticResponse = getDeterministicResponse(intent, content, {});
 
-        // If no static response, use LLM with RAG context
-        if (!aiResponse) {
-            // Fetch User Profile for Name
-            const { data: userProfile } = await supabase
-                .from('users')
-                .select('name')
-                .eq('id', user.id)
-                .single();
-
-            // 5. Gather Context for AI based on Intent + RAG (in parallel)
-            // Intent-based context provides structured data for known queries
-            // RAG provides semantic search for nuanced/unknown queries
-            const [context, ragContext] = await Promise.all([
-                getContextForIntent(supabase, intent, userProfile?.name || "Guest"),
-                isRAGAvailable()
-                    ? retrieveContextSmart(supabase, content, { matchCount: 4, matchThreshold: 0.72 })
-                    : Promise.resolve({ formattedContext: '', documents: [], totalChars: 0, truncated: false }),
-            ]);
-
-            aiResponse = await generateLLMResponse(content, context, ragContext.formattedContext, {
-                sessionId: conversationId,
-                userId: user.id,
+        if (staticResponse) {
+            const { error: botMsgError } = await supabase.from('messages').insert({
+                conversation_id: conversationId,
+                sender_type: 'bot',
+                content: staticResponse,
             });
+            if (botMsgError) console.error('Error saving bot message:', botMsgError);
+            return NextResponse.json({ reply: staticResponse });
         }
 
-        // 7. Save Bot Message
-        const { error: botMsgError } = await supabase.from('messages').insert({
-            conversation_id: conversationId,
-            sender_type: 'bot',
-            content: aiResponse,
+        // The LLM path costs money per call, so it's limited per IP as well as
+        // per conversation (a new anonymous session is a new conversation).
+        if (!(await allowRequest(req, RATE_LIMITS.chat))) {
+            const reply = "You're sending messages faster than I can keep up. Give it a few minutes and ask again.";
+            return NextResponse.json({ reply, rateLimited: true });
+        }
+
+        // Fetch User Profile for Name
+        const { data: userProfile } = await supabase
+            .from('users')
+            .select('name')
+            .eq('id', user.id)
+            .single();
+
+        // 5. Gather Context for AI based on Intent + RAG (in parallel)
+        // Intent-based context provides structured data for known queries
+        // RAG provides semantic search for nuanced/unknown queries
+        const [context, ragContext] = await Promise.all([
+            getContextForIntent(supabase, intent, userProfile?.name || "Guest"),
+            isRAGAvailable()
+                ? retrieveContextSmart(supabase, content, { matchCount: 4, matchThreshold: 0.72 })
+                : Promise.resolve({ formattedContext: '', documents: [], totalChars: 0, truncated: false }),
+        ]);
+
+        // Stream the reply as it's generated; save it once complete.
+        const stream = streamLLMResponse(
+            content,
+            context,
+            ragContext.formattedContext,
+            { sessionId: conversationId, userId: user.id },
+            async (reply) => {
+                const { error: botMsgError } = await supabase.from('messages').insert({
+                    conversation_id: conversationId,
+                    sender_type: 'bot',
+                    content: reply,
+                });
+                if (botMsgError) console.error('Error saving bot message:', botMsgError);
+            }
+        );
+
+        return new Response(stream, {
+            headers: {
+                'Content-Type': 'text/plain; charset=utf-8',
+                'Cache-Control': 'no-store',
+                'X-Accel-Buffering': 'no',
+            },
         });
-
-        if (botMsgError) {
-            console.error('Error saving bot message:', botMsgError);
-        }
-
-        return NextResponse.json({ reply: aiResponse });
 
     } catch (error) {
         console.error('Chat API Error:', error);
