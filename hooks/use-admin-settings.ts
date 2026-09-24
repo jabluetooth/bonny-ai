@@ -47,6 +47,8 @@ export function useAdminSettings() {
         fetchResumeUrl()
 
         setIsLoaded(true)
+        // Mount-only: load saved settings once.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])
 
     // Fetch current resume URL from API

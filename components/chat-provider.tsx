@@ -134,7 +134,9 @@ export function ChatProvider({ children }: { children: ReactNode }) {
         init();
 
         return () => { mounted = false };
-    }, []); // Run once on mount
+        // Mount-only: resume a returning visitor's session once.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     const addMessage = (message: { role: 'user' | 'bot', content: string, component?: ReactNode }) => {
         setMessages(prev => [...prev, message])
@@ -193,7 +195,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
         return () => {
             supabase.removeChannel(channel)
         }
-    }, [conversationId, supabase])
+    }, [conversationId])
 
     // Presence Channel Ref (to use in cleanup)
     const presenceChannelRef = useRef<ReturnType<typeof supabase.channel> | null>(null)
@@ -268,7 +270,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
             if (presenceChannelRef.current) {
                 try {
                     presenceChannelRef.current.untrack()
-                } catch (e) {
+                } catch {
                     // Ignore errors during unload
                 }
             }

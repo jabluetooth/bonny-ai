@@ -140,6 +140,8 @@ export const CardItem = ({
 
     useEffect(() => {
         handleAnimations();
+        // handleAnimations only reads isMouseEntered and a ref.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [isMouseEntered]);
 
     return (

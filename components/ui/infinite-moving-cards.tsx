@@ -87,6 +87,8 @@ export const InfiniteMovingCards = ({
         if (items.length > 0) {
             addAnimation();
         }
+        // addAnimation reads refs and props only; rerun when items change.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [items]);
 
     return (

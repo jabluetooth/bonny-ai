@@ -78,7 +78,7 @@ export function useAdminChat({ onNewMessage }: UseAdminChatOptions = {}) {
 
         if (showLoading) setIsLoading(false)
         setIsInitialLoad(false)
-    }, [processConversations, supabase])
+    }, [processConversations])
 
     useEffect(() => {
         // Initial Fetch
@@ -146,7 +146,6 @@ export function useAdminChat({ onNewMessage }: UseAdminChatOptions = {}) {
                     table: 'messages'
                 },
                 (payload) => {
-                    console.log("[useAdminChat] Supabase INSERT event received:", payload.new) // Debug log
 
                     // Trigger callback via ref to ensure latest state is used
                     if (onNewMessageRef.current) {

@@ -42,7 +42,6 @@ export function BackgroundCards() {
                 // Cache bust to ensure fresh data
                 const res = await fetch(`/api/about/background?t=${new Date().getTime()}`);
                 const json = await res.json();
-                console.log("Background Cards Data:", json);
 
                 if (json.data) {
                     // Map DB snake_case to component expected props if needed, or just use what we assume
@@ -114,7 +113,7 @@ export function BackgroundCards() {
             {/* Background Text */}
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-0">
                 <h1 className="text-[120px] font-black text-slate-800/30 dark:text-slate-100/10 tracking-widest uppercase text-center select-none leading-none blur-sm">
-                    Bonny-Ai
+                    Bonny-AI
                 </h1>
             </div>
 

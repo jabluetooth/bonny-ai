@@ -9,7 +9,6 @@ import {
     GraduationCap,
     Palette,
     User,
-    Users,
     ChevronDown,
     Layers,
 } from "lucide-react"
@@ -18,7 +17,6 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
 import {
     Sidebar,
     SidebarContent,
-    SidebarFooter,
     SidebarGroup,
     SidebarHeader,
     SidebarMenu,
@@ -35,7 +33,6 @@ import {
 } from "@/components/ui/collapsible"
 
 import { ChatIntents } from "@/lib/intents"
-import { VisitorCounter } from "@/components/visitor-counter"
 import { Status, StatusIndicator, StatusLabel } from "@/components/ui/shadcn-io/status"
 
 interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
@@ -51,7 +48,7 @@ export function AppSidebar({ onNavClick, ...props }: AppSidebarProps) {
                         className="h-10 w-10 cursor-pointer hover:scale-105 transition-transform rounded-none bg-transparent"
                         onClick={() => onNavClick("Hello! Tell me about this portfolio.", undefined, "/")}
                     >
-                        <AvatarImage src="/bot-avatar.png" alt="Bonny AI" />
+                        <AvatarImage src="/bot-avatar.png" alt="Bonny-AI" />
                         <AvatarFallback>AI</AvatarFallback>
                     </Avatar>
                     <div className="flex flex-col items-start gap-0.5">

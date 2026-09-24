@@ -32,8 +32,9 @@ export function VisitorCounter({ initialCount }: { initialCount: number }) {
     return (
         <Pill className="h-7 text-xs">
             <PillIcon icon={UsersIcon} />
-            <span className="p-1">
-                {count === 0 ? "..." : `${count} online`}
+            {/* Fixed width so the pill doesn't jump when the count arrives. */}
+            <span className="p-1 inline-block min-w-[4.5rem] tabular-nums">
+                {count === 0 ? "– online" : `${count} online`}
             </span>
         </Pill>
     )

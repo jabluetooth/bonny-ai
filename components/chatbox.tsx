@@ -15,7 +15,6 @@ import { VisionSection } from "@/components/vision-section";
 import { ExperiencesSection } from "@/components/experiences-section";
 import { TypingAnimation } from "@/components/ui/typing-animation";
 import { motion, AnimatePresence } from "framer-motion";
-import { cn } from "@/lib/utils";
 import { BackgroundCards } from "@/components/background-cards";
 import { ChromaVideo } from "@/components/ui/chroma-video";
 

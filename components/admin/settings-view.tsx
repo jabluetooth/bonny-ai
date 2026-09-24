@@ -54,6 +54,8 @@ Impress the visitor with your skills and projects. Be helpful, enthusiastic, and
 
     const handleSignOut = async () => {
         await supabase.auth.signOut()
+        // Full reload on purpose: clears every bit of signed-in client state.
+        // eslint-disable-next-line @next/next/no-location-assign-relative-destination
         window.location.href = '/'
     }
 

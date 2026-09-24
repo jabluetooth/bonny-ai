@@ -118,7 +118,6 @@ export function VisionTab() {
                                 <TableCell>{item.name}</TableCell>
                                 <TableCell>
                                     {item.image_url ? (
-                                        // eslint-disable-next-line @next/next/no-img-element
                                         <img src={item.image_url} alt="" className="h-8 w-8 rounded object-cover" />
                                     ) : (
                                         <span className="text-muted-foreground">—</span>

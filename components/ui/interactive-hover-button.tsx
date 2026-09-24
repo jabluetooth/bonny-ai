@@ -22,7 +22,8 @@ export function InteractiveHoverButton({
                     {children}
                 </span>
             </div>
-            <div className="text-primary-foreground absolute top-0 z-10 flex h-full w-full translate-x-12 items-center justify-center gap-2 opacity-0 transition-all duration-300 group-hover:-translate-x-5 group-hover:opacity-100">
+            {/* Hover copy of the label: decorative, so screen readers hear it once. */}
+            <div aria-hidden="true" className="text-primary-foreground absolute top-0 z-10 flex h-full w-full translate-x-12 items-center justify-center gap-2 opacity-0 transition-all duration-300 group-hover:-translate-x-5 group-hover:opacity-100">
                 <span>{children}</span>
                 <ArrowRight />
             </div>

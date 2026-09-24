@@ -61,7 +61,7 @@ const jsonLd = [
 
 export const metadata: Metadata = {
   title: {
-    default: "Fil Heinz",
+    default: "Fil Heinz | Talk to My Portfolio",
     template: "%s | Fil Heinz",
   },
   description: "Fil Heinz O. Re La Torre - Software Engineer specializing in full-stack web development and AI/ML. Ask the AI chatbot about my work, skills, and experience.",
