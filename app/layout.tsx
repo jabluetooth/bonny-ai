@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Outfit, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
+import { MotionProvider } from "@/components/motion-provider";
 
 const outfit = Outfit({
   variable: "--font-sans",
@@ -105,11 +106,7 @@ export const metadata: Metadata = {
       "max-snippet": -1,
     },
   },
-  icons: {
-    icon: "/bot-avatar.png",
-    shortcut: "/bot-avatar.png",
-    apple: "/bot-avatar.png",
-  },
+  // Icons come from app/icon.png (48px) and app/apple-icon.png (180px).
 };
 
 export default function RootLayout({
@@ -120,10 +117,6 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-        <link rel="dns-prefetch" href="https://fonts.googleapis.com" />
-        <link rel="dns-prefetch" href="https://fonts.gstatic.com" />
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
@@ -132,7 +125,7 @@ export default function RootLayout({
       <body
         className={`${outfit.variable} ${jetbrainsMono.variable} font-sans antialiased`}
       >
-        {children}
+        <MotionProvider>{children}</MotionProvider>
         <Toaster />
       </body>
     </html>
