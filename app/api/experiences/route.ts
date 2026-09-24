@@ -1,7 +1,9 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase-server';
+import { createPublicClient as createClient } from '@/lib/supabase-public';
 
-export const dynamic = 'force-dynamic';
+
+// Public content, cached for five minutes (see lib/supabase-public.ts).
+export const revalidate = 300;
 
 export async function GET() {
     const supabase = await createClient();

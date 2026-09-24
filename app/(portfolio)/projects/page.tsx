@@ -4,6 +4,10 @@ import { PortfolioPageShell } from "@/components/portfolio-page-shell";
 import { getProjects } from "@/lib/portfolio-data";
 import { Github, ExternalLink } from "lucide-react";
 
+// Content comes from Supabase via a cookieless client, so the page is
+// static and refreshed at most every five minutes.
+export const revalidate = 300;
+
 export const metadata: Metadata = {
     title: "Projects",
     description: "Web development and AI/ML projects built by Fil Heinz O. Re La Torre.",
