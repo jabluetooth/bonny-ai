@@ -62,47 +62,22 @@ export function SiteFooter() {
 
     return (
         <footer className="w-full mt-auto">
-            {/* One compact block: brand + links + socials/status. Wraps to two
-                short rows on phones instead of two tall stacked panels. */}
-            <div className="max-w-6xl mx-auto px-3 sm:px-4 pt-4">
-                <div className="rounded-t-2xl bg-primary text-primary-foreground px-4 sm:px-6 py-3 flex flex-wrap items-center justify-between gap-x-6 gap-y-2">
-                    <div className="flex items-center gap-2 min-w-0">
-                        <Image
-                            src="/bot-avatar.png"
-                            alt=""
-                            width={24}
-                            height={24}
-                            className="h-6 w-6 rounded-full object-cover"
-                        />
-                        <span className="font-bold tracking-tight">Bonny-AI</span>
-                        <span className="text-xs opacity-65 truncate">&copy; {year} Fil Heinz Re La Torre</span>
-                    </div>
-
-                    <nav aria-label="Footer">
-                        <ul className="flex flex-wrap items-center gap-x-4 gap-y-1">
-                            {EXPLORE_LINKS.map((item) => (
-                                <li key={item.label}>
-                                    <Link
-                                        href={item.href}
-                                        className="text-xs sm:text-sm opacity-75 hover:opacity-100 transition-opacity"
-                                    >
-                                        {item.label}
-                                    </Link>
-                                </li>
-                            ))}
-                        </ul>
-                    </nav>
-
-                    <div className="flex items-center gap-2">
-                        <Status status="online" className="px-2 py-0.5 h-7 text-xs">
-                            <span className="relative flex h-2 w-2">
-                                <span className={`absolute inline-flex h-full w-full animate-ping rounded-full opacity-75 ${config.color}`}></span>
-                                <span className={`relative inline-flex h-2 w-2 rounded-full ${config.color}`}></span>
-                            </span>
-                            <StatusLabel className="text-xs text-secondary-foreground">{config.text}</StatusLabel>
-                        </Status>
-                        <VisitorCounter initialCount={0} />
-                        <div className="flex items-center">
+            {/* Phones: one compact block. The page links live in the menu,
+                so only brand, socials and status are shown here. */}
+            <div className="sm:hidden px-3 pt-4">
+                <div className="rounded-t-2xl bg-primary text-primary-foreground px-4 pt-4 pb-3 flex flex-col gap-3">
+                    <div className="flex items-center justify-between gap-3">
+                        <div className="flex items-center gap-2">
+                            <Image
+                                src="/bot-avatar.png"
+                                alt=""
+                                width={24}
+                                height={24}
+                                className="h-6 w-6 rounded-full object-cover"
+                            />
+                            <span className="font-bold tracking-tight">Bonny-AI</span>
+                        </div>
+                        <div className="flex items-center -mr-2">
                             {SOCIAL_LINKS.map(({ label, href, Icon }) => (
                                 <a
                                     key={href}
@@ -110,14 +85,93 @@ export function SiteFooter() {
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     aria-label={label}
-                                    className="inline-flex items-center justify-center h-8 w-8 opacity-75 hover:opacity-100 transition-opacity"
+                                    className="inline-flex items-center justify-center h-9 w-9 opacity-75 hover:opacity-100 transition-opacity"
                                 >
-                                    <Icon size={16} />
+                                    <Icon size={17} />
                                 </a>
                             ))}
                         </div>
                     </div>
+                    <div className="flex items-center justify-between gap-2">
+                        <Status status="online" className="px-2 py-0.5 h-7 text-xs">
+                            <span className="relative flex h-2 w-2">
+                                <span className={`absolute inline-flex h-full w-full animate-ping rounded-full opacity-75 ${config.color}`}></span>
+                                <span className={`relative inline-flex h-2 w-2 rounded-full ${config.color}`}></span>
+                            </span>
+                            <StatusLabel className="text-xs text-secondary-foreground">{config.text}</StatusLabel>
+                        </Status>
+                        <span className="text-[11px] opacity-60">&copy; {year} Fil Heinz Re La Torre</span>
+                    </div>
                 </div>
+            </div>
+
+            <div className="hidden sm:flex max-w-6xl mx-auto px-4 pt-6 flex-wrap items-stretch justify-between gap-4">
+                {/* Brand panel */}
+                <div className="flex-1 min-w-[240px] flex flex-col justify-between gap-6 rounded-t-2xl bg-primary text-primary-foreground px-6 pt-6 pb-5">
+                    <div className="flex items-center gap-2">
+                        <Image
+                            src="/bot-avatar.png"
+                            alt=""
+                            width={28}
+                            height={28}
+                            className="h-7 w-7 rounded-full object-cover"
+                        />
+                        <span className="text-xl font-bold tracking-tight">Bonny-AI</span>
+                    </div>
+
+                    <div className="flex flex-col gap-3">
+                        <p className="text-sm font-medium opacity-80 max-w-[34ch]">
+                            Automation and AI systems that save time, cut costs, and help businesses grow.
+                        </p>
+
+                        <div className="flex items-center gap-1">
+                            {SOCIAL_LINKS.map(({ label, href, Icon }) => (
+                                <a
+                                    key={href}
+                                    href={href}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    aria-label={label}
+                                    className="inline-flex items-center justify-center h-9 w-9 opacity-75 hover:opacity-100 transition-opacity"
+                                >
+                                    <Icon size={18} />
+                                </a>
+                            ))}
+                        </div>
+
+                        <div className="flex flex-wrap items-center gap-2">
+                            <VisitorCounter initialCount={0} />
+                            <Status status="online" className="px-2 py-0.5 h-7 text-xs">
+                                <span className="relative flex h-2 w-2">
+                                    <span className={`absolute inline-flex h-full w-full animate-ping rounded-full opacity-75 ${config.color}`}></span>
+                                    <span className={`relative inline-flex h-2 w-2 rounded-full ${config.color}`}></span>
+                                </span>
+                                <StatusLabel className="text-xs text-secondary-foreground">{config.text}</StatusLabel>
+                            </Status>
+                        </div>
+
+                        <p className="text-xs opacity-65">&copy; {year} Bonny-AI by Fil Heinz Re La Torre</p>
+                    </div>
+                </div>
+
+                {/* Links panel */}
+                <nav aria-label="Footer" className="flex-none w-full sm:w-[200px] rounded-t-2xl border border-border bg-card px-6 pt-6 pb-5">
+                    <h2 className="text-xs font-bold uppercase tracking-wide text-muted-foreground mb-3">
+                        Explore
+                    </h2>
+                    <ul className="flex flex-col gap-2">
+                        {EXPLORE_LINKS.map((item) => (
+                            <li key={item.label}>
+                                <Link
+                                    href={item.href}
+                                    className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                                >
+                                    {item.label}
+                                </Link>
+                            </li>
+                        ))}
+                    </ul>
+                </nav>
             </div>
         </footer>
     )

@@ -157,11 +157,13 @@ export function Chatbox() {
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const scrollContainerRef = useRef<HTMLDivElement>(null);
     const chatInputRef = useRef<HTMLInputElement>(null);
+    const composerRef = useRef<HTMLDivElement>(null);
 
     const scrollToBottom = () => {
-        // block: "end" aligns the target at the bottom of the message list's
-        // own overflow-y-auto box, not the page.
-        messagesEndRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+        // Scroll only the message list. scrollIntoView would also scroll the
+        // page and push the input box below the fold.
+        const el = scrollContainerRef.current;
+        if (el) el.scrollTo({ top: el.scrollHeight, behavior: "smooth" });
     };
 
     useEffect(() => {
@@ -171,6 +173,28 @@ export function Chatbox() {
     useEffect(() => {
         scrollToBottom();
     }, [messages]);
+
+    // "Magnet" the input box: when the conversation starts, a new message
+    // arrives, or a reply finishes, snap the page so the composer sits at the
+    // bottom of the screen. Keyed on milestones, not every streamed token.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const lastStreaming = !!(messages[messages.length - 1] as any)?.streaming;
+    useEffect(() => {
+        if (messages.length === 0) return;
+        const id = requestAnimationFrame(() => {
+            composerRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+        });
+        return () => cancelAnimationFrame(id);
+    }, [messages.length, isLoading, lastStreaming]);
+
+    // When a reply finishes, put the cursor back in the input on devices with
+    // a mouse. Skipped on touch screens so the keyboard doesn't pop open.
+    useEffect(() => {
+        if (isLoading || lastStreaming || messages.length === 0) return;
+        if (window.matchMedia("(pointer: fine)").matches) {
+            chatInputRef.current?.focus({ preventScroll: true });
+        }
+    }, [isLoading, lastStreaming, messages.length]);
 
     // A new visitor's session starts with their first message (see chat-provider).
     const inputDisabled = isLoading || isChatDisabled;
@@ -340,7 +364,7 @@ export function Chatbox() {
                 </div>
 
                 {/* Composer */}
-                <div className="pt-2 sm:pt-3 pb-3 sm:pb-6 shrink-0 px-1 sm:px-4">
+                <div ref={composerRef} className="pt-2 sm:pt-3 pb-3 sm:pb-6 shrink-0 px-1 sm:px-4 scroll-mb-3">
                     <AnimatePresence>
                         {!dismissedSuggestions && !isChatDisabled && (
                             <motion.div
