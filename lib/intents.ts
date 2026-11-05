@@ -1,14 +1,15 @@
 export const ChatIntents = {
     // About
     ABOUT_ME: 'QUERY_ABOUT_ME',
-    BACKGROUND: 'QUERY_BACKGROUND',
-    INTERESTS: 'QUERY_INTERESTS',
-    VISION: 'QUERY_VISION',
 
-    // Projects
+    // Business
+    SERVICES: 'QUERY_SERVICES',
+    CONTACT: 'QUERY_CONTACT',
+
+    // Case studies (projects)
     PROJECTS_WEB: 'QUERY_PROJECTS_WEB',
     PROJECTS_AI: 'QUERY_PROJECTS_AI',
-    PROJECTS_ALL: 'QUERY_PROJECTS_ALL', // Dynamic fallback
+    PROJECTS_ALL: 'QUERY_PROJECTS_ALL',
 
     // Skills
     SKILLS_FRONTEND: 'QUERY_SKILLS_FRONTEND',
@@ -24,32 +25,24 @@ export const ChatIntents = {
 
 export type ChatIntentType = typeof ChatIntents[keyof typeof ChatIntents];
 
-// Keyword patterns for intent detection
+// Keyword patterns for intent detection. Order matters: the first match
+// wins, so the more specific intents come first. Anything that doesn't
+// match falls through to the LLM + RAG path, which is where open-ended
+// business questions ("how would you cut our support costs?") belong.
 const INTENT_PATTERNS: { intent: ChatIntentType; patterns: RegExp[] }[] = [
-    // Interests/Hobbies - most specific first
+    // Contact / hire
     {
-        intent: ChatIntents.INTERESTS,
+        intent: ChatIntents.CONTACT,
         patterns: [
-            /\b(hobbies|hobby|interests?|free\s*time|spare\s*time|pastime|leisure|for\s*fun|enjoy\s*doing|like\s*to\s*do|passionate\s*about|love\s*doing)\b/i,
-            /what\s*(do\s*you|are\s*your).*(like|enjoy|love|do\s*for\s*fun)/i,
-            /outside\s*(of\s*)?(work|coding|programming)/i,
+            /\b(contact|get\s*in\s*touch|reach\s*(you|out)|book\s*(a\s*)?(call|meeting)|schedule\s*(a\s*)?(call|meeting)|hire\s*you|work\s*with\s*you|email\s*you|your\s*email)\b/i,
         ]
     },
-    // Vision/Goals
+    // Services / problems solved
     {
-        intent: ChatIntents.VISION,
+        intent: ChatIntents.SERVICES,
         patterns: [
-            /\b(vision|goals?|aspirations?|dreams?|ambitions?|future\s*plans?|where\s*do\s*you\s*see|motivat|inspir|philosophy|values?|beliefs?)\b/i,
-            /what\s*(drives?|motivates?)\s*(you|your)/i,
-            /\b(favorite|inspiring)\s*(quotes?|sayings?)\b/i,
-        ]
-    },
-    // Background/Journey
-    {
-        intent: ChatIntents.BACKGROUND,
-        patterns: [
-            /\b(background|journey|story|path|history|milestones?|timeline|how\s*did\s*you\s*(start|begin|get\s*into))\b/i,
-            /\b(tell\s*me\s*about\s*your\s*(journey|background|story|path))\b/i,
+            /\b(services?|offerings?|what\s*do\s*you\s*offer|problems?\s*(do\s*)?you\s*solve|what\s*can\s*you\s*(do|help)|how\s*can\s*you\s*help)\b/i,
+            /\b(grow|scale|automate)\s*(my|our)\s*(business|company|team|operations?)\b/i,
         ]
     },
     // About Me
@@ -60,12 +53,12 @@ const INTENT_PATTERNS: { intent: ChatIntentType; patterns: RegExp[] }[] = [
             /^(who\s*(are|is)\s*you|about\s*you)\??$/i,
         ]
     },
-    // Projects
+    // Case studies / projects
     {
         intent: ChatIntents.PROJECTS_ALL,
         patterns: [
-            /\b(projects?|portfolio|work|apps?|built|created|developed|made|showcase)\b/i,
-            /what\s*(have\s*you|did\s*you)\s*(built|made|created|developed)/i,
+            /\b(projects?|portfolio|case\s*stud(y|ies)|client\s*work|apps?|built|created|developed|showcase|results)\b/i,
+            /what\s*(have\s*you|did\s*you)\s*(built|made|created|developed|delivered)/i,
             /show\s*(me\s*)?(your\s*)?(projects?|work|portfolio)/i,
         ]
     },
@@ -73,7 +66,7 @@ const INTENT_PATTERNS: { intent: ChatIntentType; patterns: RegExp[] }[] = [
     {
         intent: ChatIntents.SKILLS_ALL,
         patterns: [
-            /\b(skills?|technologies?|tech\s*stack|stack|tools?|frameworks?|languages?|expertise|proficient|know\s*how)\b/i,
+            /\b(skills?|technologies?|tech\s*stack|stack|tools?|frameworks?|languages?|expertise|proficient)\b/i,
             /what\s*(do\s*you|can\s*you)\s*(know|use|work\s*with)/i,
         ]
     },
@@ -81,7 +74,7 @@ const INTENT_PATTERNS: { intent: ChatIntentType; patterns: RegExp[] }[] = [
     {
         intent: ChatIntents.WORK_HISTORY,
         patterns: [
-            /\b(experience|work\s*history|career|jobs?|employment|worked\s*(at|for)|positions?)\b/i,
+            /\b(experience|work\s*history|career|jobs?|employment|worked\s*(at|for)|positions?|background)\b/i,
             /where\s*(have\s*you|did\s*you)\s*work/i,
         ]
     },

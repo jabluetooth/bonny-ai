@@ -127,7 +127,7 @@ export async function POST(req: Request) {
 
         // 6. Generate AI Response
         // TOKEN OPTIMIZATION: Check for Static Response first using Strategy Pattern
-        let aiResponse = getDeterministicResponse(intent, content, {});
+        let aiResponse = getDeterministicResponse(intent, content);
 
         // If no static response, use LLM with RAG context
         if (!aiResponse) {

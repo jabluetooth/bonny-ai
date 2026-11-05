@@ -12,6 +12,7 @@ import {
     Sparkles,
     LogOut,
     Command,
+    Wrench,
 } from "lucide-react"
 import Link from "next/link"
 import { useSearchParams } from "next/navigation"
@@ -46,7 +47,13 @@ const data = {
             icon: User,
         },
         {
-            title: "Projects",
+            title: "Services",
+            url: "/admin?view=services",
+            view: "services",
+            icon: Wrench,
+        },
+        {
+            title: "Case Studies",
             url: "/admin?view=projects",
             view: "projects",
             icon: Briefcase,

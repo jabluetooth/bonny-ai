@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 import { useChat } from "@/components/chat-provider"
 
 export function WelcomeModal() {
@@ -11,60 +12,8 @@ export function WelcomeModal() {
     const [name, setName] = useState("")
     const [initializing, setInitializing] = useState(true)
 
-    // --- Local Typing Animation State ---
-    const [placeholder, setPlaceholder] = useState("|")
-    const [phraseIndex, setPhraseIndex] = useState(0)
-    const [charIndex, setCharIndex] = useState(0)
-    const [isDeleting, setIsDeleting] = useState(false)
-    const [isPausing, setIsPausing] = useState(false)
-    const [isInteracted, setIsInteracted] = useState(false)
-
-    const phrases = [
-        "welcome to bonny ai",
-        "my name is fil heinz",
-        "write your name here.."
-    ]
-
-    useEffect(() => {
-        // Stop animation if user has interacted or modal is closed
-        if (!isWelcomeOpen || isInteracted) return
-
-        const currentPhrase = phrases[phraseIndex]
-
-        let timeoutDuration = isDeleting ? 50 : 100
-        if (isPausing) timeoutDuration = 2000
-
-        const timeout = setTimeout(() => {
-            if (isPausing) {
-                setIsPausing(false)
-                setIsDeleting(true)
-                return
-            }
-
-            if (!isDeleting) {
-                if (charIndex < currentPhrase.length) {
-                    setCharIndex(prev => prev + 1)
-                } else {
-                    setIsPausing(true)
-                }
-            } else {
-                if (charIndex > 0) {
-                    setCharIndex(prev => prev - 1)
-                } else {
-                    setIsDeleting(false)
-                    setPhraseIndex((prev) => (prev + 1) % phrases.length)
-                }
-            }
-        }, timeoutDuration)
-
-        setPlaceholder(currentPhrase.substring(0, charIndex) + "|")
-
-        return () => clearTimeout(timeout)
-    }, [charIndex, isDeleting, isPausing, phraseIndex, isWelcomeOpen, isInteracted])
-
     // Only show if not connected and not loading (after initial check)
     useEffect(() => {
-        // Wait a small tick to ensure hydration is settled (though auto-hydrate is removed, good for safety)
         const timer = setTimeout(() => {
             if (!conversationId && !isLoading) {
                 setIsWelcomeOpen(true)
@@ -74,14 +23,9 @@ export function WelcomeModal() {
         return () => clearTimeout(timer)
     }, [conversationId, isLoading, setIsWelcomeOpen])
 
-    // (Removed auto-close effect)
-    // We do NOT want to close the modal just because a conversationId exists,
-    // because now we generate one automatically for every visitor.
-    // The modal should only close when the user explicitly interacts (Start/Skip).
-
     const handleStartWithName = async () => {
         if (!name.trim()) return
-        await startChat(name)
+        await startChat(name.trim())
         setIsWelcomeOpen(false)
     }
 
@@ -97,49 +41,41 @@ export function WelcomeModal() {
             <DialogContent
                 showCloseButton={false}
                 onOpenAutoFocus={(e) => e.preventDefault()}
-                className="sm:max-w-[330px] p-6 border bg-background shadow-lg rounded-2xl outline-none"
+                className="sm:max-w-[380px] p-6 border bg-background shadow-lg rounded-2xl outline-none"
             >
-                <DialogTitle className="sr-only">Welcome</DialogTitle>
-                <DialogDescription className="sr-only">
-                    Please enter your name or continue anonymously to start chatting.
-                </DialogDescription>
-                <div className="flex flex-col items-center justify-center space-y-6">
+                <div className="space-y-1.5">
+                    <DialogTitle className="text-lg font-semibold">Welcome</DialogTitle>
+                    <DialogDescription className="text-sm text-muted-foreground">
+                        Ask me about a problem in your business or about my work. Add your name and company so I can tailor the answers, or continue as a guest.
+                    </DialogDescription>
+                </div>
 
-                    {/* Input Section */}
-                    <div className="w-full">
+                <form
+                    className="space-y-3 pt-2"
+                    onSubmit={(e) => {
+                        e.preventDefault()
+                        handleStartWithName()
+                    }}
+                >
+                    <div className="space-y-1.5">
+                        <Label htmlFor="welcome-name" className="text-xs text-muted-foreground">Name (optional)</Label>
                         <Input
                             id="welcome-name"
                             name="name"
                             value={name}
                             onChange={(e) => setName(e.target.value)}
-                            onFocus={() => {
-                                setIsInteracted(true)
-                                setPlaceholder("Write your name here...")
-                            }}
-                            onBlur={() => setIsInteracted(false)}
-                            className="h-12 rounded-full bg-secondary/30 border-0 focus-visible:ring-1 focus-visible:ring-primary/50 text-center text-lg placeholder:text-muted-foreground/50 transition-all font-light"
-                            placeholder={isInteracted ? "Write your name here..." : placeholder}
-                            onKeyDown={(e) => e.key === 'Enter' && handleStartWithName()}
-                            autoComplete="off"
+                            placeholder="e.g. Maria, Acme Logistics"
+                            autoComplete="name"
+                            maxLength={80}
                         />
                     </div>
-
-                    <div className="flex items-center gap-3 w-full opacity-60">
-                        <div className="h-[1px] bg-border flex-1" />
-                        <span className="text-xs font-medium text-muted-foreground uppercase tracking-widest">or</span>
-                        <div className="h-[1px] bg-border flex-1" />
-                    </div>
-
-                    {/* Anonymous Button */}
-                    <Button
-                        onClick={handleSkip}
-                        disabled={isLoading}
-                        variant="outline"
-                        className="rounded-full h-11 px-8 w-full border-muted-foreground/20 hover:bg-black hover:text-white hover:border-black font-normal transition-all"
-                    >
-                        Continue as Guest
+                    <Button type="submit" className="w-full" disabled={isLoading || !name.trim()}>
+                        Start
                     </Button>
-                </div>
+                    <Button type="button" variant="ghost" className="w-full" onClick={handleSkip} disabled={isLoading}>
+                        Continue as guest
+                    </Button>
+                </form>
             </DialogContent>
         </Dialog>
     )

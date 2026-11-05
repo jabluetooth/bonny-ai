@@ -3,7 +3,7 @@ import { createClient } from '@supabase/supabase-js';
 import { InferenceClient } from '@huggingface/inference';
 import * as dotenv from 'dotenv';
 import { join } from 'path';
-import { generateEmbedding as sharedGenerateEmbedding, embedProjectRecord } from '../lib/embeddings';
+import { generateEmbedding as sharedGenerateEmbedding, embedProjectRecord, embedServiceRecord } from '../lib/embeddings';
 
 // Load environment variables from .env.local
 dotenv.config({ path: join(process.cwd(), '.env.local') });
@@ -151,106 +151,18 @@ async function processExperience() {
     console.log(`  Embedded ${experiences.length} experiences.`);
 }
 
-async function processInterests() {
-    console.log('Processing Interests...');
-    const { data: interests } = await supabase.from('interests').select('*');
-    if (!interests || interests.length === 0) {
-        console.log('  No interests found in database (skipping).');
+async function processServices() {
+    console.log('Processing Services...');
+    const { data: services } = await supabase.from('services').select('*').eq('is_active', true);
+    if (!services || services.length === 0) {
+        console.log('  No services found in database (skipping).');
         return;
     }
 
-    for (const i of interests) {
-        // Clean title: remove trailing colon if present
-        const cleanTitle = (i.title || '').replace(/:$/, '').trim();
-        const description = (i.description || '').trim();
-
-        // Include keywords: hobbies, interests, free time, what I like, passions, personal life
-        const content = `My Hobby and Personal Interest: ${cleanTitle}. ${description}`.trim();
-        const embedding = await generateEmbedding(content);
-
-        const { error } = await supabase.from('document_embeddings').insert({
-            content,
-            embedding,
-            metadata: {
-                source_table: 'interests',
-                record_id: i.id,
-                chunk_type: 'hobby_interest',
-                title: cleanTitle
-            }
-        });
-        if (error) console.error(`  Error inserting interest (${cleanTitle}):`, error.message);
+    for (const s of services) {
+        await embedServiceRecord(supabase, hf, s);
     }
-    console.log(`  Embedded ${interests.length} interests.`);
-}
-
-async function processBackgroundCards() {
-    console.log('Processing Background Cards...');
-    const { data: cards } = await supabase.from('background_cards').select('*');
-    if (!cards || cards.length === 0) {
-        console.log('  No background cards found in database (skipping).');
-        return;
-    }
-
-    for (const c of cards) {
-        // Clean title: remove trailing colon if present
-        const cleanTitle = (c.title || '').replace(/:$/, '').trim();
-        const description = (c.description || '').trim();
-        const dateInfo = c.date_range ? ` (${c.date_range})` : '';
-        const category = c.category ? ` [${c.category}]` : '';
-
-        // Include keywords: background, journey, story, path, milestone, education, history
-        const content = `My Journey and Background${category}: ${cleanTitle}${dateInfo}. ${description}`.trim();
-        const embedding = await generateEmbedding(content);
-
-        const { error } = await supabase.from('document_embeddings').insert({
-            content,
-            embedding,
-            metadata: {
-                source_table: 'background_cards',
-                record_id: c.id,
-                chunk_type: 'journey_milestone',
-                title: cleanTitle,
-                category: c.category || 'general'
-            }
-        });
-        if (error) console.error(`  Error inserting background card (${cleanTitle}):`, error.message);
-    }
-    console.log(`  Embedded ${cards.length} background cards.`);
-}
-
-async function processVisionCards() {
-    console.log('Processing Vision Cards...');
-    const { data: cards } = await supabase.from('vision_cards').select('*');
-    if (!cards || cards.length === 0) {
-        console.log('  No vision cards found in database (skipping).');
-        return;
-    }
-
-    for (const v of cards) {
-        // Clean title: remove trailing colon if present
-        const cleanTitle = (v.title || '').replace(/:$/, '').trim();
-        const quote = (v.quote || '').trim();
-        const attribution = v.name ? ` - ${v.name}` : '';
-        const category = cleanTitle ? ` [${cleanTitle}]` : '';
-
-        // Include keywords: vision, goals, aspirations, philosophy, beliefs, values, inspiration, motivation
-        const content = `My Vision and Inspiration${category}: "${quote}"${attribution}`.trim();
-        const embedding = await generateEmbedding(content);
-
-        const { error } = await supabase.from('document_embeddings').insert({
-            content,
-            embedding,
-            metadata: {
-                source_table: 'vision_cards',
-                record_id: v.id,
-                chunk_type: 'vision_quote',
-                author: v.name,
-                category: cleanTitle || 'inspiration'
-            }
-        });
-        if (error) console.error(`  Error inserting vision card (${cleanTitle}):`, error.message);
-    }
-    console.log(`  Embedded ${cards.length} vision cards.`);
+    console.log(`  Embedded ${services.length} services.`);
 }
 
 async function main() {
@@ -266,11 +178,7 @@ async function main() {
     await processProjects();
     await processSkills();
     await processExperience();
-
-    // Personal/About section data
-    await processInterests();
-    await processBackgroundCards();
-    await processVisionCards();
+    await processServices();
 
     // Verify final count
     const { count, error: countError } = await supabase

@@ -4,30 +4,53 @@ import { useState, useRef, useEffect, useMemo } from "react";
 import { useChat } from "@/components/chat-provider";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Bot, ArrowRight } from "lucide-react";
+import { ArrowRight, Briefcase, Layers, LineChart, Wrench } from "lucide-react";
 import { WelcomeModal } from "./welcome-modal";
 import { SkillsSection } from "@/components/skills-section";
 import { ProjectsSection } from "@/components/projects-section";
 import { AboutSection } from "@/components/about-section";
 import { LoadingScreen } from "@/components/loading-screen";
-import { InterestsSection } from "@/components/interests-section";
-import { VisionSection } from "@/components/vision-section";
-
+import { ServicesSection } from "@/components/services-section";
+import { ContactCta } from "@/components/contact-cta";
 import { ExperiencesSection } from "@/components/experiences-section";
 import { TypingAnimation } from "@/components/ui/typing-animation";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
-import { BackgroundCards } from "@/components/background-cards";
-import { ChromaVideo } from "@/components/ui/chroma-video";
+import { ChatIntents } from "@/lib/intents";
 
-const SUGGESTIONS = [
-    "What projects have you built?",
-    "What's your tech stack?",
-    "Show me your work experience",
-    "Tell me about yourself",
-    "What are you currently working on?",
+// Starter prompts on the landing screen. Mixed on purpose: two for business
+// owners, one that invites them to describe their own problem, one for
+// recruiters.
+const STARTERS: { icon: React.ReactNode; title: string; prompt: string; intent?: string }[] = [
+    { icon: <Wrench size={18} />, title: "What problems do you solve?", prompt: "What problems can you solve for my business?", intent: ChatIntents.SERVICES },
+    { icon: <LineChart size={18} />, title: "Show me results", prompt: "Show me case studies with results.", intent: ChatIntents.PROJECTS_ALL },
+    { icon: <Layers size={18} />, title: "My team loses hours to manual work", prompt: "My team spends hours every week on manual, repetitive work. How would you fix that?" },
+    { icon: <Briefcase size={18} />, title: "I'm hiring", prompt: "I'm hiring. Walk me through your experience.", intent: ChatIntents.WORK_HISTORY },
 ];
+
+const FOLLOW_UPS: { label: string; prompt: string; intent?: string }[] = [
+    { label: "Problems I solve", prompt: "What problems can you solve for my business?", intent: ChatIntents.SERVICES },
+    { label: "Case studies", prompt: "Show me case studies with results.", intent: ChatIntents.PROJECTS_ALL },
+    { label: "How you'd approach my problem", prompt: "How do you usually approach a new client project?" },
+    { label: "Experience", prompt: "Walk me through your experience.", intent: ChatIntents.WORK_HISTORY },
+    { label: "Get in touch", prompt: "I'd like to get in touch.", intent: ChatIntents.CONTACT },
+];
+
+const STATUS_LABELS: Record<string, string> = {
+    available_fulltime: "Available for new roles and projects",
+    available_parttime: "Available for part-time and project work",
+    open_for_discussion: "Open to new conversations",
+    busy: "Currently fully booked",
+};
+
+const DEFAULT_HEADLINE = "I build automation and AI systems that give your team hours back.";
+const DEFAULT_SUBHEADLINE = "Tell me where your business is losing time or money. I'll explain how I'd fix it, with examples of what I've already delivered.";
+
+interface HeroProfile {
+    headline?: string | null;
+    subheadline?: string | null;
+    status?: string | null;
+}
 
 // Types for parsed message data
 interface ParsedMessageData {
@@ -40,12 +63,11 @@ interface ParsedMessageData {
     showExperiences: boolean;
     experienceCategory: string | undefined;
     showAbout: boolean;
-    showInterests: boolean;
-    showVision: boolean;
-    showBackground: boolean;
+    showServices: boolean;
+    showContact: boolean;
 }
 
-// Pure function to parse message content for UI tags - moved outside component to avoid recreation
+// Pure function to parse message content for UI tags
 function getMessageData(content: string): ParsedMessageData {
     const skillMatch = content.match(/\[\[(?:SHOW_)?SKILL:\s*(.*?)\]\]/);
     const categoryMatch = content.match(/\[\[(?:SHOW_)?CATEGORY:\s*(.*?)\]\]/);
@@ -55,9 +77,8 @@ function getMessageData(content: string): ParsedMessageData {
     const showAllSkills = /\[\[(?:SHOW_)?SKILLS\]\]/.test(content);
     const showProjects = !!projectMatch || /\[\[(?:SHOW_)?PROJECTS\]\]/.test(content);
     const showAbout = /\[\[(?:SHOW_)?ABOUT\]\]/.test(content);
-    const showInterests = /\[\[(?:SHOW_)?INTERESTS\]\]/.test(content);
-    const showVision = /\[\[(?:SHOW_)?VISION\]\]/.test(content);
-    const showBackground = /\[\[(?:SHOW_)?BACKGROUND\]\]/.test(content);
+    const showServices = /\[\[(?:SHOW_)?SERVICES\]\]/.test(content);
+    const showContact = /\[\[(?:SHOW_)?CONTACT\]\]/.test(content);
     const showExperiences = !!experienceMatch || /\[\[(?:SHOW_)?EXPERIENCE\]\]/.test(content);
 
     const highlightSkill = skillMatch ? skillMatch[1] : undefined;
@@ -65,31 +86,66 @@ function getMessageData(content: string): ParsedMessageData {
     const experienceCategory = experienceMatch ? experienceMatch[1].toLowerCase() : undefined;
     const projectCategory = projectMatch ? projectMatch[1].toLowerCase() : undefined;
 
-    // Clean the tag out of the displayed text (remove all types of tags)
-    let cleanContent = content.replace(/\[\[(?:SHOW_)?SKILL:\s*.*?\]\]/g, "");
-    cleanContent = cleanContent.replace(/\[\[(?:SHOW_)?CATEGORY:\s*.*?\]\]/g, "");
-    cleanContent = cleanContent.replace(/\[\[(?:SHOW_)?EXPERIENCE:\s*.*?\]\]/g, "");
-    cleanContent = cleanContent.replace(/\[\[(?:SHOW_)?PROJECTS:\s*.*?\]\]/g, "");
-    cleanContent = cleanContent
-        .replace(/\[\[(?:SHOW_)?SKILLS\]\]/g, "")
-        .replace(/\[\[(?:SHOW_)?PROJECTS\]\]/g, "")
-        .replace(/\[\[(?:SHOW_)?EXPERIENCE\]\]/g, "")
-        .replace(/\[\[(?:SHOW_)?ABOUT\]\]/g, "")
-        .replace(/\[\[(?:SHOW_)?INTERESTS\]\]/g, "")
-        .replace(/\[\[(?:SHOW_)?VISION\]\]/g, "")
-        .replace(/\[\[(?:SHOW_)?BACKGROUND\]\]/g, "")
-        .trim();
+    // Strip every [[...]] UI tag from the displayed text — including legacy
+    // ones (INTERESTS, VISION, BACKGROUND) still stored in old conversations.
+    const cleanContent = content.replace(/\[\[[A-Z_]+(?::[^\]]*)?\]\]/g, "").trim();
 
     const showSkills = !!highlightSkill || !!highlightCategory || showAllSkills;
 
-    return { cleanContent, highlightSkill, highlightCategory, showSkills, showProjects, projectCategory, showExperiences, experienceCategory, showAbout, showInterests, showVision, showBackground };
+    return { cleanContent, highlightSkill, highlightCategory, showSkills, showProjects, projectCategory, showExperiences, experienceCategory, showAbout, showServices, showContact };
+}
+
+// Renders **bold** segments; everything else is plain text.
+function FormattedText({ text }: { text: string }) {
+    return (
+        <>
+            {text.split(/(\*\*.*?\*\*)/).map((part, idx) =>
+                part.startsWith("**") && part.endsWith("**")
+                    ? <strong key={idx} className="font-semibold">{part.slice(2, -2)}</strong>
+                    : <span key={idx}>{part}</span>
+            )}
+        </>
+    );
+}
+
+function Block({ children, className }: { children: React.ReactNode; className?: string }) {
+    return (
+        <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3, ease: "easeOut" }}
+            className={cn("mt-1 w-full grid grid-cols-1 min-w-0 overflow-hidden rounded-xl border border-border/60 bg-background", className)}
+        >
+            {children}
+        </motion.div>
+    );
+}
+
+function BotAvatar() {
+    return (
+        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-foreground text-xs font-semibold tracking-wide text-background" aria-hidden>
+            FH
+        </div>
+    );
+}
+
+function useHeroProfile(): HeroProfile | null {
+    const [profile, setProfile] = useState<HeroProfile | null>(null);
+    useEffect(() => {
+        fetch("/api/about/author")
+            .then((res) => (res.ok ? res.json() : null))
+            .then((json) => setProfile(json?.data ?? {}))
+            .catch(() => setProfile({}));
+    }, []);
+    return profile;
 }
 
 export function Chatbox() {
-    const { conversationId, sendMessage, messages, isLoading, isWelcomeOpen, isChatDisabled } = useChat();
+    const { conversationId, sendMessage, messages, isLoading, isChatDisabled } = useChat();
     const [input, setInput] = useState("");
     const [typedMessages, setTypedMessages] = useState<Set<string | number>>(new Set());
     const [dismissedSuggestions, setDismissedSuggestions] = useState(false);
+    const heroProfile = useHeroProfile();
 
     const handleTypingComplete = (id: string | number) => {
         setTypedMessages(prev => {
@@ -99,25 +155,21 @@ export function Chatbox() {
         });
     };
 
-
-
-
     const handleSend = async () => {
         if (!input.trim()) return;
         const msg = input;
         setInput("");
-        // Only dismiss chips when sending from chat interface (not the first/hero send)
         if (messages.length > 0) setDismissedSuggestions(true);
         await sendMessage(msg);
     };
 
-    const handleSuggestion = async (text: string) => {
-        setDismissedSuggestions(true);
-        await sendMessage(text);
+    const handlePrompt = async (prompt: string, intent?: string) => {
+        if (messages.length > 0) setDismissedSuggestions(true);
+        await sendMessage(prompt, intent);
     };
 
-    // Memoize parsed message data - only re-parse when messages array changes
     const parsedMessages = useMemo(() => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         return messages.map((msg: any) => ({
             ...msg,
             parsed: getMessageData(msg.content)
@@ -129,21 +181,15 @@ export function Chatbox() {
     const chatInputRef = useRef<HTMLInputElement>(null);
 
     const scrollToBottom = () => {
-        // block: "end" aligns the target at the bottom of its scrolling
-        // ancestor — the message list's own overflow-y-auto box, not the
-        // page (the composer lives outside that box now, so it's always
-        // visible regardless of scroll position).
+        // block: "end" aligns the target at the bottom of the message list's
+        // own overflow-y-auto box, not the page.
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
     };
 
-    // Always start at the top of the page, not wherever the browser happened
-    // to leave the scroll position (e.g. its own scroll restoration on
-    // reload) — the page can still scroll a little to reach the footer.
     useEffect(() => {
         window.scrollTo(0, 0);
     }, []);
 
-    // Auto-scroll to bottom when messages change
     useEffect(() => {
         scrollToBottom();
     }, [messages]);
@@ -153,30 +199,40 @@ export function Chatbox() {
         return <LoadingScreen />;
     }
 
+    const inputDisabled = !conversationId || isLoading || isChatDisabled;
+
     // 2. Hero / Initial State
     if (messages.length === 0) {
+        const statusLabel = heroProfile?.status ? STATUS_LABELS[heroProfile.status] : undefined;
+
         return (
             <>
                 <WelcomeModal />
 
-                <div className="relative w-full max-w-2xl aspect-video mb-0 translate-y-12 -mb-12">
-                    <ChromaVideo
-                        src="/gs.mp4"
-                        className="w-full h-full"
-                        similarity={35}
-                        smoothness={45}
-                        greenColor={{ r: 0, g: 255, b: 0 }}
-                    />
-                </div>
+                <div className="w-full max-w-3xl mx-auto px-4 flex flex-col gap-8 animate-in fade-in slide-in-from-bottom-2 duration-500">
+                    <div className="space-y-4 text-center">
+                        {statusLabel && (
+                            <span className="inline-flex items-center gap-2 rounded-full border border-border px-3 py-1 text-xs text-muted-foreground">
+                                <span className={cn("h-1.5 w-1.5 rounded-full", heroProfile?.status === "busy" ? "bg-red-500" : "bg-emerald-500")} />
+                                {statusLabel}
+                            </span>
+                        )}
+                        <h1 className="text-3xl md:text-5xl font-semibold tracking-tight text-balance">
+                            {heroProfile?.headline || DEFAULT_HEADLINE}
+                        </h1>
+                        <p className="mx-auto max-w-2xl text-base md:text-lg text-muted-foreground text-balance">
+                            {heroProfile?.subheadline || DEFAULT_SUBHEADLINE}
+                        </p>
+                    </div>
 
-                <div className="w-full max-w-lg mx-auto px-4 animate-in fade-in zoom-in duration-500 slide-in-from-bottom-4">
                     <form
                         onSubmit={(e) => {
                             e.preventDefault();
                             handleSend();
                         }}
-                        className="relative flex items-center w-full"
+                        className="relative flex items-center w-full max-w-2xl mx-auto"
                     >
+                        <label htmlFor="hero-chat-input" className="sr-only">Describe your problem or ask a question</label>
                         <Input
                             id="hero-chat-input"
                             name="message"
@@ -185,215 +241,101 @@ export function Chatbox() {
                             spellCheck={false}
                             value={input}
                             onChange={(e) => setInput(e.target.value)}
-                            placeholder={isChatDisabled ? "Message limit reached." : "Ask me anything..."}
-                            className="w-full h-14 pl-6 pr-16 rounded-full text-lg shadow-lg border-muted-foreground/20 bg-background focus-visible:ring-1 focus-visible:ring-primary/50 transition-all hover:shadow-xl relative z-10"
-                            disabled={!conversationId || isLoading || isChatDisabled}
+                            placeholder={isChatDisabled ? "Message limit reached." : "Describe a problem in your business, or ask about my work"}
+                            className="w-full h-14 pl-5 pr-16 rounded-xl text-base shadow-sm border-border bg-background focus-visible:ring-1 focus-visible:ring-ring"
+                            disabled={inputDisabled}
                         />
                         <Button
                             type="submit"
                             size="icon"
-                            disabled={!conversationId || isLoading || !input.trim() || isChatDisabled}
-                            className="absolute right-1.5 h-11 w-11 rounded-full bg-blue-500 hover:bg-blue-600 text-white shadow-sm transition-transform hover:scale-105 active:scale-95 z-20"
+                            disabled={inputDisabled || !input.trim()}
+                            className="absolute right-2 h-10 w-10 rounded-lg"
                         >
-                            <ArrowRight size={20} />
+                            <ArrowRight size={18} />
                             <span className="sr-only">Send</span>
                         </Button>
                     </form>
+
+                    <div className="grid gap-3 sm:grid-cols-2 max-w-2xl mx-auto w-full">
+                        {STARTERS.map((s) => (
+                            <button
+                                key={s.title}
+                                type="button"
+                                onClick={() => handlePrompt(s.prompt, s.intent)}
+                                disabled={inputDisabled}
+                                className="flex items-center gap-3 rounded-xl border border-border bg-card px-4 py-3 text-left text-sm transition-colors hover:bg-accent disabled:opacity-40 disabled:cursor-not-allowed"
+                            >
+                                <span className="text-muted-foreground">{s.icon}</span>
+                                <span className="font-medium">{s.title}</span>
+                            </button>
+                        ))}
+                    </div>
                 </div>
             </>
         );
     }
 
-    // 2. Chat Interface State (Minimalist)
+    // 3. Chat Interface State
     return (
         <>
             <WelcomeModal />
-            <div className="w-full h-full max-w-4xl flex flex-col min-h-0 animate-in fade-in zoom-in-95 duration-500">
+            <div className="w-full h-full max-w-4xl flex flex-col min-h-0 animate-in fade-in duration-300">
                 {/* Messages Area - a bounded box that scrolls internally, so
-                    a long conversation never grows the page. The composer
-                    below lives outside this box in normal flex flow, so it
-                    never has to overlap or paint over scrolled content. */}
+                    a long conversation never grows the page. */}
                 <div className="flex-1 min-h-0">
                     <div ref={scrollContainerRef} className="h-full overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
                         <div className="flex flex-col gap-6 pb-2 px-4">
-                        {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                        {parsedMessages.map((msg: any, i) => {
-                                // Use pre-parsed data from memoized array
-                                const { cleanContent, highlightSkill, highlightCategory, showSkills, showProjects, projectCategory, showExperiences, experienceCategory, showAbout, showInterests, showVision, showBackground } = msg.parsed;
+                            {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+                            {parsedMessages.map((msg: any, i) => {
+                                const { cleanContent, highlightSkill, highlightCategory, showSkills, showProjects, projectCategory, showExperiences, experienceCategory, showAbout, showServices, showContact } = msg.parsed as ParsedMessageData;
 
-                                const isLatestBotMessage = msg.role === 'bot' && i === parsedMessages.length - 1;
-                                const isAdmin = msg.role === 'admin' || (msg as any).sender_type === 'admin';
+                                const isBot = msg.role === 'bot';
+                                const isLatestBotMessage = isBot && i === parsedMessages.length - 1;
+                                const isAdmin = msg.role === 'admin' || msg.sender_type === 'admin';
                                 const isUser = msg.role === 'user';
 
                                 const messageId = msg.id || i;
                                 const hasTyped = typedMessages.has(messageId);
                                 const shouldAnimate = isLatestBotMessage && !hasTyped;
 
-                                // Heuristic for About Section if not explicitly tagged
-                                const prevMsg = parsedMessages[i - 1];
-                                const showAboutHeuristic = prevMsg && prevMsg.role === 'user' && prevMsg.content.includes("Tell me about yourself");
-
                                 return (
-                                    <div key={msg.id || i} className={`flex gap-3 w-full mb-6 min-w-0 ${isUser ? "justify-end" : "justify-start"}`}>
-                                        {/* Bot Avatar (Only for bot) */}
-                                        {msg.role === "bot" && (
-                                            <Avatar className="h-10 w-10 shrink-0 border-none shadow-none rounded-none bg-transparent">
-                                                <AvatarImage src="/bot-avatar.png" className="object-contain" />
-                                                <AvatarFallback className="bg-primary/10 text-primary"><Bot size={14} /></AvatarFallback>
-                                            </Avatar>
-                                        )}
-                                        {/* Admin Avatar fallback or distinctive icon could go here, for now keeping it simple */}
+                                    <div key={msg.id || i} className={`flex gap-3 w-full min-w-0 ${isUser ? "justify-end" : "justify-start"}`}>
+                                        {(isBot || isAdmin) && <BotAvatar />}
 
-                                        {/* Message Content Column (Bubble + Component) */}
                                         <div className={`flex flex-col gap-2 w-full min-w-0 ${isUser ? "items-end" : "items-start"}`}>
-                                            <div
-                                                className={`rounded-[20px] px-5 py-2.5 text-[15px] shadow-sm leading-relaxed break-words whitespace-pre-wrap [word-break:break-word] min-w-0 max-w-[85%] overflow-hidden ${isUser
-                                                    ? "bg-gradient-to-br from-blue-600/90 to-blue-600/70 backdrop-blur-md border border-blue-400/30 shadow-xl text-white rounded-br-none"
-                                                    : isAdmin
-                                                        ? "bg-gradient-to-br from-red-600/90 to-red-600/70 backdrop-blur-md border border-red-400/30 shadow-xl text-white rounded-bl-none" // Admin Red
-                                                        : "bg-gradient-to-br from-muted/80 to-muted/40 backdrop-blur-md border border-white/10 shadow-xl text-foreground rounded-bl-none"
-                                                    }`}
-                                            >
-                                                {shouldAnimate ? (
-                                                    <TypingAnimation
-                                                        text={cleanContent}
-                                                        duration={1}
-                                                        className="font-normal"
-                                                        onComplete={() => handleTypingComplete(messageId)}
-                                                    />
-                                                ) : (
-                                                    /* Format message with BOLD support */
-                                                    cleanContent.split(/(\*\*.*?\*\*)/).map((part: string, idx: number) => {
-                                                        if (part.startsWith('**') && part.endsWith('**')) {
-                                                            return <strong key={idx}>{part.slice(2, -2)}</strong>;
-                                                        }
-                                                        return <span key={idx}>{part}</span>;
-                                                    })
-                                                )}
-                                            </div>
+                                            {cleanContent && (
+                                                <div
+                                                    className={cn(
+                                                        "rounded-2xl px-4 py-2.5 text-[15px] leading-relaxed break-words whitespace-pre-wrap [word-break:break-word] min-w-0 max-w-[85%]",
+                                                        isUser && "bg-primary text-primary-foreground rounded-br-sm",
+                                                        isAdmin && "bg-muted text-foreground border-l-2 border-primary rounded-bl-sm",
+                                                        isBot && "bg-muted/60 text-foreground rounded-bl-sm"
+                                                    )}
+                                                >
+                                                    {isAdmin && <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Fil (live)</span>}
+                                                    {shouldAnimate ? (
+                                                        <TypingAnimation
+                                                            text={cleanContent}
+                                                            duration={1}
+                                                            className="font-normal"
+                                                            onComplete={() => handleTypingComplete(messageId)}
+                                                        />
+                                                    ) : (
+                                                        <FormattedText text={cleanContent} />
+                                                    )}
+                                                </div>
+                                            )}
 
-                                            {/* Component Display - Outside Message Bubble */}
-                                            {!shouldAnimate && (
+                                            {/* UI blocks render under the bot's text once it has finished typing */}
+                                            {isBot && (!shouldAnimate || !cleanContent) && (
                                                 <>
-                                                    {/* 1. Explicit Component (e.g. forced via code) */}
-                                                    {msg.component && (
-                                                        <motion.div
-                                                            initial={{ opacity: 0, scale: 0 }}
-                                                            animate={{ opacity: 1, scale: 1 }}
-                                                            transition={{
-                                                                duration: 0.4,
-                                                                scale: { type: "spring", visualDuration: 0.4, bounce: 0.25 },
-                                                            }}
-                                                            className="mt-1 w-full grid grid-cols-1 min-w-0 overflow-hidden rounded-xl bg-background/50 backdrop-blur-sm"
-                                                        >
-                                                            {msg.component}
-                                                        </motion.div>
-                                                    )}
-
-                                                    {/* 2. Skills Section (Triggered by Tag or Heuristic) */}
-                                                    {!msg.component && showSkills && msg.role === 'bot' && (
-                                                        <motion.div
-                                                            initial={{ opacity: 0, scale: 0 }}
-                                                            animate={{ opacity: 1, scale: 1 }}
-                                                            transition={{
-                                                                duration: 0.4,
-                                                                scale: { type: "spring", visualDuration: 0.4, bounce: 0.25 },
-                                                            }}
-                                                            className="mt-1 w-full grid grid-cols-1 min-w-0 overflow-hidden rounded-xl bg-background/50 backdrop-blur-sm"
-                                                        >
-                                                            <SkillsSection highlightSkill={highlightSkill} highlightCategory={highlightCategory} />
-                                                        </motion.div>
-                                                    )}
-
-                                                    {/* 3. Projects Section (Triggered by Tag) */}
-                                                    {msg.role === 'bot' && showProjects && (
-                                                        <motion.div
-                                                            initial={{ opacity: 0, scale: 0 }}
-                                                            animate={{ opacity: 1, scale: 1 }}
-                                                            transition={{
-                                                                duration: 0.4,
-                                                                scale: { type: "spring", visualDuration: 0.4, bounce: 0.25 },
-                                                            }}
-                                                            className="mt-1 w-full grid grid-cols-1 min-w-0 overflow-hidden rounded-xl bg-background/50 backdrop-blur-sm"
-                                                        >
-                                                            <ProjectsSection category={projectCategory} />
-                                                        </motion.div>
-                                                    )}
-
-                                                    {/* 4. Experiences Section (Triggered by Tag) */}
-                                                    {msg.role === 'bot' && showExperiences && (
-                                                        <motion.div
-                                                            initial={{ opacity: 0, scale: 0 }}
-                                                            animate={{ opacity: 1, scale: 1 }}
-                                                            transition={{
-                                                                duration: 0.4,
-                                                                scale: { type: "spring", visualDuration: 0.4, bounce: 0.20 },
-                                                            }}
-                                                            className="mt-1 w-full grid grid-cols-1 min-w-0 overflow-hidden rounded-xl bg-background/50 backdrop-blur-sm"
-                                                        >
-                                                            <ExperiencesSection category={experienceCategory} scrollContainer={scrollContainerRef} />
-                                                        </motion.div>
-                                                    )}
-
-                                                    {/* 5. About Section (Triggered by Tag or Heuristic) */}
-                                                    {msg.role === 'bot' && (showAbout || showAboutHeuristic) && (
-                                                        <motion.div
-                                                            initial={{ opacity: 0, scale: 0 }}
-                                                            animate={{ opacity: 1, scale: 1 }}
-                                                            transition={{
-                                                                duration: 0.4,
-                                                                scale: { type: "spring", visualDuration: 0.4, bounce: 0.20 },
-                                                            }}
-                                                            className="mt-1 w-full grid grid-cols-1 min-w-0 rounded-xl bg-background/50 backdrop-blur-sm overflow-visible py-4"
-                                                        >
-                                                            <AboutSection />
-                                                        </motion.div>
-                                                    )}
-
-                                                    {/* 6. Interests Section (Triggered by Tag) */}
-                                                    {msg.role === 'bot' && showInterests && (
-                                                        <motion.div
-                                                            initial={{ opacity: 0, scale: 0 }}
-                                                            animate={{ opacity: 1, scale: 1 }}
-                                                            transition={{
-                                                                duration: 0.4,
-                                                                scale: { type: "spring", visualDuration: 0.4, bounce: 0.20 },
-                                                            }}
-                                                            className="mt-1 w-full grid grid-cols-1 min-w-0"
-                                                        >
-                                                            <InterestsSection />
-                                                        </motion.div>
-                                                    )}
-
-                                                    {/* 7. Vision Section (Triggered by Tag) */}
-                                                    {msg.role === 'bot' && showVision && (
-                                                        <motion.div
-                                                            initial={{ opacity: 0, scale: 0 }}
-                                                            animate={{ opacity: 1, scale: 1 }}
-                                                            transition={{
-                                                                duration: 0.4,
-                                                                scale: { type: "spring", visualDuration: 0.4, bounce: 0.20 },
-                                                            }}
-                                                            className="mt-1 w-full grid grid-cols-1 min-w-0"
-                                                        >
-                                                            <VisionSection />
-                                                        </motion.div>
-                                                    )}
-
-                                                    {/* 8. Background Section (Triggered by Tag) */}
-                                                    {msg.role === 'bot' && showBackground && (
-                                                        <motion.div
-                                                            initial={{ opacity: 0, scale: 0 }}
-                                                            animate={{ opacity: 1, scale: 1 }}
-                                                            transition={{
-                                                                duration: 0.4,
-                                                                scale: { type: "spring", visualDuration: 0.4, bounce: 0.20 },
-                                                            }}
-                                                            className="mt-1 w-full grid grid-cols-1 min-w-0 rounded-xl bg-background/50 backdrop-blur-sm overflow-visible py-4"
-                                                        >
-                                                            <BackgroundCards />
-                                                        </motion.div>
-                                                    )}
+                                                    {msg.component && <Block>{msg.component}</Block>}
+                                                    {!msg.component && showServices && <Block><ServicesSection /></Block>}
+                                                    {!msg.component && showProjects && <Block><ProjectsSection category={projectCategory} /></Block>}
+                                                    {!msg.component && showSkills && <Block><SkillsSection highlightSkill={highlightSkill} highlightCategory={highlightCategory} /></Block>}
+                                                    {!msg.component && showExperiences && <Block><ExperiencesSection category={experienceCategory} scrollContainer={scrollContainerRef} /></Block>}
+                                                    {!msg.component && showAbout && <Block className="overflow-visible py-4 border-0"><AboutSection /></Block>}
+                                                    {!msg.component && showContact && <Block className="border-0"><ContactCta /></Block>}
                                                 </>
                                             )}
                                         </div>
@@ -403,42 +345,22 @@ export function Chatbox() {
 
                             {/* Loading Indicator */}
                             {isLoading && (
-                                <div className="flex gap-3 max-w-[85%] items-end">
-                                    <div className="h-10 w-10 shrink-0 relative overflow-hidden">
-                                        <ChromaVideo
-                                            src="/botpng000.mp4"
-                                            poster="/bot-avatar.png"
-                                            className="w-full h-full"
-                                            similarity={35}
-                                            smoothness={50}
-                                            greenColor={{ r: 0, g: 255, b: 0 }}
-                                            maxResolution={100}
-                                        />
-                                    </div>
-                                    <div className="bg-muted text-foreground rounded-[20px] rounded-bl-none px-5 py-4 flex gap-1 items-center shadow-sm">
+                                <div className="flex gap-3 items-end" role="status" aria-label="Fil is typing">
+                                    <BotAvatar />
+                                    <div className="bg-muted/60 rounded-2xl rounded-bl-sm px-4 py-3.5 flex gap-1 items-center">
                                         <span className="w-1.5 h-1.5 bg-foreground/40 rounded-full animate-bounce [animation-delay:-0.3s]" />
                                         <span className="w-1.5 h-1.5 bg-foreground/40 rounded-full animate-bounce [animation-delay:-0.15s]" />
                                         <span className="w-1.5 h-1.5 bg-foreground/40 rounded-full animate-bounce" />
                                     </div>
                                 </div>
                             )}
-                            {/* Invisible marker at the very bottom of the
-                                scrollable list — scrollIntoView's block:
-                                "end" targets this to bring the latest
-                                message flush to the bottom of the box. */}
                             <div ref={messagesEndRef} />
                         </div>
                     </div>
                 </div>
 
-                {/* Composer - a normal flex child below the (bounded,
-                    internally-scrolling) message list, not flex-1, so it
-                    just takes its content height. Since it no longer
-                    overlaps scrolled content, it needs no sticky/fixed
-                    positioning or opaque/frosted backing to stop message
-                    text bleeding through. */}
-                <div className="pt-3 pb-6 shrink-0">
-                    {/* Suggestion Chips */}
+                {/* Composer */}
+                <div className="pt-3 pb-6 shrink-0 px-4">
                     <AnimatePresence>
                         {!dismissedSuggestions && !isChatDisabled && (
                             <motion.div
@@ -450,15 +372,15 @@ export function Chatbox() {
                                 className="w-full pb-2"
                             >
                                 <div className="flex gap-2 overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-                                    {SUGGESTIONS.map((s) => (
+                                    {FOLLOW_UPS.map((s) => (
                                         <button
-                                            key={s}
+                                            key={s.label}
                                             type="button"
-                                            onClick={() => handleSuggestion(s)}
+                                            onClick={() => handlePrompt(s.prompt, s.intent)}
                                             disabled={isLoading || !conversationId}
-                                            className="shrink-0 rounded-full border border-border/40 bg-background/60 backdrop-blur-sm px-3.5 py-1.5 text-xs text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-all duration-150 disabled:opacity-30 disabled:cursor-not-allowed whitespace-nowrap"
+                                            className="shrink-0 rounded-lg border border-border bg-background px-3 py-1.5 text-xs text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors disabled:opacity-30 disabled:cursor-not-allowed whitespace-nowrap"
                                         >
-                                            {s}
+                                            {s.label}
                                         </button>
                                     ))}
                                 </div>
@@ -466,56 +388,49 @@ export function Chatbox() {
                         )}
                     </AnimatePresence>
 
-                    {/* Input Area - Wide & Clean */}
-                    <div className="w-full">
-                        <form
-                            onSubmit={(e) => {
-                                e.preventDefault();
-                                handleSend();
+                    <form
+                        onSubmit={(e) => {
+                            e.preventDefault();
+                            handleSend();
+                        }}
+                        className="relative flex items-center w-full"
+                    >
+                        <label htmlFor="chat-input" className="sr-only">Message</label>
+                        <Input
+                            ref={chatInputRef}
+                            id="chat-input"
+                            name="message"
+                            autoComplete="off"
+                            autoCorrect="off"
+                            spellCheck={false}
+                            value={input}
+                            onChange={(e) => setInput(e.target.value)}
+                            onFocus={() => {
+                                // Snap the input into view once the on-screen
+                                // keyboard finishes opening.
+                                setTimeout(() => {
+                                    chatInputRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+                                }, 300);
                             }}
-                            className="relative flex items-center w-full rounded-full transition-all duration-300"
+                            placeholder={isChatDisabled ? "Message limit reached." : "Ask a follow-up or describe your problem"}
+                            className="w-full h-12 pl-5 pr-16 rounded-xl shadow-sm border-border bg-background focus-visible:ring-1 focus-visible:ring-ring text-base"
+                            disabled={inputDisabled}
+                        />
+                        <Button
+                            type="submit"
+                            size="icon"
+                            disabled={inputDisabled || !input.trim()}
+                            className="absolute right-2 h-9 w-9 rounded-lg"
                         >
-                            <Input
-                                ref={chatInputRef}
-                                id="chat-input"
-                                name="message"
-                                autoComplete="off"
-                                autoCorrect="off"
-                                spellCheck={false}
-                                value={input}
-                                onChange={(e) => setInput(e.target.value)}
-                                onFocus={() => {
-                                    // Snap the input itself into view once the
-                                    // on-screen keyboard finishes opening (the
-                                    // delay lets its animation settle first) —
-                                    // it lives outside the message list now,
-                                    // so scrolling the messages to their
-                                    // bottom no longer guarantees the input is
-                                    // visible on its own.
-                                    setTimeout(() => {
-                                        chatInputRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
-                                    }, 300);
-                                }}
-                                placeholder={isChatDisabled ? "Message limit reached." : "Type a message..."}
-                                className="w-full h-14 pl-6 pr-16 rounded-full shadow-md border-border/40 bg-background/80 backdrop-blur-md focus-visible:ring-1 focus-visible:ring-primary/30 transition-shadow hover:shadow-lg text-lg relative z-10"
-                                disabled={!conversationId || isLoading || isChatDisabled}
-                            />
-                            <Button
-                                type="submit"
-                                size="icon"
-                                disabled={!conversationId || isLoading || !input.trim() || isChatDisabled}
-                                className="absolute right-1.5 h-11 w-11 rounded-full bg-blue-500 hover:bg-blue-600 text-white shadow-sm transition-transform hover:scale-105 active:scale-95 z-20"
-                            >
-                                <ArrowRight size={20} />
-                                <span className="sr-only">Send</span>
-                            </Button>
-                        </form>
-                        {isChatDisabled && (
-                            <p className="text-center text-xs text-muted-foreground mt-2.5">
-                                Message limit reached — use the <strong className="text-foreground/70">Contact</strong> button in the navigation to reach me directly.
-                            </p>
-                        )}
-                    </div>
+                            <ArrowRight size={18} />
+                            <span className="sr-only">Send</span>
+                        </Button>
+                    </form>
+                    {isChatDisabled && (
+                        <p className="text-center text-xs text-muted-foreground mt-2.5">
+                            Message limit reached. Use <strong className="text-foreground/70">Work with me</strong> in the navigation to reach me directly.
+                        </p>
+                    )}
                 </div>
             </div>
         </>

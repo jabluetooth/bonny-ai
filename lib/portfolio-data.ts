@@ -2,29 +2,20 @@ import { createClient } from "@/lib/supabase-server";
 
 export interface AuthorProfile {
     title: string;
+    headline?: string | null;
+    subheadline?: string | null;
     description: string;
     images: string[];
     status?: string;
 }
 
-export interface BackgroundCard {
+export interface Service {
     id: string;
     title: string;
-    description: string;
-    image: string;
-    date_range: string;
-}
-
-export interface VisionCard {
-    quote: string;
-    name: string;
-    title: string;
-}
-
-export interface Interest {
-    title: string;
-    description: string;
-    image_url?: string;
+    problem: string;
+    solution: string;
+    outcome: string;
+    image_url?: string | null;
 }
 
 export interface SkillItem {
@@ -45,6 +36,10 @@ export interface PortfolioProject {
     features: string[];
     tech_stack: string[];
     challenges: string;
+    industry?: string;
+    problem?: string;
+    solution?: string;
+    results: string[];
     type?: string;
     status?: string;
 }
@@ -61,21 +56,6 @@ export interface PortfolioExperience {
     tech_stack: string[];
 }
 
-const VISION_FALLBACK: VisionCard[] = [
-    { quote: "The future belongs to those who believe in the beauty of their dreams.", name: "Eleanor Roosevelt", title: "Inspiration" },
-    { quote: "Artificial intelligence is not a substitute for human intelligence; it is a tool to amplify human creativity and ingenuity.", name: "Fei-Fei Li", title: "AI & Humanity" },
-    { quote: "Any sufficiently advanced technology is indistinguishable from magic.", name: "Arthur C. Clarke", title: "Technology" },
-    { quote: "The best way to predict the future is to invent it.", name: "Alan Kay", title: "Computer Science" },
-    { quote: "Creativity is intelligence having fun.", name: "Albert Einstein", title: "Innovation" },
-];
-
-const INTERESTS_FALLBACK: Interest[] = [
-    { title: "Photography", description: "I love capturing moments that tell a story. Whether it's street photography in a bustling city or landscapes in the quiet outdoors, framing the world through a lens gives me a new perspective." },
-    { title: "Gaming", description: "From strategic RPGs to fast-paced FPS, gaming is my way to unwind and challenge myself. I enjoy exploring immersive worlds and the storytelling that modern games offer." },
-    { title: "Traveling", description: "Experiencing new cultures and cuisines is what drives me. I believe that travel is the best form of education, and I try to visit a new country every year." },
-    { title: "Reading", description: "I'm an avid reader of sci-fi and philosophy. Books like 'Dune' and 'Sapiens' have shaped my worldview. There's nothing quite like getting lost in a good book." },
-];
-
 export async function getAuthorProfile(): Promise<AuthorProfile | null> {
     const supabase = await createClient();
     const { data } = await supabase
@@ -86,31 +66,14 @@ export async function getAuthorProfile(): Promise<AuthorProfile | null> {
     return data ?? null;
 }
 
-export async function getBackgroundCards(): Promise<BackgroundCard[]> {
+export async function getServices(): Promise<Service[]> {
     const supabase = await createClient();
     const { data } = await supabase
-        .from("background_cards")
+        .from("services")
         .select("*")
+        .eq("is_active", true)
         .order("display_order", { ascending: true });
     return data ?? [];
-}
-
-export async function getVisionCards(): Promise<VisionCard[]> {
-    const supabase = await createClient();
-    const { data } = await supabase
-        .from("vision_cards")
-        .select("*")
-        .order("created_at", { ascending: true });
-    return data && data.length > 0 ? data : VISION_FALLBACK;
-}
-
-export async function getInterests(): Promise<Interest[]> {
-    const supabase = await createClient();
-    const { data } = await supabase
-        .from("interests")
-        .select("*")
-        .order("display_order", { ascending: true });
-    return data && data.length > 0 ? data : INTERESTS_FALLBACK;
 }
 
 export async function getSkillCategories(): Promise<SkillCategory[]> {
@@ -144,6 +107,10 @@ export async function getProjects(category?: string): Promise<PortfolioProject[]
         features: p.key_features || p.features || [],
         tech_stack: p.project_skills?.map((ps: { skills?: { name?: string } }) => ps.skills?.name).filter(Boolean) || [],
         challenges: p.challenges_learned || p.challenges || "",
+        industry: p.industry || undefined,
+        problem: p.problem || undefined,
+        solution: p.solution || undefined,
+        results: Array.isArray(p.results) ? p.results : [],
         type: p.type,
         status: p.status || "Work in progress",
     }));

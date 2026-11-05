@@ -4,6 +4,7 @@ import { useEffect, useState } from "react"
 import { supabase } from "@/lib/supabase-client"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
+import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -16,6 +17,8 @@ export function ProfileTab() {
     const [isSaving, setIsSaving] = useState(false)
 
 
+    const [headline, setHeadline] = useState("")
+    const [subheadline, setSubheadline] = useState("")
     const [description, setDescription] = useState("")
     const [status, setStatus] = useState("available_fulltime")
     const [imageUrls, setImageUrls] = useState<string[]>([])
@@ -29,11 +32,13 @@ export function ProfileTab() {
         setIsLoading(true)
         const { data } = await supabase
             .from('author_profiles')
-            .select('id, description, images, status, is_active')
+            .select('id, headline, subheadline, description, images, status, is_active')
             .eq('is_active', true)
             .maybeSingle()
 
         if (data) {
+            setHeadline(data.headline || "")
+            setSubheadline(data.subheadline || "")
             setDescription(data.description || "")
             setStatus(data.status || "available_fulltime")
             if (data.images && Array.isArray(data.images)) {
@@ -71,6 +76,8 @@ export function ProfileTab() {
         setIsSaving(true)
         try {
             const payload = {
+                headline: headline.trim() || null,
+                subheadline: subheadline.trim() || null,
                 description,
                 status,
                 images: imageUrls.filter(url => url.trim() !== ""),
@@ -107,11 +114,22 @@ export function ProfileTab() {
             <CardHeader>
                 <CardTitle>Main Profile</CardTitle>
                 <CardDescription>
-                    Update the main &quot;About&quot; card introduction.
+                    The headline and subheadline appear on the landing screen. The bio is used in the About card and by the chatbot.
                 </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
 
+
+                <div className="space-y-2">
+                    <Label htmlFor="headline">Landing headline</Label>
+                    <Input id="headline" value={headline} onChange={(e) => setHeadline(e.target.value)} placeholder="I build automation and AI systems that give your team hours back." />
+                    <p className="text-xs text-muted-foreground">Lead with the business result you deliver. Leave empty to use the default.</p>
+                </div>
+
+                <div className="space-y-2">
+                    <Label htmlFor="subheadline">Landing subheadline</Label>
+                    <Textarea id="subheadline" value={subheadline} onChange={(e) => setSubheadline(e.target.value)} className="min-h-[70px]" placeholder="Tell me where your business is losing time or money..." />
+                </div>
 
                 <div className="space-y-2">
                     <Label htmlFor="status">Availability Status</Label>
@@ -120,10 +138,10 @@ export function ProfileTab() {
                             <SelectValue placeholder="Select Status" />
                         </SelectTrigger>
                         <SelectContent>
-                            <SelectItem value="available_fulltime">🟢 Available for Full-time</SelectItem>
-                            <SelectItem value="available_parttime">🟡 Available for Part-time</SelectItem>
-                            <SelectItem value="open_for_discussion">🔵 Open for Discussion</SelectItem>
-                            <SelectItem value="busy">🔴 Busy / Not Looking</SelectItem>
+                            <SelectItem value="available_fulltime">Available for new roles and projects</SelectItem>
+                            <SelectItem value="available_parttime">Available for part-time / project work</SelectItem>
+                            <SelectItem value="open_for_discussion">Open to new conversations</SelectItem>
+                            <SelectItem value="busy">Fully booked</SelectItem>
                         </SelectContent>
                     </Select>
                 </div>
