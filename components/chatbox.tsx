@@ -36,22 +36,6 @@ const FOLLOW_UPS: { label: string; prompt: string; intent?: string }[] = [
     { label: "Get in touch", prompt: "I'd like to get in touch.", intent: ChatIntents.CONTACT },
 ];
 
-const STATUS_LABELS: Record<string, string> = {
-    available_fulltime: "Available for new roles and projects",
-    available_parttime: "Available for part-time and project work",
-    open_for_discussion: "Open to new conversations",
-    busy: "Currently fully booked",
-};
-
-const DEFAULT_HEADLINE = "I build automation and AI systems that give your team hours back.";
-const DEFAULT_SUBHEADLINE = "Tell me where your business is losing time or money. I'll explain how I'd fix it, with examples of what I've already delivered.";
-
-interface HeroProfile {
-    headline?: string | null;
-    subheadline?: string | null;
-    status?: string | null;
-}
-
 // Types for parsed message data
 interface ParsedMessageData {
     cleanContent: string;
@@ -128,22 +112,11 @@ function Block({ children, className }: { children: React.ReactNode; className?:
 
 function BotAvatar() {
     return (
-        <Avatar className="h-10 w-10 shrink-0 border-none shadow-none rounded-none bg-transparent">
+        <Avatar className="h-8 w-8 sm:h-10 sm:w-10 shrink-0 border-none shadow-none rounded-none bg-transparent">
             <AvatarImage src="/bot-avatar.png" alt="" className="object-contain" />
             <AvatarFallback className="bg-primary/10 text-primary"><Bot size={14} /></AvatarFallback>
         </Avatar>
     );
-}
-
-function useHeroProfile(): HeroProfile | null {
-    const [profile, setProfile] = useState<HeroProfile | null>(null);
-    useEffect(() => {
-        fetch("/api/about/author")
-            .then((res) => (res.ok ? res.json() : null))
-            .then((json) => setProfile(json?.data ?? {}))
-            .catch(() => setProfile({}));
-    }, []);
-    return profile;
 }
 
 export function Chatbox() {
@@ -151,7 +124,6 @@ export function Chatbox() {
     const [input, setInput] = useState("");
     const [typedMessages, setTypedMessages] = useState<Set<string | number>>(new Set());
     const [dismissedSuggestions, setDismissedSuggestions] = useState(false);
-    const heroProfile = useHeroProfile();
 
     const handleTypingComplete = (id: string | number) => {
         setTypedMessages(prev => {
@@ -205,11 +177,9 @@ export function Chatbox() {
 
     // 2. Hero / Initial State
     if (messages.length === 0) {
-        const statusLabel = heroProfile?.status ? STATUS_LABELS[heroProfile.status] : undefined;
-
         return (
             <>
-                <div className="relative w-full max-w-xl aspect-video translate-y-10 -mb-10 mx-auto">
+                <div className="relative w-full max-w-[20rem] sm:max-w-md md:max-w-xl aspect-video mx-auto translate-y-6 -mb-6 md:translate-y-10 md:-mb-10">
                     <ChromaVideo
                         src="/gs.mp4"
                         className="w-full h-full"
@@ -219,33 +189,19 @@ export function Chatbox() {
                     />
                 </div>
 
-                <div className="w-full max-w-2xl mx-auto px-4 flex flex-col gap-5 animate-in fade-in zoom-in duration-500 slide-in-from-bottom-4">
-                    {/* Introduction + recommended prompts sit above the input */}
-                    <div className="space-y-2 text-center">
-                        {statusLabel && (
-                            <span className="inline-flex items-center gap-2 rounded-full border border-border px-3 py-1 text-xs text-muted-foreground">
-                                <span className={cn("h-1.5 w-1.5 rounded-full", heroProfile?.status === "busy" ? "bg-red-500" : "bg-emerald-500")} />
-                                {statusLabel}
-                            </span>
-                        )}
-                        <h1 className="text-2xl md:text-4xl font-semibold tracking-tight text-balance">
-                            {heroProfile?.headline || DEFAULT_HEADLINE}
-                        </h1>
-                        <p className="mx-auto max-w-xl text-sm md:text-base text-muted-foreground text-balance">
-                            {heroProfile?.subheadline || DEFAULT_SUBHEADLINE}
-                        </p>
-                    </div>
-
-                    <div className="grid gap-2 sm:grid-cols-2">
+                <div className="w-full max-w-2xl mx-auto px-1 sm:px-4 flex flex-col gap-3 sm:gap-4 animate-in fade-in zoom-in duration-500 slide-in-from-bottom-4">
+                    {/* Recommended prompts sit above the input: a swipeable row
+                        on phones, a 2x2 grid from sm up. */}
+                    <div className="-mx-1 px-1 flex gap-2 overflow-x-auto snap-x [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] sm:mx-0 sm:px-0 sm:grid sm:grid-cols-2 sm:overflow-visible">
                         {STARTERS.map((s) => (
                             <button
                                 key={s.title}
                                 type="button"
                                 onClick={() => handlePrompt(s.prompt, s.intent)}
                                 disabled={inputDisabled}
-                                className="flex items-center gap-3 rounded-full border border-border/40 bg-background/60 backdrop-blur-sm px-4 py-2.5 text-left text-sm text-muted-foreground transition-all hover:bg-accent hover:text-accent-foreground disabled:opacity-40 disabled:cursor-not-allowed"
+                                className="snap-start shrink-0 flex items-center gap-2 sm:gap-3 relative z-10 rounded-full border border-border/60 bg-background shadow-sm px-3.5 py-2 sm:px-4 sm:py-2.5 text-left text-xs sm:text-sm text-muted-foreground whitespace-nowrap sm:whitespace-normal transition-all hover:bg-accent hover:text-accent-foreground disabled:opacity-40 disabled:cursor-not-allowed"
                             >
-                                <span aria-hidden>{s.icon}</span>
+                                <span aria-hidden className="[&>svg]:h-4 [&>svg]:w-4 sm:[&>svg]:h-[18px] sm:[&>svg]:w-[18px]">{s.icon}</span>
                                 <span className="font-medium">{s.title}</span>
                             </button>
                         ))}
@@ -268,14 +224,14 @@ export function Chatbox() {
                             value={input}
                             onChange={(e) => setInput(e.target.value)}
                             placeholder={isChatDisabled ? "Message limit reached." : "Ask me anything..."}
-                            className="w-full h-14 pl-6 pr-16 rounded-full text-lg shadow-lg border-muted-foreground/20 bg-background focus-visible:ring-1 focus-visible:ring-primary/50 transition-all hover:shadow-xl relative z-10"
+                            className="w-full h-12 sm:h-14 pl-5 sm:pl-6 pr-14 sm:pr-16 rounded-full text-base sm:text-lg shadow-lg border-muted-foreground/20 bg-background focus-visible:ring-1 focus-visible:ring-primary/50 transition-all hover:shadow-xl relative z-10"
                             disabled={inputDisabled}
                         />
                         <Button
                             type="submit"
                             size="icon"
                             disabled={inputDisabled || !input.trim()}
-                            className="absolute right-1.5 h-11 w-11 rounded-full bg-blue-500 hover:bg-blue-600 text-white shadow-sm transition-transform hover:scale-105 active:scale-95 z-20"
+                            className="absolute right-1.5 h-9 w-9 sm:h-11 sm:w-11 rounded-full bg-blue-500 hover:bg-blue-600 text-white shadow-sm transition-transform hover:scale-105 active:scale-95 z-20"
                         >
                             <ArrowRight size={20} />
                             <span className="sr-only">Send</span>
@@ -294,7 +250,7 @@ export function Chatbox() {
                     a long conversation never grows the page. */}
                 <div className="flex-1 min-h-0">
                     <div ref={scrollContainerRef} className="h-full overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-                        <div className="flex flex-col gap-6 pb-2 px-4">
+                        <div className="flex flex-col gap-4 sm:gap-6 pb-2 px-1 sm:px-4">
                             {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
                             {parsedMessages.map((msg: any, i) => {
                                 const { cleanContent, highlightSkill, highlightCategory, showSkills, showProjects, projectCategory, showExperiences, experienceCategory, showAbout, showServices, showContact } = msg.parsed as ParsedMessageData;
@@ -314,14 +270,14 @@ export function Chatbox() {
                                 const shouldAnimate = isLatestBotMessage && !hasTyped && !isStreamed;
 
                                 return (
-                                    <div key={msg.id || i} className={`flex gap-3 w-full min-w-0 ${isUser ? "justify-end" : "justify-start"}`}>
+                                    <div key={msg.id || i} className={`flex gap-2 sm:gap-3 w-full min-w-0 ${isUser ? "justify-end" : "justify-start"}`}>
                                         {isBot && <BotAvatar />}
 
                                         <div className={`flex flex-col gap-2 w-full min-w-0 ${isUser ? "items-end" : "items-start"}`}>
                                             {cleanContent && (
                                                 <div
                                                     className={cn(
-                                                        "rounded-[20px] px-5 py-2.5 text-[15px] shadow-sm leading-relaxed break-words whitespace-pre-wrap [word-break:break-word] min-w-0 max-w-[85%] overflow-hidden",
+                                                        "rounded-[20px] px-4 sm:px-5 py-2.5 text-[15px] shadow-sm leading-relaxed break-words whitespace-pre-wrap [word-break:break-word] min-w-0 max-w-[88%] sm:max-w-[85%] overflow-hidden",
                                                         isUser && "bg-gradient-to-br from-blue-600/90 to-blue-600/70 backdrop-blur-md border border-blue-400/30 shadow-xl text-white rounded-br-none",
                                                         isAdmin && "bg-gradient-to-br from-red-600/90 to-red-600/70 backdrop-blur-md border border-red-400/30 shadow-xl text-white rounded-bl-none",
                                                         isBot && "bg-gradient-to-br from-muted/80 to-muted/40 backdrop-blur-md border border-white/10 shadow-xl text-foreground rounded-bl-none"
@@ -360,7 +316,7 @@ export function Chatbox() {
                             {/* Loading Indicator */}
                             {isLoading && (
                                 <div className="flex gap-3 max-w-[85%] items-end" role="status" aria-label="Typing">
-                                    <div className="h-10 w-10 shrink-0 relative overflow-hidden">
+                                    <div className="h-8 w-8 sm:h-10 sm:w-10 shrink-0 relative overflow-hidden">
                                         <ChromaVideo
                                             src="/botpng000.mp4"
                                             poster="/bot-avatar.png"
@@ -384,7 +340,7 @@ export function Chatbox() {
                 </div>
 
                 {/* Composer */}
-                <div className="pt-3 pb-6 shrink-0 px-4">
+                <div className="pt-2 sm:pt-3 pb-3 sm:pb-6 shrink-0 px-1 sm:px-4">
                     <AnimatePresence>
                         {!dismissedSuggestions && !isChatDisabled && (
                             <motion.div
@@ -437,14 +393,14 @@ export function Chatbox() {
                                 }, 300);
                             }}
                             placeholder={isChatDisabled ? "Message limit reached." : "Type a message..."}
-                            className="w-full h-14 pl-6 pr-16 rounded-full shadow-md border-border/40 bg-background/80 backdrop-blur-md focus-visible:ring-1 focus-visible:ring-primary/30 transition-shadow hover:shadow-lg text-lg relative z-10"
+                            className="w-full h-12 sm:h-14 pl-5 sm:pl-6 pr-14 sm:pr-16 rounded-full shadow-md border-border/40 bg-background/80 backdrop-blur-md focus-visible:ring-1 focus-visible:ring-primary/30 transition-shadow hover:shadow-lg text-base sm:text-lg relative z-10"
                             disabled={inputDisabled}
                         />
                         <Button
                             type="submit"
                             size="icon"
                             disabled={inputDisabled || !input.trim()}
-                            className="absolute right-1.5 h-11 w-11 rounded-full bg-blue-500 hover:bg-blue-600 text-white shadow-sm transition-transform hover:scale-105 active:scale-95 z-20"
+                            className="absolute right-1.5 h-9 w-9 sm:h-11 sm:w-11 rounded-full bg-blue-500 hover:bg-blue-600 text-white shadow-sm transition-transform hover:scale-105 active:scale-95 z-20"
                         >
                             <ArrowRight size={20} />
                             <span className="sr-only">Send</span>

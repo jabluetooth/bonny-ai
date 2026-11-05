@@ -18,7 +18,7 @@ export default function Home() {
             max-h caps how tall it gets on very tall ones. The footer below
             keeps reaching the bottom of the viewport via its own mt-auto
             regardless of how tall this ends up. */}
-        <div className="flex-1 min-h-0 max-h-[46rem] flex flex-col items-center justify-center p-4 md:p-8 pb-12 gap-8 w-full">
+        <div className="flex-1 min-h-0 max-h-[46rem] flex flex-col items-center justify-center px-3 py-3 sm:p-4 md:p-8 sm:pb-12 gap-6 sm:gap-8 w-full">
           <Chatbox />
         </div>
         <SiteFooter />
