@@ -165,7 +165,9 @@ ${ragContext ? `\nRELEVANT DATABASE MATCHES (use these for specific details)\n${
 function llmConfig() {
     const apiKey = process.env.GROQ_API_KEY || process.env.OPENAI_API_KEY;
     const baseURL = process.env.GROQ_API_KEY ? 'https://api.groq.com/openai/v1' : undefined;
-    return { apiKey, baseURL, model: baseURL ? 'openai/gpt-oss-20b' : 'gpt-4o-mini' };
+    // gpt-oss-20b is blocked in this Groq org; override with GROQ_MODEL.
+    const groqModel = process.env.GROQ_MODEL || 'openai/gpt-oss-120b';
+    return { apiKey, baseURL, model: baseURL ? groqModel : 'gpt-4o-mini' };
 }
 
 function tracedClient(apiKey: string, baseURL: string | undefined, traceContext?: LLMTraceContext) {
