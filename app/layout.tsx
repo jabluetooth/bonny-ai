@@ -33,8 +33,8 @@ const jsonLd = [
     name: "Fil Heinz O. Re La Torre",
     url: siteUrl,
     image: `${siteUrl}/bot-avatar.png`,
-    jobTitle: "Software Engineer",
-    description: "Software Engineer specializing in full-stack web development and AI/ML",
+    jobTitle: "Automation & AI Solutions Engineer",
+    description: "Automation & AI Solutions Engineer helping businesses cut manual work and grow",
     sameAs: [
       "https://github.com/jabluetooth",
       "https://ph.linkedin.com/in/filheinzrelatorre",
@@ -55,7 +55,7 @@ const jsonLd = [
     "@type": "WebSite",
     name: "Fil Heinz Portfolio",
     url: siteUrl,
-    description: "Fil Heinz O. Re La Torre - Software Engineer specializing in full-stack web development and AI/ML. Ask the AI chatbot about my work, skills, and experience.",
+    description: "Fil Heinz O. Re La Torre, Automation & AI Solutions Engineer. I help businesses cut manual work and grow with automation, AI and custom software. Ask about a problem and see the case studies.",
   },
 ];
 
@@ -64,7 +64,7 @@ export const metadata: Metadata = {
     default: "Fil Heinz | Talk to My Portfolio",
     template: "%s | Fil Heinz",
   },
-  description: "Fil Heinz O. Re La Torre - Software Engineer specializing in full-stack web development and AI/ML. Ask the AI chatbot about my work, skills, and experience.",
+  description: "Fil Heinz O. Re La Torre, Automation & AI Solutions Engineer. I help businesses cut manual work and grow with automation, AI and custom software. Ask about a problem and see the case studies.",
   keywords: ["Software Engineer", "Web Developer", "AI", "Machine Learning", "React", "Next.js", "Portfolio", "Fil Heinz", "Full Stack Developer"],
   authors: [{ name: "Fil Heinz O. Re La Torre" }],
   creator: "Fil Heinz O. Re La Torre",
@@ -76,8 +76,8 @@ export const metadata: Metadata = {
     type: "website",
     locale: "en_US",
     url: siteUrl,
-    title: "Fil Heinz | Talk to My Portfolio",
-    description: "Skip the scrolling. Ask the AI anything about my projects, skills, and experience. Get a real answer back.",
+    title: "Fil Heinz | Automation & AI Solutions",
+    description: "Describe a problem in your business and get a straight answer, with case studies showing the problem, the solution and the results.",
     siteName: "Fil Heinz Portfolio",
     images: [
       {
@@ -90,8 +90,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Fil Heinz | Talk to My Portfolio",
-    description: "Skip the scrolling. Ask the AI anything about my projects, skills, and experience. Get a real answer back.",
+    title: "Fil Heinz | Automation & AI Solutions",
+    description: "Describe a problem in your business and get a straight answer, with case studies showing the problem, the solution and the results.",
     images: [`${siteUrl}/og-image.png`],
     creator: "@filheinz",
   },

@@ -1,14 +1,28 @@
 import { SupabaseClient } from '@supabase/supabase-js';
 import { ChatIntents } from './intents';
-import { LLMContext, ProjectContext, SkillContext, ExperienceContext, ProfileContext, InterestContext, VisionContext, BackgroundContext } from './llm';
+import { LLMContext, ProjectContext, SkillContext, ExperienceContext, ProfileContext, ServiceContext } from './llm';
 
-// Helper to sanitize/map DB data to strict types
+/* eslint-disable @typescript-eslint/no-explicit-any -- raw Supabase rows */
+
+const PROJECT_SELECT = '*, project_skills(skills(name))';
+
 const mapProjects = (items: any[]): ProjectContext[] => items.map(p => ({
     title: p.title,
-    description: p.description,
-    tech_stack: p.tech_stack || [], // Handled by API route logic usually, so ensuring array
+    description: p.description || '',
+    tech_stack: p.project_skills?.map((ps: any) => ps.skills?.name).filter(Boolean) || [],
+    industry: p.industry || undefined,
+    problem: p.problem || undefined,
+    solution: p.solution || undefined,
+    results: Array.isArray(p.results) ? p.results : [],
     url: p.live_url || p.demo_url,
     github: p.github_url
+}));
+
+const mapServices = (items: any[]): ServiceContext[] => items.map(s => ({
+    title: s.title,
+    problem: s.problem || '',
+    solution: s.solution || '',
+    outcome: s.outcome || '',
 }));
 
 const mapSkills = (items: any[]): SkillContext[] => items.map(s => ({
@@ -26,25 +40,8 @@ const mapExperience = (items: any[]): ExperienceContext[] => items.map(e => ({
 }));
 
 const mapProfile = (items: any[]): ProfileContext[] => items.map(p => ({
-    content: p.description
-}));
-
-const mapInterests = (items: any[]): InterestContext[] => items.map(i => ({
-    title: i.title?.replace(/:$/, '') || '', // Remove trailing colon
-    description: i.description || ''
-}));
-
-const mapVision = (items: any[]): VisionContext[] => items.map(v => ({
-    quote: v.quote,
-    author: v.name,
-    category: v.title
-}));
-
-const mapBackground = (items: any[]): BackgroundContext[] => items.map(b => ({
-    title: b.title?.replace(/:$/, '') || '', // Remove trailing colon
-    description: b.description || '',
-    dateRange: b.date_range,
-    category: b.category
+    content: p.description || '',
+    headline: p.headline || undefined,
 }));
 
 export async function getContextForIntent(
@@ -52,119 +49,61 @@ export async function getContextForIntent(
     intent: string | undefined,
     userName: string
 ): Promise<LLMContext> {
-    const context: LLMContext = {
-        userName: userName,
-        projects: [],
-        skills: [],
-        experience: [],
-        about: [],
-        interests: [],
-        vision: [],
-        background: []
-    };
+    const context: LLMContext = { userName };
 
-    // --- Intent-Specific Fetching ---
-
-    // 1. ABOUT ME - Fetch author profile
     if (intent === ChatIntents.ABOUT_ME) {
-        let { data } = await supabase.from('author_profiles').select('*').eq('is_active', true).maybeSingle();
-        if (!data) {
-            const { data: fallbackData } = await supabase.from('author_profiles').select('*').limit(1).maybeSingle();
-            data = fallbackData;
-        }
+        const { data } = await supabase.from('author_profiles').select('*').eq('is_active', true).maybeSingle();
         context.about = mapProfile(data ? [data] : []);
     }
 
-    // 2. INTERESTS - Fetch from interests table
-    else if (intent === ChatIntents.INTERESTS) {
-        const { data: interests } = await supabase.from('interests').select('*').order('id', { ascending: true });
-        context.interests = mapInterests(interests || []);
-    }
-
-    // 3. VISION - Fetch from vision_cards table
-    else if (intent === ChatIntents.VISION) {
-        const { data: vision } = await supabase.from('vision_cards').select('*').order('id', { ascending: true });
-        context.vision = mapVision(vision || []);
-    }
-
-    // 4. BACKGROUND - Fetch from background_cards table + experiences
-    else if (intent === ChatIntents.BACKGROUND) {
-        const [backgroundCards, experiences] = await Promise.all([
-            supabase.from('background_cards').select('*').order('id', { ascending: true }),
-            supabase.from('experiences').select('*').order('id', { ascending: false })
+    else if (intent === ChatIntents.SERVICES) {
+        const [services, projects] = await Promise.all([
+            supabase.from('services').select('*').eq('is_active', true).order('display_order', { ascending: true }),
+            supabase.from('projects').select(PROJECT_SELECT).order('created_at', { ascending: false }).limit(5),
         ]);
-        context.background = mapBackground(backgroundCards.data || []);
-        context.experience = mapExperience(experiences.data || []);
+        context.services = mapServices(services.data || []);
+        context.projects = mapProjects(projects.data || []);
     }
 
-    // 2. EXPERIENCE
+    else if (intent === ChatIntents.CONTACT) {
+        const { data } = await supabase.from('contact_links').select('*').eq('is_active', true);
+        context.contactLinks = (data || []).map((l: any) => ({ platform: l.platform, url: l.url }));
+    }
+
     else if (intent === ChatIntents.WORK_HISTORY || intent === ChatIntents.EDUCATION) {
-        const typeFilter = intent === ChatIntents.WORK_HISTORY ? 'work' : 'education'; // Assuming DB has 'work'/'education' types or similar
-        // For simplicity, fetching all and letting LLM filter or just showing all sorted
         const { data } = await supabase.from('experiences').select('*').order('id', { ascending: false });
         context.experience = mapExperience(data || []);
     }
 
-    // 3. PROJECTS
     else if (intent === ChatIntents.PROJECTS_WEB || intent === ChatIntents.PROJECTS_AI || intent === ChatIntents.PROJECTS_ALL) {
-        const query = supabase.from('projects').select('*, project_skills(skills(name))').order('created_at', { ascending: false });
-        // NOTE: In a real app we might filter DB side, but for small portfolio, mapping is fine.
-
-        const { data } = await query;
-        const rawProjects = data?.map((p: any) => ({
-            ...p,
-            tech_stack: p.project_skills?.map((ps: any) => ps.skills?.name) || []
-        })) || [];
-
-        // Filter in memory for refined context if needed, or just pass all.
-        // Passing all gives LLM more context to say "I also have..."
-        context.projects = mapProjects(rawProjects);
+        const { data } = await supabase.from('projects').select(PROJECT_SELECT).order('created_at', { ascending: false });
+        context.projects = mapProjects(data || []);
     }
 
-    // 4. SKILLS
     else if (intent?.startsWith('QUERY_SKILLS')) {
         const { data } = await supabase.from('skills').select('*, category:skill_categories(title)');
-        const skills = data || [];
-
-        // Filter if specific category requested to save tokens? 
-        // Or just send all so it knows adjacent skills. Sending all is usually better for small datasets.
-
-        context.skills = mapSkills(skills);
+        context.skills = mapSkills(data || []);
     }
 
-    // 5. GENERAL / FALLBACK (Natural Chat)
+    // General / open-ended question: give the model a compact view of
+    // everything, with services and case studies first since most free-form
+    // questions are about whether I can solve a specific problem.
     else {
-        // "Fetch Everything" (Optimized)
-        // We fetch top items to give a "gist" of the portfolio
-        const [projects, skills, experience, about, contacts, interests, vision, background] = await Promise.all([
-            supabase.from('projects').select('*, project_skills(skills(name))').limit(5),
+        const [services, projects, skills, experience, about, contacts] = await Promise.all([
+            supabase.from('services').select('*').eq('is_active', true).order('display_order', { ascending: true }),
+            supabase.from('projects').select(PROJECT_SELECT).order('created_at', { ascending: false }).limit(6),
             supabase.from('skills').select('*, category:skill_categories(title)'),
-            supabase.from('experiences').select('*').limit(3),
+            supabase.from('experiences').select('*').order('id', { ascending: false }).limit(3),
             supabase.from('author_profiles').select('*').eq('is_active', true),
             supabase.from('contact_links').select('*').eq('is_active', true),
-            supabase.from('interests').select('*').limit(5),
-            supabase.from('vision_cards').select('*').limit(3),
-            supabase.from('background_cards').select('*').limit(3)
         ]);
 
-        const rawProjects = projects.data?.map((p: any) => ({
-            ...p,
-            tech_stack: p.project_skills?.map((ps: any) => ps.skills?.name) || []
-        })) || [];
-
-        context.projects = mapProjects(rawProjects);
+        context.services = mapServices(services.data || []);
+        context.projects = mapProjects(projects.data || []);
         context.skills = mapSkills(skills.data || []);
         context.experience = mapExperience(experience.data || []);
         context.about = mapProfile(about.data || []);
-        context.interests = mapInterests(interests.data || []);
-        context.vision = mapVision(vision.data || []);
-        context.background = mapBackground(background.data || []);
-
-        // Add contacts to context
-        const links = contacts.data || [];
-        if (links.length > 0) {
-            context.contactLinks = links.map(l => ({ platform: l.platform, url: l.url }));
-        }
+        context.contactLinks = (contacts.data || []).map((l: any) => ({ platform: l.platform, url: l.url }));
     }
 
     return context;

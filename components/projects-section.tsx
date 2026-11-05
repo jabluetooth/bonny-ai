@@ -1,29 +1,16 @@
-"use strict";
 "use client";
 
 import { useEffect, useState } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ExpandableCardDemo } from "@/components/ui/expandable-card";
+import { CaseStudyList, type CaseStudy } from "@/components/case-study-list";
 import { fetchWithCache, CACHE_KEYS } from "@/lib/data-cache";
-
-export interface Project {
-    title: string;
-    image_url?: string;
-    description?: string;
-    github_url?: string;
-    project_url?: string;
-    features: string[];
-    tech_stack: string[];
-    challenges: string;
-    status?: string;
-}
 
 interface ProjectsSectionProps {
     category?: string;
 }
 
 export function ProjectsSection({ category }: ProjectsSectionProps) {
-    const [projects, setProjects] = useState<Project[]>([]);
+    const [projects, setProjects] = useState<CaseStudy[]>([]);
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
@@ -80,8 +67,8 @@ export function ProjectsSection({ category }: ProjectsSectionProps) {
 
     return (
         <div className="w-full p-4">
-            <h2 className="text-xl font-semibold px-2 mb-4 text-center md:text-left mx-auto max-w-6xl">Featured Projects</h2>
-            <ExpandableCardDemo projects={projects} />
+            <h2 className="text-lg font-semibold mb-4">Case studies</h2>
+            <CaseStudyList studies={projects} />
         </div>
     );
 }

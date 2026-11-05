@@ -201,7 +201,7 @@ function formatContext(
     let truncated = false;
 
     // Priority order for sources
-    const sourceOrder = ['projects', 'skills', 'experiences', 'interests', 'background_cards', 'vision_cards', 'author_profiles'];
+    const sourceOrder = ['services', 'projects', 'experiences', 'skills', 'author_profiles'];
 
     for (const source of sourceOrder) {
         const docs = grouped[source];

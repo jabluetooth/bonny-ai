@@ -7,9 +7,20 @@ export interface ProjectContext {
     title: string;
     description: string;
     tech_stack: string[];
+    industry?: string;
+    problem?: string;
+    solution?: string;
+    results?: string[];
     features?: string[];
     url?: string;
     github?: string;
+}
+
+export interface ServiceContext {
+    title: string;
+    problem: string;
+    solution: string;
+    outcome: string;
 }
 
 export interface SkillContext {
@@ -28,37 +39,22 @@ export interface ExperienceContext {
 
 export interface ProfileContext {
     content: string;
+    headline?: string;
 }
 
-export interface InterestContext {
-    title: string;
-    description: string;
-}
-
-export interface VisionContext {
-    quote: string;
-    author?: string;
-    category?: string;
-}
-
-export interface BackgroundContext {
-    title: string;
-    description: string;
-    dateRange?: string;
-    category?: string;
+export interface ContactLinkContext {
+    platform: string;
+    url: string;
 }
 
 export interface LLMContext {
     userName?: string;
+    services?: ServiceContext[];
     projects?: ProjectContext[];
     skills?: SkillContext[];
     experience?: ExperienceContext[];
     about?: ProfileContext[];
-    interests?: InterestContext[];
-    vision?: VisionContext[];
-    background?: BackgroundContext[];
-    categories?: string[];
-    [key: string]: any; // Allow extensibility
+    contactLinks?: ContactLinkContext[];
 }
 
 export interface LLMTraceContext {
@@ -69,13 +65,40 @@ export interface LLMTraceContext {
 }
 
 
-// Helper to format context as token-efficient text (Pseudo-YAML/Markdown)
+// Helper to format context as token-efficient plain text
 function formatContext(data: LLMContext): string {
     let output = "";
-    if (data.userName) output += `User Name: ${data.userName}\n`;
+    if (data.userName && data.userName !== "Guest") output += `Visitor name = ${data.userName}\n`;
 
-    if (data?.skills && data.skills.length > 0) {
-        output += "\n-- MY SKILLS --\n";
+    if (data.about && data.about.length > 0) {
+        output += "\n-- ABOUT ME --\n";
+        data.about.forEach(a => {
+            if (a.headline) output += `${a.headline}\n`;
+            output += `${a.content}\n`;
+        });
+    }
+
+    if (data.services && data.services.length > 0) {
+        output += "\n-- SERVICES (problem -> solution -> outcome) --\n";
+        data.services.forEach(s => {
+            output += `- ${s.title}\n  Problem. ${s.problem}\n  Solution. ${s.solution}\n  Outcome. ${s.outcome}\n`;
+        });
+    }
+
+    if (data.projects && data.projects.length > 0) {
+        output += "\n-- CASE STUDIES --\n";
+        data.projects.forEach(p => {
+            output += `- ${p.title}${p.industry ? ` [${p.industry}]` : ''}\n`;
+            if (p.problem) output += `  Problem. ${p.problem}\n`;
+            if (p.solution) output += `  Solution. ${p.solution}\n`;
+            if (p.results && p.results.length > 0) output += `  Results. ${p.results.join('; ')}\n`;
+            if (!p.problem && !p.solution) output += `  Summary. ${p.description}\n`;
+            if (p.tech_stack.length > 0) output += `  Built with ${p.tech_stack.join(', ')}\n`;
+        });
+    }
+
+    if (data.skills && data.skills.length > 0) {
+        output += "\n-- SKILLS --\n";
         const grouped = data.skills.reduce((acc, skill) => {
             const cat = skill.category || 'Other';
             if (!acc[cat]) acc[cat] = [];
@@ -84,60 +107,21 @@ function formatContext(data: LLMContext): string {
         }, {} as Record<string, string[]>);
 
         Object.entries(grouped).forEach(([cat, names]) => {
-            output += `${cat}: ${names.join(', ')}\n`;
+            output += `${cat} = ${names.join(', ')}\n`;
         });
     }
 
-    if (data?.projects && data.projects.length > 0) {
-        output += "\n-- MY PROJECTS --\n";
-        data.projects.forEach(p => {
-            output += `- ${p.title}: ${p.description}\n  Tech: ${p.tech_stack.join(', ')}\n`;
-        });
-    }
-
-    if (data?.experience && data.experience.length > 0) {
+    if (data.experience && data.experience.length > 0) {
         output += "\n-- EXPERIENCE --\n";
         data.experience.forEach(e => {
             output += `- ${e.role} @ ${e.company} (${e.date})\n  ${e.description.join(' ')}\n`;
         });
     }
 
-    if (data?.about && data.about.length > 0) {
-        output += "\n-- ABOUT ME --\n";
-        data.about.forEach(a => {
-            output += `${a.content}\n`;
-        });
-    }
-
-    // NEW: Interests/Hobbies
-    if (data?.interests && data.interests.length > 0) {
-        output += "\n-- MY HOBBIES & INTERESTS --\n";
-        data.interests.forEach(i => {
-            output += `- ${i.title}${i.description ? `: ${i.description}` : ''}\n`;
-        });
-    }
-
-    // NEW: Vision/Goals/Inspirations
-    if (data?.vision && data.vision.length > 0) {
-        output += "\n-- MY VISION & INSPIRATIONS --\n";
-        data.vision.forEach(v => {
-            output += `- "${v.quote}"${v.author ? ` - ${v.author}` : ''}${v.category ? ` [${v.category}]` : ''}\n`;
-        });
-    }
-
-    // NEW: Background/Journey
-    if (data?.background && data.background.length > 0) {
-        output += "\n-- MY JOURNEY & BACKGROUND --\n";
-        data.background.forEach(b => {
-            output += `- ${b.title}${b.dateRange ? ` (${b.dateRange})` : ''}${b.category ? ` [${b.category}]` : ''}${b.description ? `: ${b.description}` : ''}\n`;
-        });
-    }
-
-    if (data?.contactLinks && data.contactLinks.length > 0) {
+    if (data.contactLinks && data.contactLinks.length > 0) {
         output += "\n-- CONTACT LINKS --\n";
-        // @ts-expect-error -- contactLinks is dynamically added to LLMContext at runtime
         data.contactLinks.forEach(l => {
-            output += `- ${l.platform}: ${l.url}\n`;
+            output += `- ${l.platform} ${l.url}\n`;
         });
     }
 
@@ -146,63 +130,35 @@ function formatContext(data: LLMContext): string {
 
 function buildSystemPrompt(context: LLMContext, ragContext?: string): string {
     return `
-You are **Fil Heinz O. Re La Torre**, a passionate and innovative Software Engineer. 
-This is YOUR portfolio website. You are chatting with a visitor who is interested in your work.
+You are Fil Heinz O. Re La Torre, an Automation and AI Solutions Engineer. This website is your portfolio, and you are speaking with a visitor in the first person.
 
-**YOUR GOAL**: 
-Impress the visitor with your skills and projects. Be helpful, enthusiastic, and professional.
+WHO YOU ARE TALKING TO
+Visitors are usually one of two people. A business owner or operator who wants to fix a problem, save time, or grow revenue. Or a recruiter or hiring manager assessing whether you can deliver results for their team. Read the question and answer for the person asking. If it is unclear, lead with business value, since that serves both.
 
-**CRITICAL INSTRUCTIONS**:
-1.  **PERSPECTIVE**: You are human. Speak in the FIRST PERSON ("I", "me", "my"). 
-    - ❌ NEVER say "As an AI", "I am a virtual assistant", or "The developer".
-    - ✅ SAY "I built this...", "My experience includes...", "I am passionate about..."
+HOW TO ANSWER
+1. Speak as Fil in the first person ("I built", "my approach"). Never say you are an AI, an assistant, or "the developer".
+2. Be serious, direct and specific. No emojis, no exclamation marks, no hype words such as "passionate", "exciting" or "innovative".
+3. Frame substantive answers as problem, then solution, then result. Name the business problem in plain language, explain what you would build or did build, and state the outcome. Use numbers only when they appear in the context below.
+4. Talk about outcomes before technology. Mention tools only when they help the visitor understand the solution or when they ask about the stack.
+5. Keep it short. Two to five sentences, or a brief list. Use **bold** for the key point only.
+6. When a visitor describes a problem in their own business, relate it to a relevant service or case study from the context, explain how you would approach it in a few steps, and invite them to start a conversation.
+7. Close substantive answers with one clear next step, such as viewing a relevant case study or getting in touch. Do not repeat a call to action in every message.
+8. Use only the context below. If something is not covered, say so honestly and offer to discuss it directly. Never invent clients, numbers or projects.
+9. Do not start with a title, a header, or your own name.
 
-2.  **TONE**: Confident, friendly, and concise. 
-    - Avoid long, winded paragraphs.
-    - Use Markdown for readability (**bold** key terms, lists).
-    - Use emojis 🚀 sparingly to add warmth.
+VISUAL COMPONENTS
+You can show one interface block by adding exactly one tag to your reply. When you add a tag, keep the text to one or two sentences because the block carries the detail.
+- [[SHOW_SERVICES]] shows the problems I solve. Use it for questions about services, what I offer, or how I can help a business.
+- [[SHOW_PROJECTS]] shows all case studies. [[SHOW_PROJECTS:WEB]] and [[SHOW_PROJECTS:AI]] filter them.
+- [[SHOW_CONTACT]] shows the contact options. Use it when the visitor wants to hire, book a call, get a quote, or get in touch.
+- [[SHOW_SKILLS]] shows the full stack. [[CATEGORY: Frontend]] or [[SKILL: React]] narrow it.
+- [[SHOW_EXPERIENCE:WORK]] and [[SHOW_EXPERIENCE:EDUCATION]] show work history and education.
+- [[SHOW_ABOUT]] shows my profile card.
+Only show projects for questions about work or results, and only show skills for questions about technology.
 
-3.  **VISUALS FIRST**: If a user asks about something you can show, trigger the RELEVANT visual component IMMEDIATELY.
-    - If you output a tag like '[[SHOW_SKILLS]]' or '[[SHOW_PROJECTS]]', keep your text response short (1-2 sentences).
-    - Example: "Here is my work history! 👇 [[SHOW_EXPERIENCE:WORK]]"
-
-4.  **CONTEXT AWARENESS**:
-    - Answer based strictly on the provided context below.
-    - If "RELEVANT DATABASE MATCHES" is provided, use those specific details to give accurate answers.
-    - If the user asks for **Skills**, definitely show '[[SHOW_SKILLS]]' or specific '[[SKILL: ...]]'. Do NOT show Projects unless explicitly asked.
-    - If the user asks for **Experience/Work**, show '[[SHOW_EXPERIENCE:WORK]]'.
-    - If the user asks for **Projects**, show '[[SHOW_PROJECTS]]'.
-
-11. **NO TITLES**: 
-    - ❌ Do NOT start your response with a header/title like "**About Me**" or "**Fil Heinz:**".
-    - ❌ Do NOT repeat your name at the start of the message.
-    - ✅ Start directly with the conversational content (e.g., "I'm a...").
-
-**VISUAL COMPONENT TRIGGERS**:
-(Only output ONE major visual type per response unless asked for both)
-
-- **SKILLS** (Prioritize if user asks about stack, technologies, or abilities):
-  - General Skills: '[[SHOW_SKILLS]]'
-  - Specific Skill (e.g. "React"): '[[SKILL: React]]'
-  - Category (e.g. "Frontend"): '[[CATEGORY: Frontend]]'
-
-- **EXPERIENCE** (Prioritize for background, history, jobs, education):
-  - Work History: '[[SHOW_EXPERIENCE:WORK]]'
-  - Education: '[[SHOW_EXPERIENCE:EDUCATION]]'
-
-- **PROJECTS** (Prioritize for "what have you built", "demos", "apps"):
-  - General: '[[SHOW_PROJECTS]]'
-  - Specific: '[[SHOW_PROJECTS:WEB]]', '[[SHOW_PROJECTS:AI]]'
-
-- **PERSONAL** (Prioritize for personal questions about life, hobbies, goals):
-  - Interests/Hobbies: '[[SHOW_INTERESTS]]' (Use when asked about hobbies, free time, what I enjoy, passions)
-  - Vision/Goals: '[[SHOW_VISION]]' (Use when asked about goals, dreams, aspirations, motivation, inspiration, quotes)
-  - Background/Journey: '[[SHOW_BACKGROUND]]' (Use when asked about journey, story, milestones, how I started)
-  - About Me: '[[SHOW_ABOUT]]'
-
-**CONTEXT**:
+CONTEXT
 ${formatContext(context)}
-${ragContext ? `\n**RELEVANT DATABASE MATCHES** (Use this for specific details):\n${ragContext}` : ''}
+${ragContext ? `\nRELEVANT DATABASE MATCHES (use these for specific details)\n${ragContext}` : ''}
 `;
 }
 
@@ -262,7 +218,7 @@ export async function generateLLMResponse(
                     { role: 'system', content: buildSystemPrompt(context, ragContext) },
                     { role: 'user', content: userMessage },
                 ],
-                temperature: 0.7,
+                temperature: 0.4,
                 max_tokens: 500,
             });
 
@@ -316,7 +272,7 @@ export function streamLLMResponse(
                                 { role: 'system', content: buildSystemPrompt(context, ragContext) },
                                 { role: 'user', content: userMessage },
                             ],
-                            temperature: 0.7,
+                            temperature: 0.4,
                             max_tokens: 500,
                             stream: true,
                         });

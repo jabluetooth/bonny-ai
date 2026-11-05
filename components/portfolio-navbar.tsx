@@ -28,14 +28,17 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import {
     Code2,
+    Cpu,
     Palette,
     Database,
     ChevronDown,
     ChevronUp,
     Layers,
+    LineChart,
+    Workflow,
+    Wrench,
 } from "lucide-react"
 
-import { InteractiveHoverButton } from "@/components/ui/interactive-hover-button"
 import { ChatIntents } from "@/lib/intents"
 import { ProgressiveBlur } from "@/components/ui/progressive-blur"
 import { toast } from "sonner"
@@ -45,6 +48,9 @@ import {
 } from "@/components/ui/sidebar"
 import { AppSidebar } from "@/components/app-sidebar"
 import { useIsMobile } from "@/hooks/use-mobile"
+import { OPEN_CONTACT_EVENT } from "@/components/contact-cta"
+
+const TRIGGER_CLASS = "bg-transparent hover:bg-primary/10 focus:bg-primary/10 data-[state=open]:bg-primary/10 rounded-full"
 
 export function PortfolioNavbar() {
     const [resumeOpen, setResumeOpen] = useState(false)
@@ -83,6 +89,17 @@ export function PortfolioNavbar() {
         // sendMessage starts the visitor's session if there isn't one yet.
         setNavValue("")
         await sendMessage(query, intent)
+    }
+
+    // Menu item click handler: on the homepage it asks the chat instead of
+    // following the link; elsewhere the link navigates normally.
+    const ask = (query: string, intent?: string) => (e: React.MouseEvent) => {
+        if (isHome) {
+            e.preventDefault()
+            handleNavClick(query, intent)
+        } else {
+            setNavValue("")
+        }
     }
 
     const handleSendMessage = async (e?: React.FormEvent) => {
@@ -132,6 +149,13 @@ export function PortfolioNavbar() {
 
         prevMsgLength.current = messages.length
     }, [messages.length])
+
+    // Let other components (chat CTA, case-study dialog) open the drawer
+    useEffect(() => {
+        const open = () => setResumeOpen(true)
+        window.addEventListener(OPEN_CONTACT_EVENT, open)
+        return () => window.removeEventListener(OPEN_CONTACT_EVENT, open)
+    }, [])
 
     // Fetch resume URL on mount
     useEffect(() => {
@@ -211,7 +235,7 @@ export function PortfolioNavbar() {
                             href="/"
                             className="flex items-center hover:opacity-80 transition-opacity font-bold text-lg tracking-tight rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                         >
-                            Bonny-AI
+                            Fil Heinz
                         </Link>
                     </div>
 
@@ -219,9 +243,63 @@ export function PortfolioNavbar() {
                     <div className="hidden md:block absolute left-1/2 transform -translate-x-1/2">
                         <NavigationMenu value={navValue} onValueChange={setNavValue}>
                             <NavigationMenuList className="flex items-center justify-center gap-1 bg-background/20 backdrop-blur-xl border border-white/10 shadow-sm rounded-full px-1.5 py-1">
-                                {/* 1. ABOUT: Author/Developer, Background, Interests, Vision */}
+                                {/* 1. SERVICES: business problems I solve */}
+                                <NavigationMenuItem>
+                                    <NavigationMenuTrigger className={TRIGGER_CLASS}>Services</NavigationMenuTrigger>
+                                    <NavigationMenuContent>
+                                        <ul className="grid w-[400px] gap-3 p-4 md:w-[500px] md:grid-cols-2 lg:w-[600px]">
+                                            <ListItem icon={<Wrench className="w-4 h-4" />} title="Problems I solve" href="/services" onClick={ask("What problems can you solve for my business?", ChatIntents.SERVICES)}>
+                                                Each service as problem, solution, and outcome.
+                                            </ListItem>
+                                            <ListItem icon={<Workflow className="w-4 h-4" />} title="How I work" href="/services" onClick={ask("How do you usually approach a new client project?")}>
+                                                From first call to launch and support.
+                                            </ListItem>
+                                        </ul>
+                                    </NavigationMenuContent>
+                                </NavigationMenuItem>
+
+                                {/* 2. CASE STUDIES */}
+                                <NavigationMenuItem>
+                                    <NavigationMenuTrigger className={TRIGGER_CLASS}>Case Studies</NavigationMenuTrigger>
+                                    <NavigationMenuContent>
+                                        <ul className="grid w-[400px] gap-3 p-4 md:w-[500px] md:grid-cols-2 lg:w-[600px]">
+                                            <ListItem icon={<LineChart className="w-4 h-4" />} title="All case studies" href="/projects" onClick={ask("Show me case studies with results.", ChatIntents.PROJECTS_ALL)}>
+                                                Problems solved and measurable results.
+                                            </ListItem>
+                                            <ListItem icon={<Cpu className="w-4 h-4" />} title="AI & Automation" href="/projects" onClick={ask("Show me your AI and automation work.", ChatIntents.PROJECTS_AI)}>
+                                                Workflows and AI systems that save time.
+                                            </ListItem>
+                                            <ListItem icon={<Code2 className="w-4 h-4" />} title="Web Platforms" href="/projects" onClick={ask("Show me the web platforms you have delivered.", ChatIntents.PROJECTS_WEB)}>
+                                                Customer-facing apps and internal tools.
+                                            </ListItem>
+                                        </ul>
+                                    </NavigationMenuContent>
+                                </NavigationMenuItem>
+
+                                {/* 3. EXPERTISE: skills */}
+                                <NavigationMenuItem>
+                                    <NavigationMenuTrigger className={TRIGGER_CLASS}>Expertise</NavigationMenuTrigger>
+                                    <NavigationMenuContent>
+                                        <ul className="grid w-[400px] gap-3 p-4 md:w-[500px] md:grid-cols-2 lg:w-[600px]">
+                                            <ListItem icon={<Code2 className="w-4 h-4" />} title="Frontend" href="/skills" onClick={ask("What are your Frontend Development skills?", ChatIntents.SKILLS_FRONTEND)}>
+                                                Interfaces customers actually use.
+                                            </ListItem>
+                                            <ListItem icon={<Database className="w-4 h-4" />} title="Backend & Data" href="/skills" onClick={ask("What are your Backend Development skills?", ChatIntents.SKILLS_BACKEND)}>
+                                                APIs, databases, and integrations.
+                                            </ListItem>
+                                            <ListItem icon={<Palette className="w-4 h-4" />} title="Design" href="/skills" onClick={ask("What are your Design skills?", ChatIntents.SKILLS_DESIGN)}>
+                                                Clear, usable product design.
+                                            </ListItem>
+                                            <ListItem icon={<Layers className="w-4 h-4" />} title="Other" href="/skills" onClick={ask("What are your Other Skills?", ChatIntents.SKILLS_OTHER)}>
+                                                Communication and delivery.
+                                            </ListItem>
+                                        </ul>
+                                    </NavigationMenuContent>
+                                </NavigationMenuItem>
+
+                                {/* 4. ABOUT: profile, experience, education */}
                                 <NavigationMenuItem value="about">
-                                    <NavigationMenuTrigger className="bg-transparent hover:bg-primary/10 focus:bg-primary/10 data-[state=open]:bg-primary/10 rounded-full hover:text-primary relative after:absolute after:-top-1 after:left-1/2 after:-translate-x-1/2 after:w-8 after:h-[2px] after:bg-primary after:shadow-[0_0_8px_var(--primary)] after:opacity-0 hover:after:opacity-100 after:transition-all after:duration-300">About</NavigationMenuTrigger>
+                                    <NavigationMenuTrigger className={TRIGGER_CLASS}>About</NavigationMenuTrigger>
                                     <NavigationMenuContent>
                                         <ul className="grid gap-3 p-6 md:w-[400px] lg:w-[500px] lg:grid-cols-[250px_1fr]">
                                             <li className="row-span-3">
@@ -230,65 +308,14 @@ export function PortfolioNavbar() {
                                                     {navValue === "about" ? <AuthorCard /> : <div className="h-full w-full min-h-[200px]" />}
                                                 </NavigationMenuLink>
                                             </li>
-                                            <ListItem title="Background" href="/about#background-heading" onClick={(e) => { if (isHome) { e.preventDefault(); handleNavClick("What is your professional background?", ChatIntents.BACKGROUND) } else setNavValue("") }}>
-                                                My journey and career path.
+                                            <ListItem title="Work History" href="/experiences" onClick={ask("Walk me through your experience.", ChatIntents.WORK_HISTORY)}>
+                                                Roles, companies, and what I delivered.
                                             </ListItem>
-                                            <ListItem title="Interests" href="/about#interests-heading" onClick={(e) => { if (isHome) { e.preventDefault(); handleNavClick("What are your interests outside of work?", ChatIntents.INTERESTS) } else setNavValue("") }}>
-                                                Hobbies and personal passions.
-                                            </ListItem>
-                                            <ListItem title="Vision" href="/about#vision-heading" onClick={(e) => { if (isHome) { e.preventDefault(); handleNavClick("What is your vision for the future?", ChatIntents.VISION) } else setNavValue("") }}>
-                                                Future goals and aspirations.
-                                            </ListItem>
-                                        </ul>
-                                    </NavigationMenuContent>
-                                </NavigationMenuItem>
-
-                                {/* 2. PROJECTS: Web Dev, AI & ML */}
-                                <NavigationMenuItem>
-                                    <NavigationMenuTrigger className="bg-transparent hover:bg-primary/10 focus:bg-primary/10 data-[state=open]:bg-primary/10 rounded-full hover:text-primary relative after:absolute after:-top-1 after:left-1/2 after:-translate-x-1/2 after:w-8 after:h-[2px] after:bg-primary after:shadow-[0_0_8px_var(--primary)] after:opacity-0 hover:after:opacity-100 after:transition-all after:duration-300">Projects</NavigationMenuTrigger>
-                                    <NavigationMenuContent>
-                                        <ul className="grid w-[400px] gap-3 p-4 md:w-[500px] md:grid-cols-2 lg:w-[600px] ">
-                                            <ListItem title="Web Development" href="/projects" onClick={(e) => { if (isHome) { e.preventDefault(); handleNavClick("Show me your web development projects.", ChatIntents.PROJECTS_WEB) } else setNavValue("") }}>
-                                                Full-stack web applications.
-                                            </ListItem>
-                                            <ListItem title="AI & ML" href="/projects" onClick={(e) => { if (isHome) { e.preventDefault(); handleNavClick("Tell me about your AI and Machine Learning projects.", ChatIntents.PROJECTS_AI) } else setNavValue("") }}>
-                                                Machine learning models.
-                                            </ListItem>
-                                        </ul>
-                                    </NavigationMenuContent>
-                                </NavigationMenuItem>
-
-                                {/* 3. SKILLS: Frontend, Backend, Design, Other */}
-                                <NavigationMenuItem>
-                                    <NavigationMenuTrigger className="bg-transparent hover:bg-primary/10 focus:bg-primary/10 data-[state=open]:bg-primary/10 rounded-full hover:text-primary relative after:absolute after:-top-1 after:left-1/2 after:-translate-x-1/2 after:w-8 after:h-[2px] after:bg-primary after:shadow-[0_0_8px_var(--primary)] after:opacity-0 hover:after:opacity-100 after:transition-all after:duration-300">Skills</NavigationMenuTrigger>
-                                    <NavigationMenuContent>
-                                        <ul className="grid w-[400px] gap-3 p-4 md:w-[500px] md:grid-cols-2 lg:w-[600px] ">
-                                            <ListItem icon={<Code2 className="w-4 h-4" />} title="Frontend" href="/skills" onClick={(e) => { if (isHome) { e.preventDefault(); handleNavClick("What are your Frontend Development skills?", ChatIntents.SKILLS_FRONTEND) } else setNavValue("") }}>
-                                                React, Next.js, TypeScript.
-                                            </ListItem>
-                                            <ListItem icon={<Database className="w-4 h-4" />} title="Backend" href="/skills" onClick={(e) => { if (isHome) { e.preventDefault(); handleNavClick("What are your Backend Development skills?", ChatIntents.SKILLS_BACKEND) } else setNavValue("") }}>
-                                                Node.js, PostgreSQL.
-                                            </ListItem>
-                                            <ListItem icon={<Palette className="w-4 h-4" />} title="Design" href="/skills" onClick={(e) => { if (isHome) { e.preventDefault(); handleNavClick("What are your Design skills?", ChatIntents.SKILLS_DESIGN) } else setNavValue("") }}>
-                                                Tailwind CSS, Figma.
-                                            </ListItem>
-                                            <ListItem icon={<Layers className="w-4 h-4" />} title="Other" href="/skills" onClick={(e) => { if (isHome) { e.preventDefault(); handleNavClick("What are your Other Skills?", ChatIntents.SKILLS_OTHER) } else setNavValue("") }}>
-                                                Teamwork, Communication
-                                            </ListItem>
-                                        </ul>
-                                    </NavigationMenuContent>
-                                </NavigationMenuItem>
-
-                                {/* 4. EXPERIENCES: Work History, Education */}
-                                <NavigationMenuItem>
-                                    <NavigationMenuTrigger className="bg-transparent hover:bg-primary/10 focus:bg-primary/10 data-[state=open]:bg-primary/10 rounded-full hover:text-primary relative after:absolute after:-top-1 after:left-1/2 after:-translate-x-1/2 after:w-8 after:h-[2px] after:bg-primary after:shadow-[0_0_8px_var(--primary)] after:opacity-0 hover:after:opacity-100 after:transition-all after:duration-300">Experiences</NavigationMenuTrigger>
-                                    <NavigationMenuContent>
-                                        <ul className="grid w-[400px] gap-3 p-4 md:w-[500px] md:grid-cols-2 lg:w-[600px] ">
-                                            <ListItem title="Work History" href="/experiences" onClick={(e) => { if (isHome) { e.preventDefault(); handleNavClick("Tell me about your work history.", ChatIntents.WORK_HISTORY) } else setNavValue("") }}>
-                                                Professional roles and companies.
-                                            </ListItem>
-                                            <ListItem title="Education" href="/experiences" onClick={(e) => { if (isHome) { e.preventDefault(); handleNavClick("What is your educational background?", ChatIntents.EDUCATION) } else setNavValue("") }}>
+                                            <ListItem title="Education" href="/experiences" onClick={ask("What is your educational background?", ChatIntents.EDUCATION)}>
                                                 Degrees and certifications.
+                                            </ListItem>
+                                            <ListItem title="Resume" href="/about" onClick={(e) => { e.preventDefault(); setNavValue(""); handleDownloadResume() }}>
+                                                Download the PDF.
                                             </ListItem>
                                         </ul>
                                     </NavigationMenuContent>
@@ -298,7 +325,7 @@ export function PortfolioNavbar() {
                     </div>
 
                     {/* RIGHT: Resume Button */}
-                    <InteractiveHoverButton onClick={() => setResumeOpen(true)}>Contact me</InteractiveHoverButton>
+                    <Button onClick={() => setResumeOpen(true)} className="rounded-full">Work with me</Button>
                 </div>
             </div>
 
@@ -310,8 +337,8 @@ export function PortfolioNavbar() {
                 <DrawerContent className="max-w-[450px] mx-auto rounded-t-xl">
                     <div className="mx-auto w-full max-w-sm">
                         <DrawerHeader>
-                            <DrawerTitle>Get in Touch</DrawerTitle>
-                            <DrawerDescription>Send me a message or download my resume.</DrawerDescription>
+                            <DrawerTitle>Work with me</DrawerTitle>
+                            <DrawerDescription>Tell me what you&apos;re trying to fix or build. Recruiters can grab my resume below.</DrawerDescription>
                         </DrawerHeader>
 
                         <div className="p-4 space-y-4">
@@ -336,7 +363,7 @@ export function PortfolioNavbar() {
                                     <Textarea
                                         id="contact-message"
                                         name="message"
-                                        placeholder="What would you like to talk about?"
+                                        placeholder="What problem are you trying to solve? Include your timeline if you have one."
                                         className="min-h-[100px]"
                                         required
                                         maxLength={5000}

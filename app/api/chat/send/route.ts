@@ -129,7 +129,7 @@ export async function POST(req: Request) {
 
         // 6. Generate AI Response
         // TOKEN OPTIMIZATION: Check for Static Response first using Strategy Pattern
-        const staticResponse = getDeterministicResponse(intent, content, {});
+        const staticResponse = getDeterministicResponse(intent, content);
 
         if (staticResponse) {
             const { error: botMsgError } = await supabase.from('messages').insert({

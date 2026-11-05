@@ -76,6 +76,7 @@ export function clearCache(): void {
 // Pre-defined cache keys for consistency
 export const CACHE_KEYS = {
     SKILLS: 'skills',
+    SERVICES: 'services',
     PROJECTS: 'projects',
     PROJECTS_BY_CATEGORY: (category: string) => `projects:${category}`,
 } as const;

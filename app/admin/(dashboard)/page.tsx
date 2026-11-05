@@ -1,5 +1,6 @@
 import { AdminAboutForm } from "@/components/admin/forms/about";
 import { AdminProjectsForm } from "@/components/admin/forms/projects-form";
+import { AdminServicesForm } from "@/components/admin/forms/services-form";
 import { AdminSkillsForm } from "@/components/admin/forms/skills-form";
 import { AdminExperiencesForm } from "@/components/admin/forms/experiences-form";
 import { ChatManager } from "@/components/admin/chat-manager";
@@ -21,6 +22,7 @@ export default async function AdminDashboardPage({
         <div className="flex flex-1 flex-col gap-4">
             {view === "dashboard" && <DashboardOverview />}
             {view === "about" && <AdminAboutForm />}
+            {view === "services" && <AdminServicesForm />}
             {view === "projects" && <AdminProjectsForm />}
             {view === "skills" && <AdminSkillsForm />}
             {view === "experiences" && <AdminExperiencesForm />}

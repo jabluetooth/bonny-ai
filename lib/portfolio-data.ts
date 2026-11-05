@@ -2,29 +2,20 @@ import { createPublicClient } from "@/lib/supabase-public";
 
 export interface AuthorProfile {
     title: string;
+    headline?: string | null;
+    subheadline?: string | null;
     description: string;
     images: string[];
     status?: string;
 }
 
-export interface BackgroundCard {
+export interface Service {
     id: string;
     title: string;
-    description: string;
-    image: string;
-    date_range: string;
-}
-
-export interface VisionCard {
-    quote: string;
-    name: string;
-    title: string;
-}
-
-export interface Interest {
-    title: string;
-    description: string;
-    image_url?: string;
+    problem: string;
+    solution: string;
+    outcome: string;
+    image_url?: string | null;
 }
 
 export interface SkillItem {
@@ -45,6 +36,10 @@ export interface PortfolioProject {
     features: string[];
     tech_stack: string[];
     challenges: string;
+    industry?: string;
+    problem?: string;
+    solution?: string;
+    results: string[];
     type?: string;
     status?: string;
 }
@@ -61,8 +56,6 @@ export interface PortfolioExperience {
     tech_stack: string[];
 }
 
-
-
 export async function getAuthorProfile(): Promise<AuthorProfile | null> {
     const supabase = createPublicClient();
     const { data } = await supabase
@@ -73,29 +66,12 @@ export async function getAuthorProfile(): Promise<AuthorProfile | null> {
     return data ?? null;
 }
 
-export async function getBackgroundCards(): Promise<BackgroundCard[]> {
+export async function getServices(): Promise<Service[]> {
     const supabase = createPublicClient();
     const { data } = await supabase
-        .from("background_cards")
+        .from("services")
         .select("*")
-        .order("display_order", { ascending: true });
-    return data ?? [];
-}
-
-export async function getVisionCards(): Promise<VisionCard[]> {
-    const supabase = createPublicClient();
-    const { data } = await supabase
-        .from("vision_cards")
-        .select("*")
-        .order("created_at", { ascending: true });
-    return data ?? [];
-}
-
-export async function getInterests(): Promise<Interest[]> {
-    const supabase = createPublicClient();
-    const { data } = await supabase
-        .from("interests")
-        .select("*")
+        .eq("is_active", true)
         .order("display_order", { ascending: true });
     return data ?? [];
 }
@@ -131,6 +107,10 @@ export async function getProjects(category?: string): Promise<PortfolioProject[]
         features: p.key_features || p.features || [],
         tech_stack: p.project_skills?.map((ps: { skills?: { name?: string } }) => ps.skills?.name).filter(Boolean) || [],
         challenges: p.challenges_learned || p.challenges || "",
+        industry: p.industry || undefined,
+        problem: p.problem || undefined,
+        solution: p.solution || undefined,
+        results: Array.isArray(p.results) ? p.results : [],
         type: p.type,
         status: p.status || "Work in progress",
     }));

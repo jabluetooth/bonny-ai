@@ -20,6 +20,10 @@ interface ProjectSourceRow {
     features?: string[];
     challenges_learned?: string;
     challenges?: string;
+    industry?: string;
+    problem?: string;
+    solution?: string;
+    results?: string[];
     type?: string;
     status?: string;
 }
@@ -121,6 +125,10 @@ export async function GET(request: Request) {
         features: p.key_features || p.features || [],
         tech_stack: p.tech_stack || [],
         challenges: p.challenges_learned || p.challenges || "",
+        industry: p.industry || undefined,
+        problem: p.problem || undefined,
+        solution: p.solution || undefined,
+        results: Array.isArray(p.results) ? p.results : [],
         type: p.type,
         status: p.status || 'Work in progress'
     }));

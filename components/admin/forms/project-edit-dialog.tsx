@@ -33,6 +33,12 @@ export function ProjectDialog({ open, onOpenChange, project, onSuccess }: Projec
     const [newFeature, setNewFeature] = useState("")
     const [newTech, setNewTech] = useState("")
     const [status, setStatus] = useState("Work in progress")
+    // Case-study fields (problem -> solution -> results)
+    const [industry, setIndustry] = useState("")
+    const [problem, setProblem] = useState("")
+    const [solution, setSolution] = useState("")
+    const [results, setResults] = useState<string[]>([])
+    const [newResult, setNewResult] = useState("")
 
     useEffect(() => {
         if (project) {
@@ -46,6 +52,10 @@ export function ProjectDialog({ open, onOpenChange, project, onSuccess }: Projec
             setFeatures(project.key_features || [])
             setTechStack(project.tech_stack || [])
             setStatus(project.status || "Work in progress")
+            setIndustry(project.industry || "")
+            setProblem(project.problem || "")
+            setSolution(project.solution || "")
+            setResults(Array.isArray(project.results) ? project.results : [])
         } else {
             // Reset form
             setTitle("")
@@ -58,6 +68,10 @@ export function ProjectDialog({ open, onOpenChange, project, onSuccess }: Projec
             setFeatures([])
             setTechStack([])
             setStatus("Work in progress")
+            setIndustry("")
+            setProblem("")
+            setSolution("")
+            setResults([])
         }
     }, [project, open])
 
@@ -74,6 +88,10 @@ export function ProjectDialog({ open, onOpenChange, project, onSuccess }: Projec
                 challenges_learned: challenges,
                 key_features: features,
                 status,
+                industry: industry.trim() || null,
+                problem: problem.trim() || null,
+                solution: solution.trim() || null,
+                results,
                 updated_at: new Date().toISOString()
             }
 
@@ -181,6 +199,17 @@ export function ProjectDialog({ open, onOpenChange, project, onSuccess }: Projec
         setFeatures(features.filter((_, i) => i !== index))
     }
 
+    const addResult = () => {
+        if (newResult.trim()) {
+            setResults([...results, newResult.trim()])
+            setNewResult("")
+        }
+    }
+
+    const removeResult = (index: number) => {
+        setResults(results.filter((_, i) => i !== index))
+    }
+
     const addTech = () => {
         if (newTech.trim()) {
             setTechStack([...techStack, newTech.trim()])
@@ -242,6 +271,55 @@ export function ProjectDialog({ open, onOpenChange, project, onSuccess }: Projec
                     <div className="space-y-2">
                         <Label>Short Description</Label>
                         <Textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Brief summary..." />
+                        <p className="text-xs text-muted-foreground">Shown when the case-study fields below are empty.</p>
+                    </div>
+
+                    {/* Case study */}
+                    <div className="space-y-4 rounded-lg border p-4">
+                        <div>
+                            <p className="text-sm font-semibold">Case study</p>
+                            <p className="text-xs text-muted-foreground">How this project helped a business. Visitors see Problem, Solution and Results first.</p>
+                        </div>
+
+                        <div className="space-y-2">
+                            <Label>Industry / Client type</Label>
+                            <Input value={industry} onChange={(e) => setIndustry(e.target.value)} placeholder="e.g. Construction, E-commerce, Internal tool" />
+                        </div>
+
+                        <div className="space-y-2">
+                            <Label>The problem</Label>
+                            <Textarea value={problem} onChange={(e) => setProblem(e.target.value)} placeholder="What was costing the business time, money or customers?" />
+                        </div>
+
+                        <div className="space-y-2">
+                            <Label>The solution</Label>
+                            <Textarea value={solution} onChange={(e) => setSolution(e.target.value)} placeholder="What did you build, and how does it fix the problem?" />
+                        </div>
+
+                        <div className="space-y-2">
+                            <Label>Results (Press Enter or Add)</Label>
+                            <div className="flex gap-2">
+                                <Input
+                                    value={newResult}
+                                    onChange={(e) => setNewResult(e.target.value)}
+                                    onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addResult(); } }}
+                                    placeholder="e.g. 20 hrs/week saved"
+                                />
+                                <Button type="button" onClick={addResult} variant="secondary" size="icon">
+                                    <Plus className="h-4 w-4" />
+                                </Button>
+                            </div>
+                            <div className="flex flex-wrap gap-2 mt-2">
+                                {results.map((r, i) => (
+                                    <div key={i} className="flex items-center gap-1 rounded-md border border-emerald-500/30 bg-emerald-500/10 px-2 py-1 text-sm">
+                                        {r}
+                                        <button type="button" onClick={() => removeResult(i)} className="text-muted-foreground hover:text-foreground" aria-label={`Remove ${r}`}>
+                                            <X className="h-3 w-3" />
+                                        </button>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">
@@ -289,7 +367,7 @@ export function ProjectDialog({ open, onOpenChange, project, onSuccess }: Projec
                     </div>
 
                     <div className="space-y-2">
-                        <Label>Key Features (Press Enter or Add)</Label>
+                        <Label>What was delivered (Press Enter or Add)</Label>
                         <div className="flex gap-2">
                             <Input
                                 value={newFeature}
@@ -314,7 +392,7 @@ export function ProjectDialog({ open, onOpenChange, project, onSuccess }: Projec
                     </div>
 
                     <div className="space-y-2">
-                        <Label>Challenges & Learnings</Label>
+                        <Label>Challenges & Learnings (internal / AI context only)</Label>
                         <Textarea value={challenges} onChange={(e) => setChallenges(e.target.value)} placeholder="What was difficult? What did you learn?" />
                     </div>
 

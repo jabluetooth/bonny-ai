@@ -24,6 +24,10 @@ interface EmbeddableProject {
     description?: string | null
     tech_stack?: string[] | null
     challenges_learned?: string | null
+    industry?: string | null
+    problem?: string | null
+    solution?: string | null
+    results?: string[] | null
 }
 
 interface Chunk {
@@ -73,7 +77,7 @@ async function replaceRecordChunks(
 }
 
 /**
- * Re-embeds a single project's RAG chunks (overview, tech stack, challenges).
+ * Re-embeds a single project's RAG chunks (overview, tech stack, case study, challenges).
  * Mirrors the per-project chunking scripts/embed-data.ts does during a full rebuild.
  */
 export async function embedProjectRecord(
@@ -93,6 +97,18 @@ export async function embedProjectRecord(
         chunks.push({
             content: `Project ${project.title} uses the following technologies: ${project.tech_stack.join(', ')}.`,
             chunk_type: 'tech_stack',
+            extraMetadata: { title: project.title },
+        })
+    }
+
+    if (project.problem || project.solution || (project.results && project.results.length > 0)) {
+        const parts = [`Case study ${project.title}${project.industry ? ` (${project.industry})` : ''}.`]
+        if (project.problem) parts.push(`Business problem. ${project.problem}`)
+        if (project.solution) parts.push(`Solution I built. ${project.solution}`)
+        if (project.results && project.results.length > 0) parts.push(`Results. ${project.results.join('; ')}`)
+        chunks.push({
+            content: parts.join(' '),
+            chunk_type: 'case_study',
             extraMetadata: { title: project.title },
         })
     }
@@ -124,5 +140,35 @@ export async function embedProfileRecord(
     const content = `About Me - Personal Introduction and Biography: ${profile.description || ''}`.trim()
     await replaceRecordChunks(supabase, hf, 'author_profiles', profile.id, [
         { content, chunk_type: 'main_bio' },
+    ])
+}
+
+interface EmbeddableService {
+    id: string
+    title: string
+    problem?: string | null
+    solution?: string | null
+    outcome?: string | null
+}
+
+/**
+ * Re-embeds a single service as one problem -> solution -> outcome chunk,
+ * phrased the way a business owner would describe the pain so semantic
+ * search matches questions like "we waste hours on manual data entry".
+ */
+export async function embedServiceRecord(
+    supabase: SupabaseClient,
+    hf: InferenceClient,
+    service: EmbeddableService
+): Promise<void> {
+    const content = [
+        `Service I offer. ${service.title}.`,
+        service.problem ? `Problem it solves. ${service.problem}` : '',
+        service.solution ? `How I solve it. ${service.solution}` : '',
+        service.outcome ? `Business outcome. ${service.outcome}` : '',
+    ].filter(Boolean).join(' ')
+
+    await replaceRecordChunks(supabase, hf, 'services', service.id, [
+        { content, chunk_type: 'service', extraMetadata: { title: service.title } },
     ])
 }

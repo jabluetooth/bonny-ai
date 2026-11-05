@@ -7,16 +7,20 @@ import {
     Cpu,
     Database,
     GraduationCap,
+    Layers,
+    LineChart,
+    Mail,
     Palette,
     User,
+    Workflow,
+    Wrench,
     ChevronDown,
-    Layers,
 } from "lucide-react"
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
 
 import {
     Sidebar,
     SidebarContent,
+    SidebarFooter,
     SidebarGroup,
     SidebarHeader,
     SidebarMenu,
@@ -31,173 +35,111 @@ import {
     CollapsibleContent,
     CollapsibleTrigger,
 } from "@/components/ui/collapsible"
+import { Button } from "@/components/ui/button"
 
 import { ChatIntents } from "@/lib/intents"
-import { Status, StatusIndicator, StatusLabel } from "@/components/ui/shadcn-io/status"
+import { openContact } from "@/components/contact-cta"
 
 interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
     onNavClick: (query: string, intent?: string, href?: string) => void
 }
 
+interface NavLink {
+    label: string
+    icon: React.ComponentType
+    query: string
+    intent?: string
+    /** Page holding this content, used when the chat isn't on screen. */
+    href: string
+}
+
+// Mirrors the desktop navigation in portfolio-navbar.tsx.
+const GROUPS: { title: string; links: NavLink[] }[] = [
+    {
+        title: "Services",
+        links: [
+            { label: "Problems I solve", icon: Wrench, query: "What problems can you solve for my business?", intent: ChatIntents.SERVICES, href: "/services" },
+            { label: "How I work", icon: Workflow, query: "How do you usually approach a new client project?", href: "/services" },
+        ],
+    },
+    {
+        title: "Case Studies",
+        links: [
+            { label: "All case studies", icon: LineChart, query: "Show me case studies with results.", intent: ChatIntents.PROJECTS_ALL, href: "/projects" },
+            { label: "AI & Automation", icon: Cpu, query: "Show me your AI and automation work.", intent: ChatIntents.PROJECTS_AI, href: "/projects" },
+            { label: "Web Platforms", icon: Code2, query: "Show me the web platforms you have delivered.", intent: ChatIntents.PROJECTS_WEB, href: "/projects" },
+        ],
+    },
+    {
+        title: "Expertise",
+        links: [
+            { label: "Frontend", icon: Code2, query: "What are your Frontend Development skills?", intent: ChatIntents.SKILLS_FRONTEND, href: "/skills" },
+            { label: "Backend & Data", icon: Database, query: "What are your Backend Development skills?", intent: ChatIntents.SKILLS_BACKEND, href: "/skills" },
+            { label: "Design", icon: Palette, query: "What are your Design skills?", intent: ChatIntents.SKILLS_DESIGN, href: "/skills" },
+            { label: "Other", icon: Layers, query: "What are your Other Skills?", intent: ChatIntents.SKILLS_OTHER, href: "/skills" },
+        ],
+    },
+    {
+        title: "About",
+        links: [
+            { label: "Profile", icon: User, query: "Tell me about yourself.", intent: ChatIntents.ABOUT_ME, href: "/about" },
+            { label: "Work History", icon: Briefcase, query: "Walk me through your experience.", intent: ChatIntents.WORK_HISTORY, href: "/experiences" },
+            { label: "Education", icon: GraduationCap, query: "What is your educational background?", intent: ChatIntents.EDUCATION, href: "/experiences" },
+        ],
+    },
+]
+
 export function AppSidebar({ onNavClick, ...props }: AppSidebarProps) {
     return (
         <Sidebar side="left" collapsible="offcanvas" className="md:hidden" {...props}>
             <SidebarHeader>
-                <div className="flex items-center gap-3 px-4 py-2">
-                    <Avatar
-                        className="h-10 w-10 cursor-pointer hover:scale-105 transition-transform rounded-none bg-transparent"
-                        onClick={() => onNavClick("Hello! Tell me about this portfolio.", undefined, "/")}
-                    >
-                        <AvatarImage src="/bot-avatar.png" alt="Bonny-AI" />
-                        <AvatarFallback>AI</AvatarFallback>
-                    </Avatar>
-                    <div className="flex flex-col items-start gap-0.5">
-                        <span className="font-semibold text-sm tracking-tight">Bonny-ai</span>
-                        <Status status="online" className="px-2 py-0.5 h-auto min-h-[1.25rem]">
-                            <StatusIndicator className="w-2 h-2" />
-                            <StatusLabel className="text-[10px] font-medium text-muted-foreground/80">Online</StatusLabel>
-                        </Status>
-                    </div>
-                </div>
+                <button
+                    type="button"
+                    className="flex items-center gap-3 px-4 py-2 text-left"
+                    onClick={() => onNavClick("Give me a quick overview of how you can help.", undefined, "/")}
+                >
+                    <span className="flex h-9 w-9 items-center justify-center rounded-full bg-foreground text-xs font-semibold text-background">FH</span>
+                    <span className="flex flex-col">
+                        <span className="font-semibold text-sm tracking-tight">Fil Heinz</span>
+                        <span className="text-xs text-muted-foreground">Automation & AI Solutions</span>
+                    </span>
+                </button>
             </SidebarHeader>
             <SidebarContent>
                 <SidebarGroup>
                     <SidebarMenu>
-
-                        {/* About Group */}
-                        <Collapsible defaultOpen className="group/collapsible">
-                            <SidebarMenuItem>
-                                <CollapsibleTrigger asChild>
-                                    <SidebarMenuButton>
-                                        <span>About</span>
-                                        <ChevronDown className="ml-auto transition-transform group-data-[state=open]/collapsible:rotate-180" />
-                                    </SidebarMenuButton>
-                                </CollapsibleTrigger>
-                                <CollapsibleContent>
-                                    <SidebarMenuSub>
-                                        <SidebarMenuSubItem>
-                                            <SidebarMenuSubButton onClick={() => onNavClick("Tell me about yourself.", undefined, "/about")}>
-                                                <User />
-                                                <span>Author</span>
-                                            </SidebarMenuSubButton>
-                                        </SidebarMenuSubItem>
-                                        <SidebarMenuSubItem>
-                                            <SidebarMenuSubButton onClick={() => onNavClick("What is your professional background?", ChatIntents.BACKGROUND, "/about#background-heading")}>
-                                                <Briefcase />
-                                                <span>Background</span>
-                                            </SidebarMenuSubButton>
-                                        </SidebarMenuSubItem>
-                                        <SidebarMenuSubItem>
-                                            <SidebarMenuSubButton onClick={() => onNavClick("What are your interests outside of work?", ChatIntents.INTERESTS, "/about#interests-heading")}>
-                                                <Palette />
-                                                <span>Interests</span>
-                                            </SidebarMenuSubButton>
-                                        </SidebarMenuSubItem>
-                                    </SidebarMenuSub>
-                                </CollapsibleContent>
-                            </SidebarMenuItem>
-                        </Collapsible>
-
-                        {/* Projects Group */}
-                        <Collapsible defaultOpen className="group/collapsible">
-                            <SidebarMenuItem>
-                                <CollapsibleTrigger asChild>
-                                    <SidebarMenuButton>
-                                        <span>Projects</span>
-                                        <ChevronDown className="ml-auto transition-transform group-data-[state=open]/collapsible:rotate-180" />
-                                    </SidebarMenuButton>
-                                </CollapsibleTrigger>
-                                <CollapsibleContent>
-                                    <SidebarMenuSub>
-                                        <SidebarMenuSubItem>
-                                            <SidebarMenuSubButton onClick={() => onNavClick("Show me your web development projects.", ChatIntents.PROJECTS_WEB, "/projects")}>
-                                                <Code2 />
-                                                <span>Web Development</span>
-                                            </SidebarMenuSubButton>
-                                        </SidebarMenuSubItem>
-                                        <SidebarMenuSubItem>
-                                            <SidebarMenuSubButton onClick={() => onNavClick("Tell me about your AI and Machine Learning projects.", ChatIntents.PROJECTS_AI, "/projects")}>
-                                                <Cpu />
-                                                <span>AI & ML</span>
-                                            </SidebarMenuSubButton>
-                                        </SidebarMenuSubItem>
-                                    </SidebarMenuSub>
-                                </CollapsibleContent>
-                            </SidebarMenuItem>
-                        </Collapsible>
-
-                        {/* Skills Group */}
-                        <Collapsible defaultOpen className="group/collapsible">
-                            <SidebarMenuItem>
-                                <CollapsibleTrigger asChild>
-                                    <SidebarMenuButton>
-                                        <span>Skills</span>
-                                        <ChevronDown className="ml-auto transition-transform group-data-[state=open]/collapsible:rotate-180" />
-                                    </SidebarMenuButton>
-                                </CollapsibleTrigger>
-                                <CollapsibleContent>
-                                    <SidebarMenuSub>
-                                        <SidebarMenuSubItem>
-                                            <SidebarMenuSubButton onClick={() => onNavClick("What are your Frontend Development skills?", ChatIntents.SKILLS_FRONTEND, "/skills")}>
-                                                <Code2 />
-                                                <span>Frontend</span>
-                                            </SidebarMenuSubButton>
-                                        </SidebarMenuSubItem>
-                                        <SidebarMenuSubItem>
-                                            <SidebarMenuSubButton onClick={() => onNavClick("What are your Backend Development skills?", ChatIntents.SKILLS_BACKEND, "/skills")}>
-                                                <Database />
-                                                <span>Backend</span>
-                                            </SidebarMenuSubButton>
-                                        </SidebarMenuSubItem>
-                                        <SidebarMenuSubItem>
-                                            <SidebarMenuSubButton onClick={() => onNavClick("What are your Design skills?", ChatIntents.SKILLS_DESIGN, "/skills")}>
-                                                <Palette />
-                                                <span>Design</span>
-                                            </SidebarMenuSubButton>
-                                        </SidebarMenuSubItem>
-                                        <SidebarMenuSubItem>
-                                            <SidebarMenuSubButton onClick={() => onNavClick("What are your Other Skills?", ChatIntents.SKILLS_OTHER, "/skills")}>
-                                                <Layers />
-                                                <span>Other</span>
-                                            </SidebarMenuSubButton>
-                                        </SidebarMenuSubItem>
-                                    </SidebarMenuSub>
-                                </CollapsibleContent>
-                            </SidebarMenuItem>
-                        </Collapsible>
-
-                        {/* Experiences Group */}
-                        <Collapsible defaultOpen className="group/collapsible">
-                            <SidebarMenuItem>
-                                <CollapsibleTrigger asChild>
-                                    <SidebarMenuButton>
-                                        <span>Experiences</span>
-                                        <ChevronDown className="ml-auto transition-transform group-data-[state=open]/collapsible:rotate-180" />
-                                    </SidebarMenuButton>
-                                </CollapsibleTrigger>
-                                <CollapsibleContent>
-                                    <SidebarMenuSub>
-                                        <SidebarMenuSubItem>
-                                            <SidebarMenuSubButton onClick={() => onNavClick("Tell me about your work history.", ChatIntents.WORK_HISTORY, "/experiences")}>
-                                                <Briefcase />
-                                                <span>Work History</span>
-                                            </SidebarMenuSubButton>
-                                        </SidebarMenuSubItem>
-                                        <SidebarMenuSubItem>
-                                            <SidebarMenuSubButton onClick={() => onNavClick("What is your educational background?", ChatIntents.EDUCATION, "/experiences")}>
-                                                <GraduationCap />
-                                                <span>Education</span>
-                                            </SidebarMenuSubButton>
-                                        </SidebarMenuSubItem>
-                                    </SidebarMenuSub>
-                                </CollapsibleContent>
-                            </SidebarMenuItem>
-                        </Collapsible>
-
+                        {GROUPS.map((group) => (
+                            <Collapsible key={group.title} defaultOpen className="group/collapsible">
+                                <SidebarMenuItem>
+                                    <CollapsibleTrigger asChild>
+                                        <SidebarMenuButton>
+                                            <span>{group.title}</span>
+                                            <ChevronDown className="ml-auto transition-transform group-data-[state=open]/collapsible:rotate-180" />
+                                        </SidebarMenuButton>
+                                    </CollapsibleTrigger>
+                                    <CollapsibleContent>
+                                        <SidebarMenuSub>
+                                            {group.links.map(({ label, icon: Icon, query, intent, href }) => (
+                                                <SidebarMenuSubItem key={label}>
+                                                    <SidebarMenuSubButton onClick={() => onNavClick(query, intent, href)}>
+                                                        <Icon />
+                                                        <span>{label}</span>
+                                                    </SidebarMenuSubButton>
+                                                </SidebarMenuSubItem>
+                                            ))}
+                                        </SidebarMenuSub>
+                                    </CollapsibleContent>
+                                </SidebarMenuItem>
+                            </Collapsible>
+                        ))}
                     </SidebarMenu>
                 </SidebarGroup>
             </SidebarContent>
-
+            <SidebarFooter>
+                <Button className="w-full" onClick={openContact}>
+                    <Mail className="mr-2 h-4 w-4" /> Work with me
+                </Button>
+            </SidebarFooter>
         </Sidebar>
     )
 }

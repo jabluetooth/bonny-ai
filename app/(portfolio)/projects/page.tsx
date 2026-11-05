@@ -9,8 +9,8 @@ import { Github, ExternalLink } from "lucide-react";
 export const revalidate = 300;
 
 export const metadata: Metadata = {
-    title: "Projects",
-    description: "Web development and AI/ML projects built by Fil Heinz O. Re La Torre.",
+    title: "Case Studies",
+    description: "Case studies by Fil Heinz O. Re La Torre. The business problem, the solution built, and the results.",
     alternates: { canonical: "/projects" },
 };
 
@@ -21,14 +21,14 @@ export default async function ProjectsPage() {
         <PortfolioPageShell>
             <article className="flex flex-col gap-12">
                 <header>
-                    <h1 className="text-4xl font-bold tracking-tight mb-4">Projects</h1>
+                    <h1 className="text-4xl font-bold tracking-tight mb-4">Case Studies</h1>
                     <p className="text-muted-foreground leading-relaxed max-w-2xl">
-                        A selection of web development and AI/ML projects I&apos;ve built.
+                        Selected work, each told as the business problem, what I built, and the result.
                     </p>
                 </header>
 
                 {projects.length === 0 ? (
-                    <p className="text-muted-foreground">Projects coming soon.</p>
+                    <p className="text-muted-foreground">Case studies coming soon.</p>
                 ) : (
                     <div className="flex flex-col gap-8">
                         {projects.map((project) => (
@@ -67,10 +67,41 @@ export default async function ProjectsPage() {
                                     </div>
                                 </div>
 
-                                {project.description && (
-                                    <p className="text-sm text-muted-foreground leading-relaxed mb-4">
-                                        {project.description}
-                                    </p>
+                                {project.industry && (
+                                    <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-3">{project.industry}</p>
+                                )}
+
+                                {project.results.length > 0 && (
+                                    <ul className="flex flex-wrap gap-2 mb-4" aria-label="Results">
+                                        {project.results.map((r) => (
+                                            <li key={r} className="rounded-md border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-1 text-xs font-medium text-emerald-700 dark:text-emerald-300">
+                                                {r}
+                                            </li>
+                                        ))}
+                                    </ul>
+                                )}
+
+                                {project.problem || project.solution ? (
+                                    <dl className="grid gap-4 sm:grid-cols-2 mb-4">
+                                        {project.problem && (
+                                            <div>
+                                                <dt className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-1">The problem</dt>
+                                                <dd className="text-sm leading-relaxed">{project.problem}</dd>
+                                            </div>
+                                        )}
+                                        {project.solution && (
+                                            <div>
+                                                <dt className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-1">The solution</dt>
+                                                <dd className="text-sm leading-relaxed">{project.solution}</dd>
+                                            </div>
+                                        )}
+                                    </dl>
+                                ) : (
+                                    project.description && (
+                                        <p className="text-sm text-muted-foreground leading-relaxed mb-4">
+                                            {project.description}
+                                        </p>
+                                    )
                                 )}
 
                                 {project.features.length > 0 && (
