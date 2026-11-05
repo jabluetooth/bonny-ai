@@ -4,7 +4,9 @@ import { useState, useRef, useEffect, useMemo } from "react";
 import { useChat } from "@/components/chat-provider";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ArrowRight, Briefcase, Layers, LineChart, Wrench } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { ArrowRight, Bot, Briefcase, Layers, LineChart, Wrench } from "lucide-react";
+import { ChromaVideo } from "@/components/ui/chroma-video";
 import { SkillsSection } from "@/components/skills-section";
 import { ProjectsSection } from "@/components/projects-section";
 import { AboutSection } from "@/components/about-section";
@@ -126,9 +128,10 @@ function Block({ children, className }: { children: React.ReactNode; className?:
 
 function BotAvatar() {
     return (
-        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-foreground text-xs font-semibold tracking-wide text-background" aria-hidden>
-            FH
-        </div>
+        <Avatar className="h-10 w-10 shrink-0 border-none shadow-none rounded-none bg-transparent">
+            <AvatarImage src="/bot-avatar.png" alt="" className="object-contain" />
+            <AvatarFallback className="bg-primary/10 text-primary"><Bot size={14} /></AvatarFallback>
+        </Avatar>
     );
 }
 
@@ -206,20 +209,46 @@ export function Chatbox() {
 
         return (
             <>
-                <div className="w-full max-w-3xl mx-auto px-4 flex flex-col gap-8 animate-in fade-in slide-in-from-bottom-2 duration-500">
-                    <div className="space-y-4 text-center">
+                <div className="relative w-full max-w-xl aspect-video translate-y-10 -mb-10 mx-auto">
+                    <ChromaVideo
+                        src="/gs.mp4"
+                        className="w-full h-full"
+                        similarity={35}
+                        smoothness={45}
+                        greenColor={{ r: 0, g: 255, b: 0 }}
+                    />
+                </div>
+
+                <div className="w-full max-w-2xl mx-auto px-4 flex flex-col gap-5 animate-in fade-in zoom-in duration-500 slide-in-from-bottom-4">
+                    {/* Introduction + recommended prompts sit above the input */}
+                    <div className="space-y-2 text-center">
                         {statusLabel && (
                             <span className="inline-flex items-center gap-2 rounded-full border border-border px-3 py-1 text-xs text-muted-foreground">
                                 <span className={cn("h-1.5 w-1.5 rounded-full", heroProfile?.status === "busy" ? "bg-red-500" : "bg-emerald-500")} />
                                 {statusLabel}
                             </span>
                         )}
-                        <h1 className="text-3xl md:text-5xl font-semibold tracking-tight text-balance">
+                        <h1 className="text-2xl md:text-4xl font-semibold tracking-tight text-balance">
                             {heroProfile?.headline || DEFAULT_HEADLINE}
                         </h1>
-                        <p className="mx-auto max-w-2xl text-base md:text-lg text-muted-foreground text-balance">
+                        <p className="mx-auto max-w-xl text-sm md:text-base text-muted-foreground text-balance">
                             {heroProfile?.subheadline || DEFAULT_SUBHEADLINE}
                         </p>
+                    </div>
+
+                    <div className="grid gap-2 sm:grid-cols-2">
+                        {STARTERS.map((s) => (
+                            <button
+                                key={s.title}
+                                type="button"
+                                onClick={() => handlePrompt(s.prompt, s.intent)}
+                                disabled={inputDisabled}
+                                className="flex items-center gap-3 rounded-full border border-border/40 bg-background/60 backdrop-blur-sm px-4 py-2.5 text-left text-sm text-muted-foreground transition-all hover:bg-accent hover:text-accent-foreground disabled:opacity-40 disabled:cursor-not-allowed"
+                            >
+                                <span aria-hidden>{s.icon}</span>
+                                <span className="font-medium">{s.title}</span>
+                            </button>
+                        ))}
                     </div>
 
                     <form
@@ -227,7 +256,7 @@ export function Chatbox() {
                             e.preventDefault();
                             handleSend();
                         }}
-                        className="relative flex items-center w-full max-w-2xl mx-auto"
+                        className="relative flex items-center w-full"
                     >
                         <label htmlFor="hero-chat-input" className="sr-only">Describe your problem or ask a question</label>
                         <Input
@@ -238,35 +267,20 @@ export function Chatbox() {
                             spellCheck={false}
                             value={input}
                             onChange={(e) => setInput(e.target.value)}
-                            placeholder={isChatDisabled ? "Message limit reached." : "Describe a problem in your business, or ask about my work"}
-                            className="w-full h-14 pl-5 pr-16 rounded-xl text-base shadow-sm border-border bg-background focus-visible:ring-1 focus-visible:ring-ring"
+                            placeholder={isChatDisabled ? "Message limit reached." : "Ask me anything..."}
+                            className="w-full h-14 pl-6 pr-16 rounded-full text-lg shadow-lg border-muted-foreground/20 bg-background focus-visible:ring-1 focus-visible:ring-primary/50 transition-all hover:shadow-xl relative z-10"
                             disabled={inputDisabled}
                         />
                         <Button
                             type="submit"
                             size="icon"
                             disabled={inputDisabled || !input.trim()}
-                            className="absolute right-2 h-10 w-10 rounded-lg"
+                            className="absolute right-1.5 h-11 w-11 rounded-full bg-blue-500 hover:bg-blue-600 text-white shadow-sm transition-transform hover:scale-105 active:scale-95 z-20"
                         >
-                            <ArrowRight size={18} />
+                            <ArrowRight size={20} />
                             <span className="sr-only">Send</span>
                         </Button>
                     </form>
-
-                    <div className="grid gap-3 sm:grid-cols-2 max-w-2xl mx-auto w-full">
-                        {STARTERS.map((s) => (
-                            <button
-                                key={s.title}
-                                type="button"
-                                onClick={() => handlePrompt(s.prompt, s.intent)}
-                                disabled={inputDisabled}
-                                className="flex items-center gap-3 rounded-xl border border-border bg-card px-4 py-3 text-left text-sm transition-colors hover:bg-accent disabled:opacity-40 disabled:cursor-not-allowed"
-                            >
-                                <span className="text-muted-foreground">{s.icon}</span>
-                                <span className="font-medium">{s.title}</span>
-                            </button>
-                        ))}
-                    </div>
                 </div>
             </>
         );
@@ -301,20 +315,19 @@ export function Chatbox() {
 
                                 return (
                                     <div key={msg.id || i} className={`flex gap-3 w-full min-w-0 ${isUser ? "justify-end" : "justify-start"}`}>
-                                        {(isBot || isAdmin) && <BotAvatar />}
+                                        {isBot && <BotAvatar />}
 
                                         <div className={`flex flex-col gap-2 w-full min-w-0 ${isUser ? "items-end" : "items-start"}`}>
                                             {cleanContent && (
                                                 <div
                                                     className={cn(
-                                                        "rounded-2xl px-4 py-2.5 text-[15px] leading-relaxed break-words whitespace-pre-wrap [word-break:break-word] min-w-0 max-w-[85%]",
-                                                        isUser && "bg-primary text-primary-foreground rounded-br-sm",
-                                                        isAdmin && "bg-muted text-foreground border-l-2 border-primary rounded-bl-sm",
-                                                        isBot && "bg-muted/60 text-foreground rounded-bl-sm"
+                                                        "rounded-[20px] px-5 py-2.5 text-[15px] shadow-sm leading-relaxed break-words whitespace-pre-wrap [word-break:break-word] min-w-0 max-w-[85%] overflow-hidden",
+                                                        isUser && "bg-gradient-to-br from-blue-600/90 to-blue-600/70 backdrop-blur-md border border-blue-400/30 shadow-xl text-white rounded-br-none",
+                                                        isAdmin && "bg-gradient-to-br from-red-600/90 to-red-600/70 backdrop-blur-md border border-red-400/30 shadow-xl text-white rounded-bl-none",
+                                                        isBot && "bg-gradient-to-br from-muted/80 to-muted/40 backdrop-blur-md border border-white/10 shadow-xl text-foreground rounded-bl-none"
                                                     )}
                                                 >
-                                                    {isAdmin && <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Fil (live)</span>}
-                                                    {shouldAnimate ? (
+                                                                                                        {shouldAnimate ? (
                                                         <TypingAnimation
                                                             text={cleanContent}
                                                             duration={1}
@@ -346,9 +359,19 @@ export function Chatbox() {
 
                             {/* Loading Indicator */}
                             {isLoading && (
-                                <div className="flex gap-3 items-end" role="status" aria-label="Fil is typing">
-                                    <BotAvatar />
-                                    <div className="bg-muted/60 rounded-2xl rounded-bl-sm px-4 py-3.5 flex gap-1 items-center">
+                                <div className="flex gap-3 max-w-[85%] items-end" role="status" aria-label="Typing">
+                                    <div className="h-10 w-10 shrink-0 relative overflow-hidden">
+                                        <ChromaVideo
+                                            src="/botpng000.mp4"
+                                            poster="/bot-avatar.png"
+                                            className="w-full h-full"
+                                            similarity={35}
+                                            smoothness={50}
+                                            greenColor={{ r: 0, g: 255, b: 0 }}
+                                            maxResolution={100}
+                                        />
+                                    </div>
+                                    <div className="bg-muted text-foreground rounded-[20px] rounded-bl-none px-5 py-4 flex gap-1 items-center shadow-sm">
                                         <span className="w-1.5 h-1.5 bg-foreground/40 rounded-full animate-bounce [animation-delay:-0.3s]" />
                                         <span className="w-1.5 h-1.5 bg-foreground/40 rounded-full animate-bounce [animation-delay:-0.15s]" />
                                         <span className="w-1.5 h-1.5 bg-foreground/40 rounded-full animate-bounce" />
@@ -379,7 +402,7 @@ export function Chatbox() {
                                             type="button"
                                             onClick={() => handlePrompt(s.prompt, s.intent)}
                                             disabled={isLoading}
-                                            className="shrink-0 rounded-lg border border-border bg-background px-3 py-1.5 text-xs text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors disabled:opacity-30 disabled:cursor-not-allowed whitespace-nowrap"
+                                            className="shrink-0 rounded-full border border-border/40 bg-background/60 backdrop-blur-sm px-3.5 py-1.5 text-xs text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-all duration-150 disabled:opacity-30 disabled:cursor-not-allowed whitespace-nowrap"
                                         >
                                             {s.label}
                                         </button>
@@ -413,17 +436,17 @@ export function Chatbox() {
                                     chatInputRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
                                 }, 300);
                             }}
-                            placeholder={isChatDisabled ? "Message limit reached." : "Ask a follow-up or describe your problem"}
-                            className="w-full h-12 pl-5 pr-16 rounded-xl shadow-sm border-border bg-background focus-visible:ring-1 focus-visible:ring-ring text-base"
+                            placeholder={isChatDisabled ? "Message limit reached." : "Type a message..."}
+                            className="w-full h-14 pl-6 pr-16 rounded-full shadow-md border-border/40 bg-background/80 backdrop-blur-md focus-visible:ring-1 focus-visible:ring-primary/30 transition-shadow hover:shadow-lg text-lg relative z-10"
                             disabled={inputDisabled}
                         />
                         <Button
                             type="submit"
                             size="icon"
                             disabled={inputDisabled || !input.trim()}
-                            className="absolute right-2 h-9 w-9 rounded-lg"
+                            className="absolute right-1.5 h-11 w-11 rounded-full bg-blue-500 hover:bg-blue-600 text-white shadow-sm transition-transform hover:scale-105 active:scale-95 z-20"
                         >
-                            <ArrowRight size={18} />
+                            <ArrowRight size={20} />
                             <span className="sr-only">Send</span>
                         </Button>
                     </form>

@@ -4,6 +4,7 @@ import { supabase } from "@/lib/supabase-client"
 import { Status, StatusLabel } from "@/components/ui/shadcn-io/status"
 import { VisitorCounter } from './visitor-counter';
 import { Github, Linkedin, Instagram } from "lucide-react"
+import Image from "next/image"
 import Link from "next/link"
 import { useState, useEffect } from 'react';
 
@@ -65,7 +66,14 @@ export function SiteFooter() {
                 {/* Brand panel */}
                 <div className="flex-1 min-w-[240px] flex flex-col justify-between gap-6 rounded-t-2xl bg-primary text-primary-foreground px-6 pt-6 pb-5">
                     <div className="flex items-center gap-2">
-                        <span className="text-xl font-bold tracking-tight">Fil Heinz</span>
+                        <Image
+                            src="/bot-avatar.png"
+                            alt=""
+                            width={28}
+                            height={28}
+                            className="h-7 w-7 rounded-full object-cover"
+                        />
+                        <span className="text-xl font-bold tracking-tight">Bonny-AI</span>
                     </div>
 
                     <div className="flex flex-col gap-3">
@@ -99,7 +107,7 @@ export function SiteFooter() {
                             </Status>
                         </div>
 
-                        <p className="text-xs opacity-65">&copy; {year} Fil Heinz O. Re La Torre</p>
+                        <p className="text-xs opacity-65">&copy; {year} Bonny-AI by Fil Heinz Re La Torre</p>
                     </div>
                 </div>
 

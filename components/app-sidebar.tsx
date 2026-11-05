@@ -36,6 +36,7 @@ import {
     CollapsibleTrigger,
 } from "@/components/ui/collapsible"
 import { Button } from "@/components/ui/button"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 
 import { ChatIntents } from "@/lib/intents"
 import { openContact } from "@/components/contact-cta"
@@ -98,9 +99,12 @@ export function AppSidebar({ onNavClick, ...props }: AppSidebarProps) {
                     className="flex items-center gap-3 px-4 py-2 text-left"
                     onClick={() => onNavClick("Give me a quick overview of how you can help.", undefined, "/")}
                 >
-                    <span className="flex h-9 w-9 items-center justify-center rounded-full bg-foreground text-xs font-semibold text-background">FH</span>
+                    <Avatar className="h-10 w-10 rounded-none bg-transparent">
+                        <AvatarImage src="/bot-avatar.png" alt="Bonny-AI" />
+                        <AvatarFallback>AI</AvatarFallback>
+                    </Avatar>
                     <span className="flex flex-col">
-                        <span className="font-semibold text-sm tracking-tight">Fil Heinz</span>
+                        <span className="font-semibold text-sm tracking-tight">Bonny-AI</span>
                         <span className="text-xs text-muted-foreground">Automation & AI Solutions</span>
                     </span>
                 </button>

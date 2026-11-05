@@ -235,7 +235,7 @@ export function PortfolioNavbar() {
                             href="/"
                             className="flex items-center hover:opacity-80 transition-opacity font-bold text-lg tracking-tight rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                         >
-                            Fil Heinz
+                            Bonny-AI
                         </Link>
                     </div>
 
