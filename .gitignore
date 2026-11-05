@@ -60,3 +60,6 @@ ffmpeg.exe
 # Large video source files
 public/*raw*
 .claude/
+
+# Supabase CLI local state
+supabase/.temp/
