@@ -1,6 +1,5 @@
 import OpenAI from 'openai'
 import { randomUUID } from 'crypto'
-import { InferenceClient } from '@huggingface/inference'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { observeOpenAI } from '@langfuse/openai'
 import { startActiveObservation, propagateAttributes } from '@langfuse/tracing'
@@ -168,7 +167,6 @@ interface ToolResult {
 
 interface ToolContext {
     supabase: SupabaseClient
-    hf: InferenceClient
     ctx: RepoPushContext
     sessionId: string
 }
@@ -224,7 +222,7 @@ async function syncTechStack(supabase: SupabaseClient, projectId: string, techSt
     }
 }
 
-async function upsertProject(input: any, { supabase, hf, ctx, sessionId }: ToolContext): Promise<ToolResult> {
+async function upsertProject(input: any, { supabase, ctx, sessionId }: ToolContext): Promise<ToolResult> {
     const githubUrl: string | undefined = input?.github_url
     if (!githubUrl) return { isError: true, error: 'github_url is required' }
 
@@ -283,7 +281,7 @@ async function upsertProject(input: any, { supabase, hf, ctx, sessionId }: ToolC
     if (logError) console.error('[agent-session] failed writing audit log:', logError.message)
 
     try {
-        await embedProjectRecord(supabase, hf, {
+        await embedProjectRecord(supabase, {
             ...after,
             tech_stack: Array.isArray(input.tech_stack) ? input.tech_stack : after?.tech_stack,
         })
@@ -306,7 +304,7 @@ async function getAboutProfile(supabase: SupabaseClient): Promise<ToolResult> {
     return { description: data?.description || null }
 }
 
-async function updateAboutProfile(input: any, { supabase, hf, ctx, sessionId }: ToolContext): Promise<ToolResult> {
+async function updateAboutProfile(input: any, { supabase, ctx, sessionId }: ToolContext): Promise<ToolResult> {
     const description: string | undefined = input?.description
     if (!description || !description.trim()) {
         return { isError: true, error: 'description is required' }
@@ -360,7 +358,7 @@ async function updateAboutProfile(input: any, { supabase, hf, ctx, sessionId }: 
     if (logError) console.error('[agent-session] failed writing audit log:', logError.message)
 
     try {
-        await embedProfileRecord(supabase, hf, { id: profileId, description })
+        await embedProfileRecord(supabase, { id: profileId, description })
     } catch (embedError) {
         console.error('[agent-session] re-embed failed:', embedError)
     }
@@ -448,7 +446,6 @@ export async function runContentAgentSession(ctx: RepoPushContext): Promise<void
 
     const model = process.env.AGENT_GROQ_MODEL || 'openai/gpt-oss-120b'
     const supabase = createAdminClient()
-    const hf = new InferenceClient(process.env.HF_API_KEY || undefined)
     const sessionId = randomUUID()
 
     // One Langfuse session groups every model call this push triggers; the
@@ -459,7 +456,7 @@ export async function runContentAgentSession(ctx: RepoPushContext): Promise<void
         tags: ['content-agent', ctx.repoFullName],
     })
 
-    const toolCtx: ToolContext = { supabase, hf, ctx, sessionId }
+    const toolCtx: ToolContext = { supabase, ctx, sessionId }
 
     const messages: OpenAI.Chat.ChatCompletionMessageParam[] = [
         { role: 'system', content: SYSTEM_PROMPT },

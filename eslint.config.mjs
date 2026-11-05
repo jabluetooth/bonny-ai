@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Deno code deployed to Supabase Edge Functions, not part of the Next app.
+    "supabase/functions/**",
   ]),
   {
     // The codebase predates strict typing enforcement.

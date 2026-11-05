@@ -10,7 +10,6 @@
     "embed": "tsx scripts/embed-data.ts"
   },
   "dependencies": {
-    "@huggingface/inference": "^4.13.5",
     "@langfuse/openai": "^5.11.0",
     "@langfuse/otel": "^5.11.0",
     "@langfuse/tracing": "^5.11.0",

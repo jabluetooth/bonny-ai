@@ -5,21 +5,23 @@
  * Complements the intent-based context system (chat-context.ts) with
  * similarity-based retrieval for more nuanced queries.
  *
- * Uses HuggingFace Inference API (free) for embeddings.
+ * Embeddings come from the `embed` Supabase Edge Function (gte-small).
  */
 
 import { SupabaseClient } from '@supabase/supabase-js';
-import { InferenceClient } from '@huggingface/inference';
+import { generateEmbedding, EMBEDDING_MODEL } from './embeddings';
 
 // ============================================
 // Configuration
 // ============================================
 
 const CONFIG = {
-    // HuggingFace model - must match the one used in embed-data.ts
-    EMBEDDING_MODEL: 'sentence-transformers/all-MiniLM-L6-v2',
+    // Must match the model used when indexing (lib/embeddings.ts)
+    EMBEDDING_MODEL,
     EMBEDDING_DIMENSIONS: 384,
-    DEFAULT_MATCH_THRESHOLD: 0.72,
+    // gte-small scores run higher than MiniLM did (unrelated text often
+    // lands around 0.7), so the cut-off sits a little higher.
+    DEFAULT_MATCH_THRESHOLD: 0.8,
     DEFAULT_MATCH_COUNT: 5,
     MAX_CONTEXT_CHARS: 3000, // ~750 tokens, leaves room for system prompt
     CACHE_TTL_MS: 5 * 60 * 1000, // 5 minutes
@@ -99,26 +101,11 @@ function setCachedEmbedding(query: string, embedding: number[]): void {
 }
 
 // ============================================
-// HuggingFace Client (lazy initialization)
-// ============================================
-
-let hfClient: InferenceClient | null = null;
-
-function getHfClient(): InferenceClient {
-    if (!hfClient) {
-        // HF_API_KEY is optional - works without but with rate limits
-        const apiKey = process.env.HF_API_KEY;
-        hfClient = new InferenceClient(apiKey || undefined);
-    }
-    return hfClient;
-}
-
-// ============================================
 // Core Functions
 // ============================================
 
 /**
- * Generate embedding for a query string using HuggingFace
+ * Generate embedding for a query string (cached)
  */
 async function generateQueryEmbedding(query: string): Promise<number[]> {
     // Check cache first
@@ -127,17 +114,7 @@ async function generateQueryEmbedding(query: string): Promise<number[]> {
         return cached;
     }
 
-    const hf = getHfClient();
-
-    const response = await hf.featureExtraction({
-        model: CONFIG.EMBEDDING_MODEL,
-        inputs: query,
-    });
-
-    // Response is the embedding array directly
-    const embedding = Array.isArray(response)
-        ? (response as number[])
-        : Array.from(response as Float32Array);
+    const embedding = await generateEmbedding(query);
 
     // Cache the result
     setCachedEmbedding(query, embedding);
@@ -294,11 +271,11 @@ export async function retrieveContext(
 }
 
 /**
- * Check if RAG is available
- * HuggingFace works without API key (with rate limits), so RAG is always available
+ * Check if RAG is configured. Without the embed secret, every lookup would
+ * fail, so skip the round trip entirely.
  */
 export function isRAGAvailable(): boolean {
-    return true; // HuggingFace Inference API works without API key
+    return !!process.env.EMBED_FUNCTION_SECRET;
 }
 
 /**

@@ -161,7 +161,7 @@ export async function POST(req: Request) {
         const [context, ragContext] = await Promise.all([
             getContextForIntent(supabase, intent, userProfile?.name || "Guest"),
             isRAGAvailable()
-                ? retrieveContextSmart(supabase, content, { matchCount: 4, matchThreshold: 0.72 })
+                ? retrieveContextSmart(supabase, content, { matchCount: 4 })
                 : Promise.resolve({ formattedContext: '', documents: [], totalChars: 0, truncated: false }),
         ]);
 

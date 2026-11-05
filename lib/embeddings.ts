@@ -1,20 +1,42 @@
-import { InferenceClient } from '@huggingface/inference'
 import type { SupabaseClient } from '@supabase/supabase-js'
 
-// Configuration matching lib/rag.ts
-export const EMBEDDING_MODEL = 'sentence-transformers/all-MiniLM-L6-v2'
+// Embeddings come from the `embed` Supabase Edge Function
+// (supabase/functions/embed), which runs the built-in gte-small model:
+// 384 dimensions, no third-party API or per-call billing. Indexing and
+// search must use the same model, so everything goes through here.
+export const EMBEDDING_MODEL = 'gte-small'
 
-export async function generateEmbedding(hf: InferenceClient, text: string): Promise<number[]> {
-    const response = await hf.featureExtraction({
-        model: EMBEDDING_MODEL,
-        inputs: text,
-    })
-
-    if (Array.isArray(response) && Array.isArray(response[0])) {
-        // Handle batched response (though we send one string)
-        return response[0] as number[]
+function embedEndpoint(): { url: string; secret: string } {
+    const base = process.env.NEXT_PUBLIC_SUPABASE_URL
+    const secret = process.env.EMBED_FUNCTION_SECRET
+    if (!base || !secret) {
+        throw new Error('Embeddings need NEXT_PUBLIC_SUPABASE_URL and EMBED_FUNCTION_SECRET to be set')
     }
-    return Array.from(response as number[] | Float32Array)
+    return { url: `${base.replace(/\/$/, '')}/functions/v1/embed`, secret }
+}
+
+/** Embeds up to 64 strings in one call. */
+export async function generateEmbeddings(texts: string[]): Promise<number[][]> {
+    const { url, secret } = embedEndpoint()
+    const res = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-embed-secret': secret },
+        body: JSON.stringify({ input: texts }),
+    })
+    if (!res.ok) {
+        const detail = await res.text().catch(() => '')
+        throw new Error(`embed function returned ${res.status}${detail ? `: ${detail.slice(0, 200)}` : ''}`)
+    }
+    const data = (await res.json()) as { embeddings?: number[][] }
+    if (!Array.isArray(data.embeddings) || data.embeddings.length !== texts.length) {
+        throw new Error('embed function returned an unexpected response')
+    }
+    return data.embeddings
+}
+
+export async function generateEmbedding(text: string): Promise<number[]> {
+    const [embedding] = await generateEmbeddings([text])
+    return embedding
 }
 
 interface EmbeddableProject {
@@ -43,7 +65,6 @@ interface Chunk {
  */
 async function replaceRecordChunks(
     supabase: SupabaseClient,
-    hf: InferenceClient,
     sourceTable: string,
     recordId: string,
     chunks: Chunk[]
@@ -59,7 +80,7 @@ async function replaceRecordChunks(
     }
 
     for (const chunk of chunks) {
-        const embedding = await generateEmbedding(hf, chunk.content)
+        const embedding = await generateEmbedding(chunk.content)
         const { error } = await supabase.from('document_embeddings').insert({
             content: chunk.content,
             embedding,
@@ -82,7 +103,6 @@ async function replaceRecordChunks(
  */
 export async function embedProjectRecord(
     supabase: SupabaseClient,
-    hf: InferenceClient,
     project: EmbeddableProject
 ): Promise<void> {
     const chunks: Chunk[] = [
@@ -120,7 +140,7 @@ export async function embedProjectRecord(
         })
     }
 
-    await replaceRecordChunks(supabase, hf, 'projects', project.id, chunks)
+    await replaceRecordChunks(supabase, 'projects', project.id, chunks)
 }
 
 interface EmbeddableProfile {
@@ -134,11 +154,10 @@ interface EmbeddableProfile {
  */
 export async function embedProfileRecord(
     supabase: SupabaseClient,
-    hf: InferenceClient,
     profile: EmbeddableProfile
 ): Promise<void> {
     const content = `About Me - Personal Introduction and Biography: ${profile.description || ''}`.trim()
-    await replaceRecordChunks(supabase, hf, 'author_profiles', profile.id, [
+    await replaceRecordChunks(supabase, 'author_profiles', profile.id, [
         { content, chunk_type: 'main_bio' },
     ])
 }
@@ -158,7 +177,6 @@ interface EmbeddableService {
  */
 export async function embedServiceRecord(
     supabase: SupabaseClient,
-    hf: InferenceClient,
     service: EmbeddableService
 ): Promise<void> {
     const content = [
@@ -168,7 +186,7 @@ export async function embedServiceRecord(
         service.outcome ? `Business outcome. ${service.outcome}` : '',
     ].filter(Boolean).join(' ')
 
-    await replaceRecordChunks(supabase, hf, 'services', service.id, [
+    await replaceRecordChunks(supabase, 'services', service.id, [
         { content, chunk_type: 'service', extraMetadata: { title: service.title } },
     ])
 }

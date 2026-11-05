@@ -1,6 +1,5 @@
 
 import { createClient } from '@supabase/supabase-js';
-import { InferenceClient } from '@huggingface/inference';
 import * as dotenv from 'dotenv';
 import { join } from 'path';
 import { generateEmbedding as sharedGenerateEmbedding, embedProjectRecord, embedServiceRecord } from '../lib/embeddings';
@@ -10,7 +9,6 @@ dotenv.config({ path: join(process.cwd(), '.env.local') });
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
-const HF_API_KEY = process.env.HF_API_KEY;
 
 if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
     console.error('Missing Supabase credentials. Ensure NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY are set in .env.local');
@@ -19,11 +17,10 @@ if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
 
 // Init Clients
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
-const hf = new InferenceClient(HF_API_KEY || undefined);
 
 async function generateEmbedding(text: string): Promise<number[]> {
     try {
-        return await sharedGenerateEmbedding(hf, text);
+        return await sharedGenerateEmbedding(text);
     } catch (error) {
         console.error(`Error generating embedding for: "${text.substring(0, 50)}..."`, error);
         throw error;
@@ -90,7 +87,7 @@ async function processProjects() {
         const techStack = (p.project_skills || [])
             .map((ps: any) => ps.skills?.name)
             .filter(Boolean);
-        await embedProjectRecord(supabase, hf, { ...p, tech_stack: techStack });
+        await embedProjectRecord(supabase, { ...p, tech_stack: techStack });
     }
     console.log(`  Embedded ${projects.length} projects.`);
 }
@@ -160,13 +157,23 @@ async function processServices() {
     }
 
     for (const s of services) {
-        await embedServiceRecord(supabase, hf, s);
+        await embedServiceRecord(supabase, s);
     }
     console.log(`  Embedded ${services.length} services.`);
 }
 
 async function main() {
     console.log('Starting ingestion...');
+
+    // Check the embed function works BEFORE wiping anything, so a bad
+    // secret or an undeployed function can't leave the index empty.
+    try {
+        const probe = await sharedGenerateEmbedding('connectivity check');
+        if (probe.length !== 384) throw new Error(`expected 384 dimensions, got ${probe.length}`);
+    } catch (error) {
+        console.error('Embed function check failed, nothing was changed:', error instanceof Error ? error.message : error);
+        process.exit(1);
+    }
 
     // Clear old embeddings to avoid duplicates on re-runs
     const { error: deleteError } = await supabase.from('document_embeddings').delete().neq('id', '00000000-0000-0000-0000-000000000000');
