@@ -23,7 +23,6 @@ export default async function SkillsPage() {
         <PortfolioPageShell>
             <article className="flex flex-col gap-10 md:gap-14">
                 <PageHeader
-                    eyebrow="Skills"
                     title="The toolkit behind the work"
                     description="Tools and technologies I use to build automation, AI systems and full-stack products. Search for the one your team runs on."
                 >

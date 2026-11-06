@@ -24,7 +24,6 @@ export default async function ProjectsPage() {
         <PortfolioPageShell>
             <article className="flex flex-col gap-10 md:gap-14">
                 <PageHeader
-                    eyebrow="Case studies"
                     title="Work that's shipped and running"
                     description="Each project told as the problem, what I built and the result. Open one for the full story, tech stack and features."
                 >

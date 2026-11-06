@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useId, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { AnimatePresence, LayoutGroup, motion } from "framer-motion";
 import { AlertCircle, ArrowRight, TrendingUp, Wrench } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -18,9 +18,9 @@ export interface Service {
 }
 
 const STEPS = [
-    { key: "problem", label: "The problem", Icon: AlertCircle, dot: "bg-red-500", text: "text-red-600 dark:text-red-400" },
-    { key: "solution", label: "What I build", Icon: Wrench, dot: "bg-blue-500", text: "text-blue-600 dark:text-blue-400" },
-    { key: "outcome", label: "The outcome", Icon: TrendingUp, dot: "bg-emerald-500", text: "text-emerald-600 dark:text-emerald-400" },
+    { key: "problem", label: "The problem", Icon: AlertCircle, dot: "bg-red-500", text: "text-danger" },
+    { key: "solution", label: "What I build", Icon: Wrench, dot: "bg-brand", text: "text-brand" },
+    { key: "outcome", label: "The outcome", Icon: TrendingUp, dot: "bg-emerald-500", text: "text-success" },
 ] as const;
 
 const pad = (n: number) => String(n + 1).padStart(2, "0");
@@ -37,6 +37,7 @@ export function ServicesSection() {
     const [activeIndex, setActiveIndex] = useState(0);
     // Scope the sliding pill so several of these in one chat don't share it.
     const groupId = useId();
+    const tabRefs = useRef<(HTMLButtonElement | null)[]>([]);
 
     useEffect(() => {
         fetchWithCache<Service[]>(CACHE_KEYS.SERVICES, async () => {
@@ -69,6 +70,22 @@ export function ServicesSection() {
     }
 
     const active = services[Math.min(activeIndex, services.length - 1)];
+    const tabId = (i: number) => `${groupId}-tab-${i}`;
+    const panelId = `${groupId}-panel`;
+
+    const onTabKey = (e: React.KeyboardEvent, i: number) => {
+        const last = services.length - 1;
+        const next =
+            e.key === "ArrowDown" || e.key === "ArrowRight" ? (i === last ? 0 : i + 1)
+            : e.key === "ArrowUp" || e.key === "ArrowLeft" ? (i === 0 ? last : i - 1)
+            : e.key === "Home" ? 0
+            : e.key === "End" ? last
+            : -1;
+        if (next < 0) return;
+        e.preventDefault();
+        setActiveIndex(next);
+        tabRefs.current[next]?.focus();
+    };
 
     return (
         <LayoutGroup id={groupId}>
@@ -80,29 +97,34 @@ export function ServicesSection() {
 
             <div className="grid gap-3 sm:grid-cols-[14rem_1fr] sm:gap-4">
                 {/* Picker: a swipeable row on phones, a numbered list from sm up */}
-                <div role="tablist" aria-label="Services" className="flex gap-2 overflow-x-auto pb-1 [&::-webkit-scrollbar]:hidden [scrollbar-width:none] sm:flex-col sm:overflow-visible sm:pb-0">
+                <div role="tablist" aria-label="Services" aria-orientation="vertical" className="flex gap-2 overflow-x-auto pb-1 [&::-webkit-scrollbar]:hidden [scrollbar-width:none] sm:flex-col sm:overflow-visible sm:pb-0">
                     {services.map((s, i) => {
                         const selected = s.id === active.id;
                         return (
                             <button
                                 key={s.id}
+                                ref={(el) => { tabRefs.current[i] = el; }}
+                                id={tabId(i)}
                                 role="tab"
                                 aria-selected={selected}
+                                aria-controls={panelId}
+                                tabIndex={selected ? 0 : -1}
                                 type="button"
                                 onClick={() => setActiveIndex(i)}
+                                onKeyDown={(e) => onTabKey(e, i)}
                                 className={cn(
                                     "relative shrink-0 flex items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm transition-colors",
-                                    selected ? "text-white" : "text-muted-foreground hover:bg-muted/60 hover:text-foreground"
+                                    selected ? "text-brand-foreground" : "text-muted-foreground hover:bg-muted/60 hover:text-foreground"
                                 )}
                             >
                                 {selected && (
                                     <motion.span
                                         layoutId="service-pill"
-                                        className="absolute inset-0 rounded-xl bg-gradient-to-br from-blue-600/90 to-blue-600/70 border border-blue-400/30 shadow-lg"
+                                        className="absolute inset-0 rounded-xl bg-brand border border-brand-hover shadow-md"
                                         transition={{ type: "spring", bounce: 0.2, duration: 0.45 }}
                                     />
                                 )}
-                                <span className={cn("relative font-mono text-xs tabular-nums", selected ? "text-blue-100" : "text-muted-foreground/70")}>{pad(i)}</span>
+                                <span className={cn("relative font-mono text-xs tabular-nums", selected ? "text-brand-foreground/90" : "text-muted-foreground")}>{pad(i)}</span>
                                 <span className="relative font-medium leading-snug whitespace-nowrap sm:whitespace-normal">{s.title}</span>
                             </button>
                         );
@@ -119,6 +141,9 @@ export function ServicesSection() {
                             exit={{ opacity: 0, y: -8 }}
                             transition={{ duration: 0.25, ease: "easeOut" }}
                             role="tabpanel"
+                            id={panelId}
+                            aria-labelledby={tabId(Math.min(activeIndex, services.length - 1))}
+                            tabIndex={0}
                         >
                             {active.image_url && (
                                 // eslint-disable-next-line @next/next/no-img-element -- admin-uploaded, arbitrary host
@@ -158,7 +183,7 @@ export function ServicesSection() {
                                     type="button"
                                     disabled={chatBusy}
                                     onClick={() => sendMessage(`How would "${active.title}" work for my business?`)}
-                                    className="group mt-6 inline-flex items-center gap-2 rounded-full bg-blue-500 px-4 py-2 text-sm font-semibold text-white shadow-sm transition-all hover:bg-blue-600 hover:shadow-md active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    className="group mt-6 inline-flex items-center gap-2 rounded-full bg-brand px-4 py-2.5 text-sm font-semibold text-brand-foreground shadow-sm transition-all hover:bg-brand-hover hover:shadow-md active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
                                     Ask how this fits my business
                                     <ArrowRight size={16} className="transition-transform group-hover:translate-x-0.5" />

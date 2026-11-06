@@ -64,8 +64,8 @@ export default async function AboutPage() {
                             </p>
                             <div className="flex gap-1">
                                 {SOCIALS.map(({ label, href, Icon }) => (
-                                    <a key={href} href={href} target="_blank" rel="noopener noreferrer" aria-label={label} className="rounded-full p-2 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground">
-                                        <Icon size={17} />
+                                    <a key={href} href={href} target="_blank" rel="noopener noreferrer" aria-label={`${label} (new tab)`} className="rounded-full p-2.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground">
+                                        <Icon size={17} aria-hidden />
                                     </a>
                                 ))}
                             </div>
@@ -74,7 +74,6 @@ export default async function AboutPage() {
 
                     {/* Intro */}
                     <div className="flex flex-col gap-5">
-                        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">About</p>
                         <h1 className="text-3xl font-bold tracking-tight text-balance sm:text-4xl md:text-5xl">
                             {profile?.headline || profile?.title || "Fil Heinz O. Re La Torre"}
                         </h1>
@@ -96,7 +95,7 @@ export default async function AboutPage() {
                                     rel="noopener noreferrer"
                                     className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-5 py-2.5 text-sm font-semibold transition-colors hover:bg-muted"
                                 >
-                                    <FileText size={16} />
+                                    <FileText size={16} aria-hidden />
                                     Download resume
                                 </a>
                             )}

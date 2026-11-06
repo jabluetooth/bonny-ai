@@ -71,7 +71,7 @@ export function CaseStudyGrid({ projects }: { projects: CaseStudy[] }) {
                         )}
                     >
                         {name}
-                        <span className={cn("text-xs tabular-nums", filter === name ? "opacity-70" : "text-muted-foreground/70")}>{count}</span>
+                        <span className={cn("text-xs tabular-nums", filter === name ? "opacity-80" : "text-muted-foreground")}>{count}</span>
                     </button>
                 ))}
             </div>
@@ -83,14 +83,15 @@ export function CaseStudyGrid({ projects }: { projects: CaseStudy[] }) {
                             <button
                                 type="button"
                                 onClick={() => setActive(p)}
-                                aria-label={`Open ${p.title} details`}
+                                tabIndex={-1}
+                                aria-hidden
                                 className="relative block aspect-[16/9] w-full overflow-hidden bg-muted"
                             >
                                 {p.image_url ? (
                                     // eslint-disable-next-line @next/next/no-img-element -- admin-uploaded, arbitrary host
                                     <img src={p.image_url} alt="" loading="lazy" className="h-full w-full object-cover object-top transition-transform duration-500 group-hover:scale-[1.03]" />
                                 ) : (
-                                    <span className="flex h-full items-center justify-center text-3xl font-bold text-muted-foreground/40">{p.title.slice(0, 2)}</span>
+                                    <span className="flex h-full items-center justify-center text-3xl font-bold text-muted-foreground">{p.title.slice(0, 2)}</span>
                                 )}
                             </button>
 
@@ -100,7 +101,7 @@ export function CaseStudyGrid({ projects }: { projects: CaseStudy[] }) {
                                     {p.industry && <span>· {p.industry}</span>}
                                     {p.status && (
                                         <span className="ml-auto inline-flex items-center gap-1.5">
-                                            <span className={cn("h-1.5 w-1.5 rounded-full", p.status === "Online" ? "bg-emerald-500" : "bg-amber-500")} />
+                                            <span aria-hidden className={cn("h-1.5 w-1.5 rounded-full", p.status === "Online" ? "bg-emerald-500" : "bg-amber-500")} />
                                             {p.status === "Online" ? "Live" : p.status}
                                         </span>
                                     )}
@@ -115,7 +116,7 @@ export function CaseStudyGrid({ projects }: { projects: CaseStudy[] }) {
                                 {p.results && p.results.length > 0 && (
                                     <ul aria-label="Results" className="flex flex-wrap gap-1.5">
                                         {p.results.slice(0, 3).map((r) => (
-                                            <li key={r} className="rounded-md bg-emerald-500/10 px-2 py-0.5 text-xs font-medium text-emerald-700">{r}</li>
+                                            <li key={r} className="rounded-md bg-emerald-500/10 px-2 py-0.5 text-xs font-medium text-success">{r}</li>
                                         ))}
                                     </ul>
                                 )}
@@ -126,19 +127,20 @@ export function CaseStudyGrid({ projects }: { projects: CaseStudy[] }) {
                                     <button
                                         type="button"
                                         onClick={() => setActive(p)}
-                                        className="inline-flex items-center gap-1 text-sm font-semibold text-foreground hover:underline underline-offset-4"
+                                        aria-haspopup="dialog"
+                                        className="-mx-2 inline-flex min-h-9 items-center gap-1 rounded-md px-2 text-sm font-semibold text-foreground hover:underline underline-offset-4"
                                     >
-                                        View case study
+                                        View case study<span className="sr-only">: {p.title}</span>
                                     </button>
                                     <span className="ml-auto flex items-center gap-1">
                                         {p.github_url && (
-                                            <a href={p.github_url} target="_blank" rel="noopener noreferrer" aria-label={`${p.title} source code on GitHub`} className="rounded-full p-2 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground">
-                                                <Github size={16} />
+                                            <a href={p.github_url} target="_blank" rel="noopener noreferrer" aria-label={`${p.title} source code on GitHub`} className="rounded-full p-2.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground">
+                                                <Github size={16} aria-hidden />
                                             </a>
                                         )}
                                         {p.project_url && (
-                                            <a href={p.project_url} target="_blank" rel="noopener noreferrer" aria-label={`${p.title} live site`} className="rounded-full p-2 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground">
-                                                <ArrowUpRight size={16} />
+                                            <a href={p.project_url} target="_blank" rel="noopener noreferrer" aria-label={`${p.title} live site`} className="rounded-full p-2.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground">
+                                                <ArrowUpRight size={16} aria-hidden />
                                             </a>
                                         )}
                                     </span>

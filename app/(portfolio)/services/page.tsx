@@ -16,9 +16,9 @@ export const metadata: Metadata = {
 };
 
 const STEPS = [
-    { key: "problem", label: "The problem", Icon: AlertCircle, tone: "text-red-600" },
-    { key: "solution", label: "What I build", Icon: Wrench, tone: "text-blue-600" },
-    { key: "outcome", label: "The outcome", Icon: TrendingUp, tone: "text-emerald-600" },
+    { key: "problem", label: "The problem", Icon: AlertCircle, tone: "text-danger" },
+    { key: "solution", label: "What I build", Icon: Wrench, tone: "text-brand" },
+    { key: "outcome", label: "The outcome", Icon: TrendingUp, tone: "text-success" },
 ] as const;
 
 export default async function ServicesPage() {
@@ -29,7 +29,6 @@ export default async function ServicesPage() {
             <article className="flex flex-col gap-12 md:gap-16">
                 <div className="flex flex-col gap-6">
                     <PageHeader
-                        eyebrow="Services"
                         title="Problems I solve for growing teams"
                         description="Each service starts with a problem I see in businesses again and again, what I build to fix it, and the outcome you can expect."
                     >

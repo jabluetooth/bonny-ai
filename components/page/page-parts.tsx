@@ -6,19 +6,16 @@ import { cn } from "@/lib/utils";
  */
 
 export function PageHeader({
-    eyebrow,
     title,
     description,
     children,
 }: {
-    eyebrow: string;
     title: string;
     description?: string;
     children?: React.ReactNode;
 }) {
     return (
         <header className="flex flex-col gap-4">
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">{eyebrow}</p>
             <h1 className="text-3xl font-bold tracking-tight text-balance sm:text-4xl md:text-5xl">{title}</h1>
             {description && (
                 <p className="max-w-2xl text-base leading-relaxed text-muted-foreground text-pretty sm:text-lg">{description}</p>

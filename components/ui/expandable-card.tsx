@@ -37,15 +37,41 @@ export const ProjectDetails = ({
     onClose: () => void;
     refProp: React.RefObject<HTMLDivElement | null>;
 }) => {
+    const titleId = `${id}-dialog-title`;
+    const closeRef = useRef<HTMLButtonElement>(null);
+
+    // Accessible dialog: move focus in, keep Tab inside, give focus back on close.
+    useEffect(() => {
+        const opener = document.activeElement as HTMLElement | null;
+        closeRef.current?.focus({ preventScroll: true });
+        const onKey = (e: KeyboardEvent) => {
+            if (e.key !== "Tab" || !refProp.current) return;
+            const focusable = refProp.current.querySelectorAll<HTMLElement>(
+                'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])'
+            );
+            if (!focusable.length) return;
+            const first = focusable[0];
+            const last = focusable[focusable.length - 1];
+            if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+            else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+        };
+        document.addEventListener("keydown", onKey);
+        return () => {
+            document.removeEventListener("keydown", onKey);
+            if (opener && document.contains(opener)) opener.focus({ preventScroll: true });
+        };
+    }, [refProp]);
+
     return (
         <>
             <motion.div
                 key="overlay"
+                aria-hidden
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="fixed inset-0 bg-black/20 h-full w-full z-[999]"
-                style={{ backdropFilter: "blur(10px)" }}
+                className="fixed inset-0 bg-black/30 h-full w-full z-[999]"
+                style={{ backdropFilter: "blur(6px)" }}
                 onClick={onClose}
             />
             <div className="fixed inset-0 grid place-items-center z-[1000] pointer-events-none">
@@ -55,6 +81,9 @@ export const ProjectDetails = ({
                     animate={{ opacity: 1, scale: 1 }}
                     exit={{ opacity: 0, scale: 0.9 }}
                     ref={refProp}
+                    role="dialog"
+                    aria-modal="true"
+                    aria-labelledby={titleId}
                     className="w-full max-w-2xl h-full md:h-fit md:max-h-[85vh] flex flex-col bg-card dark:bg-neutral-900 sm:rounded-3xl overflow-hidden shadow-2xl pointer-events-auto"
                 >
                     {/* Close Button */}
@@ -63,21 +92,25 @@ export const ProjectDetails = ({
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        className="absolute top-4 right-4 bg-card/70 dark:bg-black/50 p-2 rounded-full z-10 backdrop-blur-sm"
+                        ref={closeRef}
+                        type="button"
+                        aria-label="Close project details"
+                        className="absolute top-4 right-4 bg-card/90 p-2.5 rounded-full z-10 shadow-sm border border-border/60 hover:bg-card focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground"
                         onClick={onClose}
                     >
-                        <X className="w-4 h-4 text-neutral-800 dark:text-neutral-200" />
+                        <X aria-hidden className="w-4 h-4 text-foreground" />
                     </motion.button>
 
                     {/* Image Section */}
                     <div
                         className="w-full h-80 lg:h-96 sm:rounded-tr-lg sm:rounded-tl-lg overflow-hidden"
                     >
+                        {/* eslint-disable-next-line @next/next/no-img-element -- admin-uploaded, arbitrary host */}
                         <img
                             width={600}
                             height={400}
                             src={active.image_url || "/placeholder.png"}
-                            alt={active.title}
+                            alt={`Screenshot of ${active.title}`}
                             className="w-full h-full object-cover object-top"
                         />
                     </div>
@@ -86,7 +119,7 @@ export const ProjectDetails = ({
                     <div className="flex-1 overflow-y-auto p-4 md:p-6">
                         <div className="flex justify-between items-start mb-4">
                             <div className="flex flex-col gap-1">
-                                <h3 className="font-bold text-neutral-700 dark:text-neutral-200 text-xl">
+                                <h3 id={titleId} className="font-bold text-foreground text-xl text-balance">
                                     {active.title}
                                 </h3>
                                 {active.status && (
@@ -114,7 +147,7 @@ export const ProjectDetails = ({
                         </div>
 
                         <div className="pt-2 relative px-2">
-                            <div className="text-neutral-600 text-sm md:text-base lg:text-base h-full md:h-fit pb-1 dark:text-neutral-400 flex flex-col gap-6">
+                            <div className="text-foreground/80 text-sm md:text-base h-full md:h-fit pb-1 flex flex-col gap-6">
                                 <p>{active.description}</p>
 
                                 {/* Case study: only shown when filled in from the admin tool */}
@@ -126,13 +159,13 @@ export const ProjectDetails = ({
                                         <div className="grid gap-3 sm:grid-cols-2">
                                             {active.problem && (
                                                 <div className="p-4 rounded-lg border border-red-500/20 bg-red-500/5">
-                                                    <p className="text-[11px] font-semibold uppercase tracking-wider text-red-600 dark:text-red-400 mb-1">The problem</p>
+                                                    <p className="text-[11px] font-semibold uppercase tracking-wider text-danger mb-1">The problem</p>
                                                     <p className="text-sm leading-relaxed whitespace-pre-wrap">{active.problem}</p>
                                                 </div>
                                             )}
                                             {active.solution && (
-                                                <div className="p-4 rounded-lg border border-blue-500/20 bg-blue-500/5">
-                                                    <p className="text-[11px] font-semibold uppercase tracking-wider text-blue-600 dark:text-blue-400 mb-1">What I built</p>
+                                                <div className="p-4 rounded-lg border border-brand/20 bg-brand/5">
+                                                    <p className="text-[11px] font-semibold uppercase tracking-wider text-brand mb-1">What I built</p>
                                                     <p className="text-sm leading-relaxed whitespace-pre-wrap">{active.solution}</p>
                                                 </div>
                                             )}
@@ -140,7 +173,7 @@ export const ProjectDetails = ({
                                         {active.results && active.results.length > 0 && (
                                             <div className="flex flex-wrap gap-2">
                                                 {active.results.map((r) => (
-                                                    <span key={r} className="px-3 py-1 text-xs font-semibold rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20">
+                                                    <span key={r} className="px-3 py-1 text-xs font-semibold rounded-full bg-emerald-500/10 text-success border border-emerald-500/20">
                                                         {r}
                                                     </span>
                                                 ))}
@@ -191,7 +224,7 @@ export const ProjectDetails = ({
                                     <ul className="grid grid-cols-1 md:grid-cols-2 gap-2">
                                         {active.features?.map((feature, i) => (
                                             <li key={i} className="text-sm flex items-start gap-2">
-                                                <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-primary shrink-0" />
+                                                <span aria-hidden className="mt-1.5 w-1.5 h-1.5 rounded-full bg-primary shrink-0" />
                                                 <span className="leading-snug">{feature}</span>
                                             </li>
                                         ))}
@@ -217,58 +250,55 @@ export const ProjectDetails = ({
 // Sub-component for the List Item
 const ProjectListItem = ({
     project,
-    id,
     onSelect
 }: {
     project: Project;
-    id: string;
     onSelect: () => void;
 }) => {
+    const tech = project.tech_stack?.slice(0, 3) ?? [];
     return (
-        <div
-            key={`card-${project.title}-${id}`}
-            onClick={onSelect}
-            className="py-4 pl-4 pr-4 flex flex-row justify-between items-center hover:bg-neutral-50 dark:hover:bg-neutral-800/50 rounded-xl cursor-pointer transition-colors group"
-        >
-            <div className="flex gap-4 flex-row items-center">
+        <li className="flex flex-row items-center gap-2 rounded-xl transition-colors hover:bg-muted/60 focus-within:bg-muted/60">
+            <button
+                type="button"
+                onClick={onSelect}
+                aria-haspopup="dialog"
+                className="relative flex min-w-0 flex-1 flex-row items-center gap-4 rounded-xl p-4 text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground"
+            >
                 {/* Image - Hidden on mobile */}
-                <div className="hidden md:block rounded-lg overflow-hidden h-14 w-14">
+                <span className="hidden md:block shrink-0 rounded-lg overflow-hidden h-14 w-14 bg-muted">
+                    {/* eslint-disable-next-line @next/next/no-img-element -- admin-uploaded, arbitrary host */}
                     <img
                         width={60}
                         height={60}
-                        src={project.image_url || "https://images.unsplash.com/photo-1550745165-9bc0b252726f?q=80&w=800&auto=format&fit=crop"}
-                        alt={project.title}
+                        loading="lazy"
+                        src={project.image_url || "/placeholder.png"}
+                        alt=""
                         className="h-full w-full object-cover object-top"
                     />
-                </div>
-                <div className="">
-                    <h3 className="font-medium text-neutral-800 dark:text-neutral-200 text-base">
+                </span>
+                <span className="min-w-0">
+                    <span className="block font-medium text-foreground text-base">
                         {project.title}
-                    </h3>
-                    <div className="text-neutral-500 dark:text-neutral-400 text-sm mt-1">
-                        <div className="flex flex-wrap gap-1">
-                            {project.tech_stack?.slice(0, 3).map((tech, i) => (
-                                <span key={tech} className="text-xs">
-                                    {tech}{i < (project.tech_stack?.slice(0, 3).length || 0) - 1 ? " • " : ""}
-                                </span>
-                            ))}
-                        </div>
-                    </div>
-                </div>
-            </div>
+                        <span className="sr-only">, view details</span>
+                    </span>
+                    {tech.length > 0 && (
+                        <span className="mt-1 block text-xs text-muted-foreground">{tech.join(" · ")}</span>
+                    )}
+                </span>
+            </button>
 
-            {project.project_url && <button
-                className="ml-auto px-4 py-2 text-sm rounded-full font-bold bg-gray-100 text-zinc-900 hover:bg-zinc-900 hover:text-white transition-colors dark:bg-zinc-800 dark:text-white dark:hover:bg-white dark:hover:text-zinc-900"
-                onClick={(e) => {
-                    e.stopPropagation();
-                    if (project.project_url) {
-                        window.open(project.project_url, '_blank', 'noopener,noreferrer');
-                    }
-                }}
-            >
-                Checkout
-            </button>}
-        </div>
+            {project.project_url && (
+                <a
+                    href={project.project_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={`Open ${project.title} (new tab)`}
+                    className="mr-4 shrink-0 px-4 py-2 text-sm rounded-full font-bold bg-muted text-foreground hover:bg-foreground hover:text-background transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground"
+                >
+                    Checkout
+                </a>
+            )}
+        </li>
     );
 };
 
@@ -292,7 +322,7 @@ export function ExpandableCardDemo({ projects }: { projects: Project[] }) {
         if (active && typeof active === "object") {
             document.body.style.overflow = "hidden";
         } else {
-            document.body.style.overflow = "auto";
+            document.body.style.overflow = "";
         }
 
         window.addEventListener("keydown", onKeyDown);
@@ -317,12 +347,11 @@ export function ExpandableCardDemo({ projects }: { projects: Project[] }) {
                 document.body
             )}
 
-            <ul className="max-w-6xl mx-auto w-full gap-4 flex flex-col">
+            <ul className="max-w-6xl mx-auto w-full gap-2 flex flex-col">
                 {projects.map((project, index) => (
                     <ProjectListItem
                         key={`${project.title}-${index}`}
                         project={project}
-                        id={id}
                         onSelect={() => setActive(project)}
                     />
                 ))}

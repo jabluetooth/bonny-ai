@@ -91,7 +91,7 @@ export function AboutSection() {
                     <div className="flex-1">
                         <CardItem translateZ="50" className="text-4xl font-bold text-neutral-800 dark:text-white mb-2">
                             I&apos;m Fil, an <br />
-                            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-500 to-cyan-400">
+                            <span className="text-brand">
                                 AI &amp; automation engineer
                             </span>
                         </CardItem>

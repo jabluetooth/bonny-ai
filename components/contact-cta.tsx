@@ -43,14 +43,14 @@ interface ActionTileProps {
 
 function ActionTile({ icon, title, hint, primary, onClick, href, index }: ActionTileProps) {
     const className = primary
-        ? "bg-gradient-to-br from-blue-600/90 to-blue-600/70 border-blue-400/30 text-white"
-        : "bg-muted/60 border-border/60 text-foreground hover:border-blue-400/40";
+        ? "bg-brand border-brand-hover text-brand-foreground hover:bg-brand-hover"
+        : "bg-muted/60 border-border/60 text-foreground hover:border-brand/40";
     const inner = (
         <>
-            <span className={primary ? "text-white" : "text-blue-500"} aria-hidden>{icon}</span>
+            <span className={primary ? "text-brand-foreground" : "text-brand"} aria-hidden>{icon}</span>
             <span className="flex flex-col">
                 <span className="text-sm font-semibold">{title}</span>
-                <span className={primary ? "text-xs text-blue-100" : "text-xs text-muted-foreground"}>{hint}</span>
+                <span className={primary ? "text-xs text-brand-foreground/90" : "text-xs text-muted-foreground"}>{hint}</span>
             </span>
         </>
     );
@@ -88,9 +88,9 @@ export function ContactCta() {
     }, []);
 
     return (
-        <div className="relative overflow-hidden rounded-3xl border border-border/70 bg-gradient-to-br from-card to-card/70 p-5 shadow-xl backdrop-blur-md sm:p-6">
+        <div className="relative overflow-hidden rounded-3xl border border-border/70 bg-card p-5 shadow-xl sm:p-6">
             {/* Soft brand glow */}
-            <span aria-hidden className="pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-full bg-blue-500/20 blur-3xl" />
+            <span aria-hidden className="pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-full bg-brand/15 blur-3xl" />
 
             <div className="relative flex items-center gap-4">
                 <Image src="/bot-avatar.png" alt="" width={56} height={56} className="h-14 w-14 shrink-0 object-contain" />

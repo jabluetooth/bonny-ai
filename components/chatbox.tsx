@@ -90,13 +90,10 @@ function FormattedText({ text }: { text: string }) {
 function Block({ children, className }: { children: React.ReactNode; className?: string }) {
     return (
         <motion.div
-            initial={{ opacity: 0, scale: 0 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{
-                duration: 0.4,
-                scale: { type: "spring", visualDuration: 0.4, bounce: 0.25 },
-            }}
-            className={cn("mt-1 w-full grid grid-cols-1 min-w-0 overflow-hidden rounded-xl bg-card/60 backdrop-blur-sm", className)}
+            initial={{ opacity: 0, y: 8, scale: 0.97 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
+            className={cn("mt-1 w-full grid grid-cols-1 min-w-0 overflow-hidden rounded-xl bg-card/70", className)}
         >
             {children}
         </motion.div>
@@ -107,7 +104,7 @@ function BotAvatar() {
     return (
         <Avatar className="h-8 w-8 sm:h-10 sm:w-10 shrink-0 border-none shadow-none rounded-none bg-transparent">
             <AvatarImage src="/bot-avatar.png" alt="" className="object-contain" />
-            <AvatarFallback className="bg-primary/10 text-primary"><Bot size={14} /></AvatarFallback>
+            <AvatarFallback className="bg-primary/10 text-primary"><Bot size={14} aria-hidden /></AvatarFallback>
         </Avatar>
     );
 }
@@ -189,6 +186,17 @@ export function Chatbox() {
         }
     }, [isLoading, lastStreaming, messages.length]);
 
+    // Screen readers hear each finished bot reply once, not every streamed token.
+    // Only replies that arrive during this visit, not a restored history.
+    const [repliedThisVisit, setRepliedThisVisit] = useState(false);
+    if (isLoading && !repliedThisVisit) setRepliedThisVisit(true);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const lastMsg = parsedMessages[parsedMessages.length - 1] as any;
+    const announcement =
+        repliedThisVisit && lastMsg && lastMsg.role !== "user" && !lastMsg.streaming
+            ? (lastMsg.parsed as ParsedMessageData).cleanContent
+            : "";
+
     // A new visitor's session starts with their first message (see chat-provider).
     const inputDisabled = isLoading || isChatDisabled;
 
@@ -224,16 +232,16 @@ export function Chatbox() {
                             value={input}
                             onChange={(e) => setInput(e.target.value)}
                             placeholder={isChatDisabled ? "Message limit reached." : "Ask me anything..."}
-                            className="w-full h-12 sm:h-14 pl-5 sm:pl-6 pr-14 sm:pr-16 rounded-full text-base sm:text-lg shadow-lg border-muted-foreground/20 bg-card focus-visible:ring-1 focus-visible:ring-primary/50 transition-all hover:shadow-xl relative z-10"
+                            className="w-full h-12 sm:h-14 pl-5 sm:pl-6 pr-14 sm:pr-16 rounded-full text-base sm:text-lg shadow-lg border-muted-foreground/20 bg-card focus-visible:border-brand focus-visible:ring-2 focus-visible:ring-brand/40 transition-shadow hover:shadow-xl relative z-10"
                             disabled={inputDisabled}
                         />
                         <Button
                             type="submit"
                             size="icon"
                             disabled={inputDisabled || !input.trim()}
-                            className="absolute right-1.5 h-9 w-9 sm:h-11 sm:w-11 rounded-full bg-blue-500 hover:bg-blue-600 text-white shadow-sm transition-transform hover:scale-105 active:scale-95 z-20"
+                            className="absolute right-1.5 h-9 w-9 sm:h-11 sm:w-11 rounded-full bg-brand hover:bg-brand-hover text-brand-foreground shadow-sm transition-transform hover:scale-105 active:scale-95 z-20"
                         >
-                            <ArrowRight size={20} />
+                            <ArrowRight size={20} aria-hidden />
                             <span className="sr-only">Send</span>
                         </Button>
                     </form>
@@ -248,8 +256,15 @@ export function Chatbox() {
             <div className="w-full h-full max-w-4xl flex flex-col min-h-0 animate-in fade-in duration-300">
                 {/* Messages Area - a bounded box that scrolls internally, so
                     a long conversation never grows the page. */}
+                <p className="sr-only" aria-live="polite" aria-atomic="true">{announcement}</p>
                 <div className="flex-1 min-h-0">
-                    <div ref={scrollContainerRef} className="h-full overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+                    <div
+                        ref={scrollContainerRef}
+                        role="region"
+                        aria-label="Conversation with Bonny-AI"
+                        tabIndex={0}
+                        className="relative h-full overflow-y-auto rounded-xl focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
+                    >
                         <div className="flex flex-col gap-4 sm:gap-6 pb-2 px-1 sm:px-4">
                             {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
                             {parsedMessages.map((msg: any, i) => {
@@ -278,9 +293,9 @@ export function Chatbox() {
                                                 <div
                                                     className={cn(
                                                         "rounded-[20px] px-4 sm:px-5 py-2.5 text-[15px] shadow-sm leading-relaxed break-words whitespace-pre-wrap [word-break:break-word] min-w-0 max-w-[88%] sm:max-w-[85%] overflow-hidden",
-                                                        isUser && "bg-gradient-to-br from-blue-600/90 to-blue-600/70 backdrop-blur-md border border-blue-400/30 shadow-xl text-white rounded-br-none",
-                                                        isAdmin && "bg-gradient-to-br from-red-600/90 to-red-600/70 backdrop-blur-md border border-red-400/30 shadow-xl text-white rounded-bl-none",
-                                                        isBot && "bg-gradient-to-br from-card to-card/80 backdrop-blur-md border border-border/70 shadow-xl text-foreground rounded-bl-none"
+                                                        isUser && "bg-gradient-to-br from-brand to-brand-hover border border-brand-hover text-brand-foreground shadow-md rounded-br-none",
+                                                        isAdmin && "bg-danger border border-danger text-white shadow-md rounded-bl-none",
+                                                        isBot && "bg-card border border-border/70 text-foreground shadow-md rounded-bl-none"
                                                     )}
                                                 >
                                                                                                         {shouldAnimate ? (
@@ -315,7 +330,7 @@ export function Chatbox() {
 
                             {/* Loading Indicator */}
                             {isLoading && (
-                                <div className="flex gap-3 max-w-[85%] items-end" role="status" aria-label="Typing">
+                                <div className="flex gap-3 max-w-[85%] items-end" role="status" aria-label="Bonny-AI is typing">
                                     <div className="h-8 w-8 sm:h-10 sm:w-10 shrink-0 relative overflow-hidden">
                                         <ChromaVideo
                                             src="/botpng000.mp4"
@@ -328,9 +343,9 @@ export function Chatbox() {
                                         />
                                     </div>
                                     <div className="bg-card border border-border/70 text-foreground rounded-[20px] rounded-bl-none px-5 py-4 flex gap-1 items-center shadow-sm">
-                                        <span className="w-1.5 h-1.5 bg-foreground/40 rounded-full animate-bounce [animation-delay:-0.3s]" />
-                                        <span className="w-1.5 h-1.5 bg-foreground/40 rounded-full animate-bounce [animation-delay:-0.15s]" />
-                                        <span className="w-1.5 h-1.5 bg-foreground/40 rounded-full animate-bounce" />
+                                        <span className="w-1.5 h-1.5 bg-foreground/50 rounded-full animate-pulse [animation-delay:-0.3s]" />
+                                        <span className="w-1.5 h-1.5 bg-foreground/50 rounded-full animate-pulse [animation-delay:-0.15s]" />
+                                        <span className="w-1.5 h-1.5 bg-foreground/50 rounded-full animate-pulse" />
                                     </div>
                                 </div>
                             )}
@@ -358,7 +373,7 @@ export function Chatbox() {
                                             type="button"
                                             onClick={() => handlePrompt(s.prompt, s.intent)}
                                             disabled={isLoading}
-                                            className="shrink-0 rounded-full border border-border/70 bg-card/80 backdrop-blur-sm px-3.5 py-1.5 text-xs text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-all duration-150 disabled:opacity-30 disabled:cursor-not-allowed whitespace-nowrap"
+                                            className="shrink-0 rounded-full border border-border/70 bg-card px-3.5 py-2 text-xs text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-all duration-150 disabled:opacity-30 disabled:cursor-not-allowed whitespace-nowrap"
                                         >
                                             {s.label}
                                         </button>
@@ -393,16 +408,16 @@ export function Chatbox() {
                                 }, 300);
                             }}
                             placeholder={isChatDisabled ? "Message limit reached." : "Type a message..."}
-                            className="w-full h-12 sm:h-14 pl-5 sm:pl-6 pr-14 sm:pr-16 rounded-full shadow-md border-border/70 bg-card/90 backdrop-blur-md focus-visible:ring-1 focus-visible:ring-primary/30 transition-shadow hover:shadow-lg text-base sm:text-lg relative z-10"
+                            className="w-full h-12 sm:h-14 pl-5 sm:pl-6 pr-14 sm:pr-16 rounded-full shadow-md border-border/70 bg-card focus-visible:border-brand focus-visible:ring-2 focus-visible:ring-brand/40 transition-shadow hover:shadow-lg text-base sm:text-lg relative z-10"
                             disabled={inputDisabled}
                         />
                         <Button
                             type="submit"
                             size="icon"
                             disabled={inputDisabled || !input.trim()}
-                            className="absolute right-1.5 h-9 w-9 sm:h-11 sm:w-11 rounded-full bg-blue-500 hover:bg-blue-600 text-white shadow-sm transition-transform hover:scale-105 active:scale-95 z-20"
+                            className="absolute right-1.5 h-9 w-9 sm:h-11 sm:w-11 rounded-full bg-brand hover:bg-brand-hover text-brand-foreground shadow-sm transition-transform hover:scale-105 active:scale-95 z-20"
                         >
-                            <ArrowRight size={20} />
+                            <ArrowRight size={20} aria-hidden />
                             <span className="sr-only">Send</span>
                         </Button>
                     </form>

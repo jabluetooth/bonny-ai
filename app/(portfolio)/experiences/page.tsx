@@ -80,7 +80,6 @@ export default async function ExperiencesPage() {
             <article className="flex flex-col gap-10 md:gap-14">
                 <div className="flex flex-col gap-6">
                     <PageHeader
-                        eyebrow="Experience"
                         title="Where I've built and what I've delivered"
                         description="Roles, responsibilities and the tools I used, followed by my education."
                     >

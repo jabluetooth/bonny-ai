@@ -77,6 +77,8 @@ export function PortfolioNavbar() {
     const pathname = usePathname()
     const router = useRouter()
     const isHome = pathname === "/"
+    // Only the homepage chat collapses the bar; subpages always show it.
+    const navShown = isOpen || isMobile || !isHome
 
     // On the homepage a menu item asks the chat; everywhere else the chat
     // isn't on screen, so it goes to the page that holds that content.
@@ -185,7 +187,7 @@ export function PortfolioNavbar() {
     return (
         <div className="sticky top-0 z-50 w-full flex-none">
             {/* Toggle Trigger (Desktop Only) */}
-            {!isMobile && messages.length > 0 && !navValue && (
+            {isHome && !isMobile && messages.length > 0 && !navValue && (
                 <div
                     className="absolute w-full flex justify-center -bottom-5 z-50 pointer-events-auto"
                     onMouseEnter={() => setIsHoveringTrigger(true)}
@@ -194,22 +196,25 @@ export function PortfolioNavbar() {
                     <Button
                         variant="secondary"
                         size="sm"
+                        aria-label={isOpen ? "Hide navigation" : "Show navigation"}
+                        aria-expanded={isOpen}
                         className={cn(
-                            "h-5 px-6 rounded-b-xl rounded-t-none text-[10px] shadow-sm border border-t-0 bg-background/80 backdrop-blur-sm transition-all duration-300 flex items-end pb-1",
+                            "h-6 px-8 rounded-b-xl rounded-t-none text-[10px] shadow-sm border border-t-0 bg-background/80 backdrop-blur-sm transition-all duration-300 flex items-end pb-1",
                             !isOpen && !isHoveringTrigger ? "opacity-50" : "opacity-100"
                         )}
                         onClick={() => setIsOpen(!isOpen)}
                     >
-                        {isOpen ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
+                        {isOpen ? <ChevronUp size={14} aria-hidden /> : <ChevronDown size={14} aria-hidden />}
                     </Button>
                 </div>
             )}
 
             {/* Main Navbar Header Content */}
             <div
+                inert={!navShown}
                 className={cn(
                     "relative transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] pointer-events-auto w-full",
-                    (isOpen || isMobile) ? "h-16 opacity-100" : "h-0 opacity-0 pointer-events-none overflow-hidden",
+                    navShown ? "h-16 opacity-100" : "h-0 opacity-0 pointer-events-none overflow-hidden",
                     resumeOpen && "blur-sm"
                 )}
             >
