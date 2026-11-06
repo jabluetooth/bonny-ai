@@ -5,7 +5,7 @@ import { useChat } from "@/components/chat-provider";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { ArrowRight, Bot, Briefcase, Layers, LineChart, Wrench } from "lucide-react";
+import { ArrowRight, Bot } from "lucide-react";
 import { ChromaVideo } from "@/components/ui/chroma-video";
 import { SkillsSection } from "@/components/skills-section";
 import { ProjectsSection } from "@/components/projects-section";
@@ -17,16 +17,6 @@ import { TypingAnimation } from "@/components/ui/typing-animation";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { ChatIntents } from "@/lib/intents";
-
-// Starter prompts on the landing screen. Mixed on purpose: two for business
-// owners, one that invites them to describe their own problem, one for
-// recruiters.
-const STARTERS: { icon: React.ReactNode; title: string; prompt: string; intent?: string }[] = [
-    { icon: <Wrench size={18} />, title: "What problems do you solve?", prompt: "What problems can you solve for my business?", intent: ChatIntents.SERVICES },
-    { icon: <LineChart size={18} />, title: "Show me results", prompt: "Show me case studies with results.", intent: ChatIntents.PROJECTS_ALL },
-    { icon: <Layers size={18} />, title: "My team loses hours to manual work", prompt: "My team spends hours every week on manual, repetitive work. How would you fix that?" },
-    { icon: <Briefcase size={18} />, title: "I'm hiring", prompt: "I'm hiring. Walk me through your experience.", intent: ChatIntents.WORK_HISTORY },
-];
 
 const FOLLOW_UPS: { label: string; prompt: string; intent?: string }[] = [
     { label: "Problems I solve", prompt: "What problems can you solve for my business?", intent: ChatIntents.SERVICES },
@@ -216,24 +206,7 @@ export function Chatbox() {
                     />
                 </div>
 
-                <div className="w-full max-w-2xl mx-auto px-1 sm:px-4 flex flex-col gap-3 sm:gap-4 animate-in fade-in zoom-in duration-500 slide-in-from-bottom-4">
-                    {/* Recommended prompts sit above the input: a swipeable row
-                        on phones, a 2x2 grid from sm up. */}
-                    <div className="-mx-1 px-1 flex gap-2 overflow-x-auto snap-x [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] sm:mx-0 sm:px-0 sm:grid sm:grid-cols-2 sm:overflow-visible">
-                        {STARTERS.map((s) => (
-                            <button
-                                key={s.title}
-                                type="button"
-                                onClick={() => handlePrompt(s.prompt, s.intent)}
-                                disabled={inputDisabled}
-                                className="snap-start shrink-0 flex items-center gap-2 sm:gap-3 relative z-10 rounded-full border border-border/60 bg-background shadow-sm px-3.5 py-2 sm:px-4 sm:py-2.5 text-left text-xs sm:text-sm text-muted-foreground whitespace-nowrap sm:whitespace-normal transition-all hover:bg-accent hover:text-accent-foreground disabled:opacity-40 disabled:cursor-not-allowed"
-                            >
-                                <span aria-hidden className="[&>svg]:h-4 [&>svg]:w-4 sm:[&>svg]:h-[18px] sm:[&>svg]:w-[18px]">{s.icon}</span>
-                                <span className="font-medium">{s.title}</span>
-                            </button>
-                        ))}
-                    </div>
-
+                <div className="w-full max-w-lg mx-auto px-1 sm:px-4 animate-in fade-in zoom-in duration-500 slide-in-from-bottom-4">
                     <form
                         onSubmit={(e) => {
                             e.preventDefault();
