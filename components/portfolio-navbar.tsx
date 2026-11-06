@@ -64,6 +64,8 @@ export function PortfolioNavbar() {
     const [email, setEmail] = useState("")
     const [message, setMessage] = useState("")
     const [isSending, setIsSending] = useState(false)
+    // Shown inline under the form so the problem stays next to the fields.
+    const [formError, setFormError] = useState("")
     // Honeypot: hidden from people, filled in by bots. See app/api/send.
     const [website, setWebsite] = useState("")
     const prevMsgLength = React.useRef(messages.length)
@@ -108,10 +110,11 @@ export function PortfolioNavbar() {
     const handleSendMessage = async (e?: React.FormEvent) => {
         e?.preventDefault()
         if (!email.trim() || !message.trim()) {
-            toast.error("Add your email and a message, then send.")
+            setFormError("Add your email and a message, then send.")
             return
         }
 
+        setFormError("")
         setIsSending(true)
         try {
             const res = await fetch("/api/send", {
@@ -133,7 +136,7 @@ export function PortfolioNavbar() {
             setMessage("")
             setResumeOpen(false)
         } catch (error) {
-            toast.error(error instanceof Error ? error.message : "The message couldn’t be sent. Please try again in a minute.")
+            setFormError(error instanceof Error ? error.message : "The message couldn’t be sent. Please try again in a minute.")
         } finally {
             setIsSending(false)
         }
@@ -349,7 +352,7 @@ export function PortfolioNavbar() {
 
                         <div className="p-4 space-y-4">
                             {/* Message Form */}
-                            <form className="space-y-3" onSubmit={handleSendMessage}>
+                            <form className="space-y-3" onSubmit={handleSendMessage} aria-describedby={formError ? "contact-error" : undefined}>
                                 <div className="space-y-1.5">
                                     <label htmlFor="contact-email" className="text-sm font-medium">Your email</label>
                                     <Input
@@ -358,9 +361,12 @@ export function PortfolioNavbar() {
                                         placeholder="you@company.com"
                                         type="email"
                                         autoComplete="email"
+                                        inputMode="email"
                                         required
+                                        aria-required="true"
+                                        aria-invalid={!!formError && !email.trim()}
                                         value={email}
-                                        onChange={(e) => setEmail(e.target.value)}
+                                        onChange={(e) => { setEmail(e.target.value); setFormError("") }}
                                         disabled={isSending}
                                     />
                                 </div>
@@ -372,9 +378,11 @@ export function PortfolioNavbar() {
                                         placeholder="What problem are you trying to solve? Include your timeline if you have one."
                                         className="min-h-[100px]"
                                         required
+                                        aria-required="true"
+                                        aria-invalid={!!formError && !message.trim()}
                                         maxLength={5000}
                                         value={message}
-                                        onChange={(e) => setMessage(e.target.value)}
+                                        onChange={(e) => { setMessage(e.target.value); setFormError("") }}
                                         disabled={isSending}
                                     />
                                 </div>
@@ -391,7 +399,12 @@ export function PortfolioNavbar() {
                                         onChange={(e) => setWebsite(e.target.value)}
                                     />
                                 </div>
-                                <Button type="submit" className="w-full" disabled={isSending}>
+                                {formError && (
+                                    <p id="contact-error" role="alert" className="rounded-lg border border-danger/30 bg-danger/5 px-3 py-2 text-sm text-danger">
+                                        {formError}
+                                    </p>
+                                )}
+                                <Button type="submit" className="w-full" disabled={isSending} aria-busy={isSending}>
                                     {isSending ? "Sending…" : "Send message"}
                                 </Button>
                             </form>

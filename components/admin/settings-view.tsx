@@ -229,7 +229,7 @@ Visitors are business owners who want to fix a problem or grow, and recruiters a
                                             <p className="text-xs text-muted-foreground">Active now</p>
                                         </div>
                                     </div>
-                                    <span className="text-xs text-green-600 bg-green-100 dark:bg-green-900/30 px-2 py-1 rounded-full font-medium">
+                                    <span className="text-xs text-green-600 bg-green-100 px-2 py-1 rounded-full font-medium">
                                         Active
                                     </span>
                                 </div>

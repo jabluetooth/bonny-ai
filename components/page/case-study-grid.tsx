@@ -2,6 +2,7 @@
 
 import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import { ProjectMedia } from "@/components/page/project-media";
 import { AnimatePresence } from "framer-motion";
 import { ArrowUpRight, Github } from "lucide-react";
 import { ProjectDetails, type Project } from "@/components/ui/expandable-card";
@@ -88,10 +89,9 @@ export function CaseStudyGrid({ projects }: { projects: CaseStudy[] }) {
                                 className="relative block aspect-[16/9] w-full overflow-hidden bg-muted"
                             >
                                 {p.image_url ? (
-                                    // eslint-disable-next-line @next/next/no-img-element -- admin-uploaded, arbitrary host
-                                    <img src={p.image_url} alt="" loading="lazy" className="h-full w-full object-cover object-top transition-transform duration-500 group-hover:scale-[1.03]" />
+                                    <ProjectMedia src={p.image_url} sizes="(min-width: 640px) 480px, 100vw" className="transition-transform duration-500 group-hover:scale-[1.03] motion-reduce:transition-none motion-reduce:group-hover:scale-100" />
                                 ) : (
-                                    <span className="flex h-full items-center justify-center text-3xl font-bold text-muted-foreground">{p.title.slice(0, 2)}</span>
+                                    <span aria-hidden className="flex h-full items-center justify-center text-3xl font-bold text-muted-foreground">{p.title.slice(0, 2)}</span>
                                 )}
                             </button>
 

@@ -20,10 +20,8 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   maximumScale: 5,
-  themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#f5f5f3" },
-    { media: "(prefers-color-scheme: dark)", color: "#f5f5f3" },
-  ],
+  themeColor: "#f5f5f3",
+  colorScheme: "light",
 };
 
 const jsonLd = [

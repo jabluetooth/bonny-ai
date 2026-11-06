@@ -173,7 +173,7 @@ export function AdminSidebar({ ...props }: React.ComponentProps<typeof Sidebar>)
                         <SidebarMenuButton
                             asChild
                             tooltip="Logout"
-                            className="bg-red-500/10 text-red-600 hover:bg-red-500/20 hover:text-red-700 dark:text-red-400 dark:hover:bg-red-900/40"
+                            className="bg-red-500/10 text-red-600 hover:bg-red-500/20 hover:text-red-700"
                         >
                             <button onClick={async () => {
                                 await supabase.auth.signOut()

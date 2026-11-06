@@ -3,6 +3,7 @@ import { AlertCircle, TrendingUp, Wrench } from "lucide-react";
 import { PortfolioPageShell } from "@/components/portfolio-page-shell";
 import { JumpNav, PageHeader, StatRow, slug } from "@/components/page/page-parts";
 import { PageCta } from "@/components/page/page-cta";
+import { ProjectMedia } from "@/components/page/project-media";
 import { getServices } from "@/lib/portfolio-data";
 
 // Content comes from Supabase via a cookieless client, so the page is
@@ -54,8 +55,9 @@ export default async function ServicesPage() {
                                     className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm"
                                 >
                                     {service.image_url && (
-                                        // eslint-disable-next-line @next/next/no-img-element -- admin-uploaded, arbitrary host
-                                        <img src={service.image_url} alt="" loading="lazy" className="h-44 w-full object-cover sm:h-56" />
+                                        <div className="relative h-44 w-full sm:h-56">
+                                            <ProjectMedia src={service.image_url} sizes="(min-width: 1024px) 960px, 100vw" className="object-center" />
+                                        </div>
                                     )}
                                     <div className="p-6 sm:p-8">
                                         <div className="mb-6 flex items-start gap-4">

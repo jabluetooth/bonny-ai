@@ -5,7 +5,7 @@ import { useState, useEffect, useMemo } from "react";
 import Image from "next/image";
 import { Marquee, MarqueeContent, MarqueeFade, MarqueeItem } from "@/components/ui/marquee";
 import { Separator } from "@/components/ui/separator";
-import { Cpu, Globe, Database, Palette, Users } from "lucide-react";
+import { Cpu, Globe, Palette, Users } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { fetchWithCache, CACHE_KEYS } from "@/lib/data-cache";
 
@@ -23,7 +23,6 @@ const SkillCard = ({
             className={cn(
                 "relative w-16 h-16 cursor-pointer overflow-hidden rounded-full border p-2",
                 "border-gray-950/[.1] bg-gray-950/[.01] hover:bg-gray-950/[.05]",
-                "dark:border-gray-50/[.1] dark:bg-gray-50/[.10] dark:hover:bg-gray-50/[.15]",
                 "flex items-center justify-center"
             )}
         >
@@ -195,7 +194,7 @@ export function SkillsSection({ highlightSkill, highlightCategory }: { highlight
                                     key={skill.name}
                                     className={cn(
                                         "px-3 py-1.5 text-xs font-medium rounded-xl border whitespace-normal h-auto text-left max-w-full leading-snug break-words",
-                                        "bg-zinc-900 text-white border-zinc-800 dark:bg-white dark:text-zinc-900"
+                                        "bg-zinc-900 text-white border-zinc-800"
                                     )}
                                 >
                                     {skill.name}

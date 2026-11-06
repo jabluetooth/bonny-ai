@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import Link from "next/link"
 import {
     Briefcase,
     Code2,
@@ -28,7 +29,8 @@ import {
     SidebarMenuItem,
     SidebarMenuSub,
     SidebarMenuSubButton,
-    SidebarMenuSubItem
+    SidebarMenuSubItem,
+    useSidebar,
 } from "@/components/ui/sidebar"
 import {
     Collapsible,
@@ -91,16 +93,20 @@ const GROUPS: { title: string; links: NavLink[] }[] = [
 ]
 
 export function AppSidebar({ onNavClick, ...props }: AppSidebarProps) {
+    const { setOpenMobile } = useSidebar()
     return (
         <Sidebar side="left" collapsible="offcanvas" className="md:hidden" {...props}>
             <SidebarHeader>
                 <button
                     type="button"
                     className="flex items-center gap-3 px-4 py-2 text-left"
-                    onClick={() => onNavClick("Give me a quick overview of how you can help.", undefined, "/")}
+                    onClick={() => {
+                        setOpenMobile(false)
+                        onNavClick("Give me a quick overview of how you can help.", undefined, "/")
+                    }}
                 >
                     <Avatar className="h-10 w-10 rounded-none bg-transparent">
-                        <AvatarImage src="/bot-avatar.png" alt="Bonny-AI" />
+                        <AvatarImage src="/bot-avatar.png" alt="" />
                         <AvatarFallback>AI</AvatarFallback>
                     </Avatar>
                     <span className="flex flex-col">
@@ -118,16 +124,25 @@ export function AppSidebar({ onNavClick, ...props }: AppSidebarProps) {
                                     <CollapsibleTrigger asChild>
                                         <SidebarMenuButton>
                                             <span>{group.title}</span>
-                                            <ChevronDown className="ml-auto transition-transform group-data-[state=open]/collapsible:rotate-180" />
+                                            <ChevronDown aria-hidden className="ml-auto transition-transform group-data-[state=open]/collapsible:rotate-180" />
                                         </SidebarMenuButton>
                                     </CollapsibleTrigger>
                                     <CollapsibleContent>
                                         <SidebarMenuSub>
                                             {group.links.map(({ label, icon: Icon, query, intent, href }) => (
                                                 <SidebarMenuSubItem key={label}>
-                                                    <SidebarMenuSubButton onClick={() => onNavClick(query, intent, href)}>
-                                                        <Icon />
-                                                        <span>{label}</span>
+                                                    <SidebarMenuSubButton asChild>
+                                                        <Link
+                                                            href={href}
+                                                            onClick={(e) => {
+                                                                e.preventDefault()
+                                                                setOpenMobile(false)
+                                                                onNavClick(query, intent, href)
+                                                            }}
+                                                        >
+                                                            <Icon aria-hidden />
+                                                            <span>{label}</span>
+                                                        </Link>
                                                     </SidebarMenuSubButton>
                                                 </SidebarMenuSubItem>
                                             ))}
@@ -140,8 +155,8 @@ export function AppSidebar({ onNavClick, ...props }: AppSidebarProps) {
                 </SidebarGroup>
             </SidebarContent>
             <SidebarFooter>
-                <Button className="w-full" onClick={openContact}>
-                    <Mail className="mr-2 h-4 w-4" /> Work with me
+                <Button className="w-full" onClick={() => { setOpenMobile(false); openContact() }}>
+                    <Mail aria-hidden className="mr-2 h-4 w-4" /> Work with me
                 </Button>
             </SidebarFooter>
         </Sidebar>

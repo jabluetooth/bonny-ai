@@ -19,7 +19,7 @@ function SocialRow() {
     return (
         <div className="flex gap-4 mt-6">
             {SOCIALS.map(({ label, href, Icon }) => (
-                <Link key={href} href={href} target="_blank" rel="noopener noreferrer" aria-label={label} className="text-neutral-400 hover:text-black dark:hover:text-white transition-colors">
+                <Link key={href} href={href} target="_blank" rel="noopener noreferrer" aria-label={label} className="text-neutral-400 hover:text-black transition-colors">
                     <CardItem translateZ={20}>
                         <Icon size={20} />
                     </CardItem>
@@ -89,14 +89,14 @@ export function AboutSection() {
             <CardContainer className="inter-var">
                 <CardBody className="relative group/card w-auto sm:w-[40rem] h-auto p-6 flex flex-col sm:flex-row gap-6 items-center">
                     <div className="flex-1">
-                        <CardItem translateZ="50" className="text-4xl font-bold text-neutral-800 dark:text-white mb-2">
+                        <CardItem translateZ="50" className="text-4xl font-bold text-neutral-800 mb-2">
                             I&apos;m Fil, an <br />
                             <span className="text-brand">
                                 AI &amp; automation engineer
                             </span>
                         </CardItem>
                         <div className="space-y-4 my-4">
-                            <CardItem as="p" translateZ="60" className="text-neutral-500 dark:text-neutral-300 text-sm leading-relaxed">
+                            <CardItem as="p" translateZ="60" className="text-neutral-500 text-sm leading-relaxed">
                                 I build automation, AI systems and full-stack products that take repetitive work off a team and turn it into measurable time and cost savings.
                             </CardItem>
                         </div>
@@ -115,7 +115,7 @@ export function AboutSection() {
                 <div className="flex-1">
                     <CardItem
                         translateZ="50"
-                        className="text-4xl font-bold text-neutral-800 dark:text-white mb-2"
+                        className="text-4xl font-bold text-neutral-800 mb-2"
                     >
                         {/* Fallback to 'Author' if title missing in specific generic profile rows */}
                         {profile.title || "Author"}
@@ -125,7 +125,7 @@ export function AboutSection() {
                         <CardItem
                             as="p"
                             translateZ="60"
-                            className="text-neutral-500 dark:text-neutral-300 text-sm leading-relaxed whitespace-pre-wrap"
+                            className="text-neutral-500 text-sm leading-relaxed whitespace-pre-wrap"
                         >
                             {profile.description}
                         </CardItem>

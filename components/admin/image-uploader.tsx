@@ -1,5 +1,6 @@
 "use client"
 
+import { isVideoUrl } from "@/components/page/project-media"
 import { useState, useRef } from "react"
 import { supabase } from "@/lib/supabase-client"
 import { Button } from "@/components/ui/button"
@@ -63,14 +64,14 @@ export function ImageUploader({
         if (!file) return
 
         // Validation
-        if (!file.type.startsWith("image/")) {
-            toast.error("Please select an image file")
+        if (!file.type.startsWith("image/") && file.type !== "video/mp4" && file.type !== "video/webm") {
+            toast.error("Please choose an image or an MP4/WebM clip")
             return
         }
 
         const maxBytes = maxSizeMB * 1024 * 1024
         if (file.size > maxBytes) {
-            toast.error(`Image must be smaller than ${maxSizeMB}MB`)
+            toast.error(`File must be smaller than ${maxSizeMB}MB`)
             return
         }
 
@@ -141,6 +142,9 @@ export function ImageUploader({
             >
                 {value ? (
                     <>
+                        {isVideoUrl(value) ? (
+                            <video src={value} muted loop playsInline autoPlay className="w-full h-full object-cover" />
+                        ) : (
                         <img
                             src={value}
                             alt="Preview"
@@ -149,6 +153,7 @@ export function ImageUploader({
                                 (e.target as HTMLImageElement).src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100'%3E%3Crect fill='%23f0f0f0' width='100' height='100'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' fill='%23999' font-size='12'%3EError%3C/text%3E%3C/svg%3E"
                             }}
                         />
+                        )}
                         <Button
                             type="button"
                             variant="destructive"
@@ -208,7 +213,7 @@ export function ImageUploader({
                 <Input
                     ref={fileInputRef}
                     type="file"
-                    accept="image/*"
+                    accept="image/*,video/mp4,video/webm"
                     className="hidden"
                     onChange={handleFileChange}
                 />
@@ -235,7 +240,7 @@ export function ImageUploader({
             )}
 
             <p className="text-xs text-muted-foreground">
-                Max {maxSizeMB}MB. PNG, JPG, WEBP, or GIF.
+                Max {maxSizeMB}MB. PNG, JPG, WEBP, or an MP4/WebM clip (much smaller than a GIF).
             </p>
         </div>
     )

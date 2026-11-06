@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useId, useRef, useState } from "react";
+import { ProjectMedia } from "@/components/page/project-media";
 import { AnimatePresence, LayoutGroup, motion } from "framer-motion";
 import { AlertCircle, ArrowRight, TrendingUp, Wrench } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -146,8 +147,9 @@ export function ServicesSection() {
                             tabIndex={0}
                         >
                             {active.image_url && (
-                                // eslint-disable-next-line @next/next/no-img-element -- admin-uploaded, arbitrary host
-                                <img src={active.image_url} alt="" className="h-36 w-full object-cover sm:h-44" />
+                                <div className="relative h-36 w-full sm:h-44">
+                                    <ProjectMedia src={active.image_url} sizes="(min-width: 640px) 560px, 100vw" className="object-center" />
+                                </div>
                             )}
 
                             <div className="p-4 sm:p-6">

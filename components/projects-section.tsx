@@ -47,7 +47,7 @@ export function ProjectsSection({ category }: ProjectsSectionProps) {
             <div className="w-full max-w-6xl mx-auto flex flex-col gap-4 p-4">
                 <div className="flex flex-col gap-4">
                     {[1, 2, 3, 4].map((i) => (
-                        <div key={i} className="p-4 flex flex-row gap-4 items-center border border-neutral-200 dark:border-neutral-700 rounded-xl bg-neutral-100 dark:bg-neutral-800">
+                        <div key={i} className="p-4 flex flex-row gap-4 items-center border border-neutral-200 rounded-xl bg-neutral-100 ">
                             <Skeleton className="h-14 w-14 rounded-lg shrink-0" />
                             <div className="flex-1 space-y-2">
                                 <Skeleton className="h-4 w-1/3" />

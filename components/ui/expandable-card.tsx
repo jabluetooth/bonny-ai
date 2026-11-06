@@ -1,5 +1,6 @@
 "use client";
 import React, { useEffect, useId, useRef, useState } from "react";
+import { ProjectMedia } from "@/components/page/project-media";
 import { cn } from "@/lib/utils";
 import { createPortal } from "react-dom";
 import { AnimatePresence, motion } from "framer-motion";
@@ -84,7 +85,7 @@ export const ProjectDetails = ({
                     role="dialog"
                     aria-modal="true"
                     aria-labelledby={titleId}
-                    className="w-full max-w-2xl h-full md:h-fit md:max-h-[85vh] flex flex-col bg-card dark:bg-neutral-900 sm:rounded-3xl overflow-hidden shadow-2xl pointer-events-auto"
+                    className="w-full max-w-2xl h-full md:h-fit md:max-h-[85vh] flex flex-col bg-card sm:rounded-3xl overflow-hidden shadow-2xl pointer-events-auto"
                 >
                     {/* Close Button */}
                     <motion.button
@@ -103,16 +104,17 @@ export const ProjectDetails = ({
 
                     {/* Image Section */}
                     <div
-                        className="w-full h-80 lg:h-96 sm:rounded-tr-lg sm:rounded-tl-lg overflow-hidden"
+                        className="relative w-full h-56 sm:h-80 lg:h-96 shrink-0 sm:rounded-tr-lg sm:rounded-tl-lg overflow-hidden bg-muted"
                     >
-                        {/* eslint-disable-next-line @next/next/no-img-element -- admin-uploaded, arbitrary host */}
-                        <img
-                            width={600}
-                            height={400}
-                            src={active.image_url || "/placeholder.png"}
-                            alt={`Screenshot of ${active.title}`}
-                            className="w-full h-full object-cover object-top"
-                        />
+                        {active.image_url ? (
+                            <ProjectMedia
+                                src={active.image_url}
+                                alt={`Demo of ${active.title}`}
+                                sizes="(min-width: 672px) 672px, 100vw"
+                            />
+                        ) : (
+                            <span aria-hidden className="flex h-full items-center justify-center text-5xl font-bold text-muted-foreground">{active.title.slice(0, 2)}</span>
+                        )}
                     </div>
 
                     {/* Content Section */}
@@ -123,9 +125,9 @@ export const ProjectDetails = ({
                                     {active.title}
                                 </h3>
                                 {active.status && (
-                                    <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold w-fit ${active.status === 'Online' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' :
-                                            active.status === 'Down' ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200' :
-                                                'bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200'
+                                    <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold w-fit ${active.status === 'Online' ? 'bg-green-100 text-green-800' :
+                                            active.status === 'Down' ? 'bg-red-100 text-red-800' :
+                                                'bg-amber-100 text-amber-800'
                                         }`}>
                                         {active.status}
                                     </span>
@@ -138,7 +140,7 @@ export const ProjectDetails = ({
                                     href={active.project_url}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="px-4 py-2 text-sm rounded-full font-bold bg-gray-100 text-zinc-900 hover:bg-zinc-900 hover:text-white transition-colors flex items-center gap-2 dark:bg-zinc-800 dark:text-white dark:hover:bg-white dark:hover:text-zinc-900"
+                                    className="px-4 py-2 text-sm rounded-full font-bold bg-gray-100 text-zinc-900 hover:bg-zinc-900 hover:text-white transition-colors flex items-center gap-2"
                                 >
                                     Checkout
                                     <ExternalLink className="w-3 h-3" />
@@ -154,7 +156,7 @@ export const ProjectDetails = ({
                                 {(active.problem || active.solution || (active.results && active.results.length > 0)) && (
                                     <div className="space-y-3">
                                         <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
-                                            Case Study{active.industry ? ` · ${active.industry}` : ""}
+                                            Case Study{active.industry ?` · ${active.industry}` : ""}
                                         </h4>
                                         <div className="grid gap-3 sm:grid-cols-2">
                                             {active.problem && (
@@ -209,7 +211,7 @@ export const ProjectDetails = ({
                                                 key={tech}
                                                 className={cn(
                                                     "px-3 py-1.5 text-xs font-medium rounded-xl border whitespace-normal h-auto text-left max-w-full leading-snug break-words",
-                                                    "bg-zinc-900 text-white border-zinc-800 dark:bg-white dark:text-zinc-900"
+                                                    "bg-zinc-900 text-white border-zinc-800"
                                                 )}
                                             >
                                                 {tech}
@@ -265,16 +267,10 @@ const ProjectListItem = ({
                 className="relative flex min-w-0 flex-1 flex-row items-center gap-4 rounded-xl p-4 text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground"
             >
                 {/* Image - Hidden on mobile */}
-                <span className="hidden md:block shrink-0 rounded-lg overflow-hidden h-14 w-14 bg-muted">
-                    {/* eslint-disable-next-line @next/next/no-img-element -- admin-uploaded, arbitrary host */}
-                    <img
-                        width={60}
-                        height={60}
-                        loading="lazy"
-                        src={project.image_url || "/placeholder.png"}
-                        alt=""
-                        className="h-full w-full object-cover object-top"
-                    />
+                <span className="relative hidden md:block shrink-0 rounded-lg overflow-hidden h-14 w-14 bg-muted">
+                    {project.image_url && (
+                        <ProjectMedia src={project.image_url} sizes="56px" still />
+                    )}
                 </span>
                 <span className="min-w-0">
                     <span className="block font-medium text-foreground text-base">
@@ -282,7 +278,7 @@ const ProjectListItem = ({
                         <span className="sr-only">, view details</span>
                     </span>
                     {tech.length > 0 && (
-                        <span className="mt-1 block text-xs text-muted-foreground">{tech.join(" · ")}</span>
+                        <span className="mt-1 block text-xs text-muted-foreground">{tech.join(" ·")}</span>
                     )}
                 </span>
             </button>

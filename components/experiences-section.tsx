@@ -2,7 +2,6 @@
 
 import React, { useEffect, useState, useRef } from "react";
 import { motion, useScroll, useTransform } from "framer-motion";
-import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { MapPin, Briefcase, Calendar } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -208,7 +207,7 @@ function ExperienceCard({ experience, index }: { experience: Experience; index: 
                             key={tech}
                             className={cn(
                                 "px-3 py-1.5 text-xs font-medium rounded-xl border whitespace-normal h-auto text-left max-w-full leading-snug break-words",
-                                "bg-zinc-900 text-white border-zinc-800 dark:bg-white dark:text-zinc-900"
+                                "bg-zinc-900 text-white border-zinc-800"
                             )}
                         >
                             {tech}
