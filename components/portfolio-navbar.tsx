@@ -39,6 +39,7 @@ import {
     Wrench,
 } from "lucide-react"
 
+import { InteractiveHoverButton } from "@/components/ui/interactive-hover-button"
 import { ChatIntents } from "@/lib/intents"
 import { ProgressiveBlur } from "@/components/ui/progressive-blur"
 import { toast } from "sonner"
@@ -50,7 +51,7 @@ import { AppSidebar } from "@/components/app-sidebar"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { OPEN_CONTACT_EVENT } from "@/components/contact-cta"
 
-const TRIGGER_CLASS = "bg-transparent hover:bg-primary/10 focus:bg-primary/10 data-[state=open]:bg-primary/10 rounded-full"
+const TRIGGER_CLASS = "bg-transparent hover:bg-primary/10 focus:bg-primary/10 data-[state=open]:bg-primary/10 rounded-full hover:text-primary relative after:absolute after:-top-1 after:left-1/2 after:-translate-x-1/2 after:w-8 after:h-[2px] after:bg-primary after:shadow-[0_0_8px_var(--primary)] after:opacity-0 hover:after:opacity-100 after:transition-all after:duration-300"
 
 export function PortfolioNavbar() {
     const [resumeOpen, setResumeOpen] = useState(false)
@@ -325,7 +326,7 @@ export function PortfolioNavbar() {
                     </div>
 
                     {/* RIGHT: Resume Button */}
-                    <Button onClick={() => setResumeOpen(true)} className="rounded-full">Work with me</Button>
+                    <InteractiveHoverButton onClick={() => setResumeOpen(true)}>Work with me</InteractiveHoverButton>
                 </div>
             </div>
 

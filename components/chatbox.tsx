@@ -100,10 +100,13 @@ function FormattedText({ text }: { text: string }) {
 function Block({ children, className }: { children: React.ReactNode; className?: string }) {
     return (
         <motion.div
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3, ease: "easeOut" }}
-            className={cn("mt-1 w-full grid grid-cols-1 min-w-0 overflow-hidden rounded-xl border border-border/60 bg-background", className)}
+            initial={{ opacity: 0, scale: 0 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{
+                duration: 0.4,
+                scale: { type: "spring", visualDuration: 0.4, bounce: 0.25 },
+            }}
+            className={cn("mt-1 w-full grid grid-cols-1 min-w-0 overflow-hidden rounded-xl bg-background/50 backdrop-blur-sm", className)}
         >
             {children}
         </motion.div>
@@ -324,12 +327,12 @@ export function Chatbox() {
                                             {isBot && !isStreaming && (!shouldAnimate || !cleanContent) && (
                                                 <>
                                                     {msg.component && <Block>{msg.component}</Block>}
-                                                    {!msg.component && showServices && <Block><ServicesSection /></Block>}
+                                                    {!msg.component && showServices && <Block className="bg-transparent backdrop-blur-none"><ServicesSection /></Block>}
                                                     {!msg.component && showProjects && <Block><ProjectsSection category={projectCategory} /></Block>}
                                                     {!msg.component && showSkills && <Block><SkillsSection highlightSkill={highlightSkill} highlightCategory={highlightCategory} /></Block>}
                                                     {!msg.component && showExperiences && <Block><ExperiencesSection category={experienceCategory} scrollContainer={scrollContainerRef} /></Block>}
-                                                    {!msg.component && showAbout && <Block className="overflow-visible py-4 border-0"><AboutSection /></Block>}
-                                                    {!msg.component && showContact && <Block className="border-0"><ContactCta /></Block>}
+                                                    {!msg.component && showAbout && <Block className="overflow-visible py-4"><AboutSection /></Block>}
+                                                    {!msg.component && showContact && <Block className="overflow-visible bg-transparent backdrop-blur-none"><ContactCta /></Block>}
                                                 </>
                                             )}
                                         </div>

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { CaseStudyList, type CaseStudy } from "@/components/case-study-list";
+import { ExpandableCardDemo } from "@/components/ui/expandable-card";
 import { fetchWithCache, CACHE_KEYS } from "@/lib/data-cache";
 
 interface ProjectsSectionProps {
@@ -10,7 +10,7 @@ interface ProjectsSectionProps {
 }
 
 export function ProjectsSection({ category }: ProjectsSectionProps) {
-    const [projects, setProjects] = useState<CaseStudy[]>([]);
+    const [projects, setProjects] = useState<React.ComponentProps<typeof ExpandableCardDemo>["projects"]>([]);
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
@@ -67,8 +67,8 @@ export function ProjectsSection({ category }: ProjectsSectionProps) {
 
     return (
         <div className="w-full p-4">
-            <h2 className="text-lg font-semibold mb-4">Case studies</h2>
-            <CaseStudyList studies={projects} />
+            <h2 className="text-xl font-semibold px-2 mb-4 text-center md:text-left mx-auto max-w-6xl">Featured Projects</h2>
+            <ExpandableCardDemo projects={projects} />
         </div>
     );
 }
