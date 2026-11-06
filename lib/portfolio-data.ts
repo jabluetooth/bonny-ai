@@ -7,6 +7,7 @@ export interface AuthorProfile {
     description: string;
     images: string[];
     status?: string;
+    resume_url?: string | null;
 }
 
 export interface Service {

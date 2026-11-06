@@ -1,5 +1,8 @@
 import type { Metadata } from "next";
+import { AlertCircle, TrendingUp, Wrench } from "lucide-react";
 import { PortfolioPageShell } from "@/components/portfolio-page-shell";
+import { JumpNav, PageHeader, StatRow, slug } from "@/components/page/page-parts";
+import { PageCta } from "@/components/page/page-cta";
 import { getServices } from "@/lib/portfolio-data";
 
 // Content comes from Supabase via a cookieless client, so the page is
@@ -12,48 +15,82 @@ export const metadata: Metadata = {
     alternates: { canonical: "/services" },
 };
 
+const STEPS = [
+    { key: "problem", label: "The problem", Icon: AlertCircle, tone: "text-red-600" },
+    { key: "solution", label: "What I build", Icon: Wrench, tone: "text-blue-600" },
+    { key: "outcome", label: "The outcome", Icon: TrendingUp, tone: "text-emerald-600" },
+] as const;
+
 export default async function ServicesPage() {
     const services = await getServices();
 
     return (
         <PortfolioPageShell>
-            <article className="flex flex-col gap-12">
-                <header>
-                    <h1 className="text-4xl font-bold tracking-tight mb-4">Services</h1>
-                    <p className="text-muted-foreground leading-relaxed max-w-2xl">
-                        The problems I help businesses solve, what I do about each one, and the outcome you can expect.
-                    </p>
-                </header>
+            <article className="flex flex-col gap-12 md:gap-16">
+                <div className="flex flex-col gap-6">
+                    <PageHeader
+                        eyebrow="Services"
+                        title="Problems I solve for growing teams"
+                        description="Each service starts with a problem I see in businesses again and again, what I build to fix it, and the outcome you can expect."
+                    >
+                        {services.length > 0 && (
+                            <StatRow stats={[
+                                { value: services.length, label: "services" },
+                                { value: "AI · Automation", label: "core focus" },
+                                { value: "End to end", label: "from first call to launch" },
+                            ]} />
+                        )}
+                    </PageHeader>
+                    <JumpNav label="Services on this page" items={services.map((s) => ({ id: slug(s.title), label: s.title }))} />
+                </div>
 
                 {services.length === 0 ? (
                     <p className="text-muted-foreground">Service details coming soon.</p>
                 ) : (
-                    <div className="flex flex-col gap-6">
-                        {services.map((service) => (
-                            <section
-                                key={service.id}
-                                aria-labelledby={`service-${service.id}`}
-                                className="rounded-xl border border-border bg-card/50 p-6 space-y-4"
-                            >
-                                <h2 id={`service-${service.id}`} className="text-xl font-semibold">{service.title}</h2>
-                                <dl className="grid gap-4 sm:grid-cols-3">
-                                    <div>
-                                        <dt className="text-xs font-semibold uppercase tracking-wide text-red-600 dark:text-red-400 mb-1">The problem</dt>
-                                        <dd className="text-sm text-muted-foreground leading-relaxed">{service.problem}</dd>
+                    <ol className="flex flex-col gap-6">
+                        {services.map((service, i) => (
+                            <li key={service.id} id={slug(service.title)} className="scroll-mt-24">
+                                <section
+                                    aria-labelledby={`service-${service.id}`}
+                                    className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm"
+                                >
+                                    {service.image_url && (
+                                        // eslint-disable-next-line @next/next/no-img-element -- admin-uploaded, arbitrary host
+                                        <img src={service.image_url} alt="" loading="lazy" className="h-44 w-full object-cover sm:h-56" />
+                                    )}
+                                    <div className="p-6 sm:p-8">
+                                        <div className="mb-6 flex items-start gap-4">
+                                            <span className="font-mono text-sm tabular-nums text-muted-foreground" aria-hidden>
+                                                {String(i + 1).padStart(2, "0")}
+                                            </span>
+                                            <h2 id={`service-${service.id}`} className="text-xl font-semibold tracking-tight sm:text-2xl">
+                                                {service.title}
+                                            </h2>
+                                        </div>
+                                        <dl className="grid gap-6 sm:grid-cols-3 sm:gap-8">
+                                            {STEPS.map(({ key, label, Icon, tone }) => {
+                                                const text = service[key];
+                                                if (!text) return null;
+                                                return (
+                                                    <div key={key} className="border-t border-border pt-4">
+                                                        <dt className={`mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider ${tone}`}>
+                                                            <Icon size={14} aria-hidden /> {label}
+                                                        </dt>
+                                                        <dd className={`text-sm leading-relaxed ${key === "outcome" ? "font-medium text-foreground" : "text-muted-foreground"}`}>
+                                                            {text}
+                                                        </dd>
+                                                    </div>
+                                                );
+                                            })}
+                                        </dl>
                                     </div>
-                                    <div>
-                                        <dt className="text-xs font-semibold uppercase tracking-wide text-blue-600 dark:text-blue-400 mb-1">What I do</dt>
-                                        <dd className="text-sm text-muted-foreground leading-relaxed">{service.solution}</dd>
-                                    </div>
-                                    <div>
-                                        <dt className="text-xs font-semibold uppercase tracking-wide text-emerald-600 dark:text-emerald-400 mb-1">The outcome</dt>
-                                        <dd className="text-sm text-muted-foreground leading-relaxed">{service.outcome}</dd>
-                                    </div>
-                                </dl>
-                            </section>
+                                </section>
+                            </li>
                         ))}
-                    </div>
+                    </ol>
                 )}
+
+                <PageCta />
             </article>
         </PortfolioPageShell>
     );

@@ -7,7 +7,7 @@ export function PortfolioPageShell({ children }: { children: React.ReactNode }) 
         <SidebarProvider defaultOpen={false} style={{ "--sidebar-width": "18rem" } as React.CSSProperties}>
             <div className="min-h-[100dvh] flex flex-col bg-app w-full">
                 <PortfolioNavbar />
-                <main className="flex-1 w-full max-w-4xl mx-auto px-4 md:px-8 py-12 md:py-16">
+                <main className="flex-1 w-full max-w-5xl mx-auto px-4 sm:px-6 md:px-8 pt-10 pb-10 md:pt-16 md:pb-12">
                     {children}
                 </main>
                 <SiteFooter />

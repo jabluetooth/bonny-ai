@@ -43,80 +43,105 @@
   --radius-xl: calc(var(--radius) + 4px);
 }
 
-/* Mist-blue palette: the neutral greys used across components (neutral,
-   gray, zinc) are re-pointed at Tailwind's cool slate scale, so hard-coded
-   greys pick up the same blue tint as the theme tokens below. */
+/* Off-white / off-black palette. Every grey family used in components is
+   pointed at one soft neutral scale, and white/black themselves become
+   off-white/off-black, so nothing on the site is pure #FFF or #000. */
 @theme {
-  --color-neutral-50: oklch(0.955 0.01 264);
-  --color-neutral-100: oklch(0.925 0.015 264);
-  --color-neutral-200: oklch(92.9% 0.013 255.508);
-  --color-neutral-300: oklch(86.9% 0.022 252.894);
-  --color-neutral-400: oklch(70.4% 0.04 256.788);
-  --color-neutral-500: oklch(55.4% 0.046 257.417);
-  --color-neutral-600: oklch(44.6% 0.043 257.281);
-  --color-neutral-700: oklch(37.2% 0.044 257.287);
-  --color-neutral-800: oklch(27.9% 0.041 260.031);
-  --color-neutral-900: oklch(20.8% 0.042 265.755);
-  --color-neutral-950: oklch(12.9% 0.042 264.695);
-  --color-gray-50: oklch(0.955 0.01 264);
-  --color-gray-100: oklch(0.925 0.015 264);
-  --color-gray-200: oklch(92.9% 0.013 255.508);
-  --color-gray-300: oklch(86.9% 0.022 252.894);
-  --color-gray-400: oklch(70.4% 0.04 256.788);
-  --color-gray-500: oklch(55.4% 0.046 257.417);
-  --color-gray-600: oklch(44.6% 0.043 257.281);
-  --color-gray-700: oklch(37.2% 0.044 257.287);
-  --color-gray-800: oklch(27.9% 0.041 260.031);
-  --color-gray-900: oklch(20.8% 0.042 265.755);
-  --color-gray-950: oklch(12.9% 0.042 264.695);
-  --color-zinc-50: oklch(0.955 0.01 264);
-  --color-zinc-100: oklch(0.925 0.015 264);
-  --color-zinc-200: oklch(92.9% 0.013 255.508);
-  --color-zinc-300: oklch(86.9% 0.022 252.894);
-  --color-zinc-400: oklch(70.4% 0.04 256.788);
-  --color-zinc-500: oklch(55.4% 0.046 257.417);
-  --color-zinc-600: oklch(44.6% 0.043 257.281);
-  --color-zinc-700: oklch(37.2% 0.044 257.287);
-  --color-zinc-800: oklch(27.9% 0.041 260.031);
-  --color-zinc-900: oklch(20.8% 0.042 265.755);
-  --color-zinc-950: oklch(12.9% 0.042 264.695);
+  --color-white: oklch(0.985 0.002 100);      /* #FAFAF8 */
+  --color-black: oklch(0.165 0.002 100);      /* #111110 */
+  --color-neutral-50: oklch(0.972 0.002 100);
+  --color-neutral-100: oklch(0.948 0.003 100);
+  --color-neutral-200: oklch(0.908 0.004 100);
+  --color-neutral-300: oklch(0.852 0.005 100);
+  --color-neutral-400: oklch(0.708 0.006 100);
+  --color-neutral-500: oklch(0.545 0.006 100);
+  --color-neutral-600: oklch(0.445 0.006 100);
+  --color-neutral-700: oklch(0.375 0.006 100);
+  --color-neutral-800: oklch(0.27 0.004 100);
+  --color-neutral-900: oklch(0.215 0.003 100);
+  --color-neutral-950: oklch(0.165 0.002 100);
+  --color-gray-50: oklch(0.972 0.002 100);
+  --color-gray-100: oklch(0.948 0.003 100);
+  --color-gray-200: oklch(0.908 0.004 100);
+  --color-gray-300: oklch(0.852 0.005 100);
+  --color-gray-400: oklch(0.708 0.006 100);
+  --color-gray-500: oklch(0.545 0.006 100);
+  --color-gray-600: oklch(0.445 0.006 100);
+  --color-gray-700: oklch(0.375 0.006 100);
+  --color-gray-800: oklch(0.27 0.004 100);
+  --color-gray-900: oklch(0.215 0.003 100);
+  --color-gray-950: oklch(0.165 0.002 100);
+  --color-zinc-50: oklch(0.972 0.002 100);
+  --color-zinc-100: oklch(0.948 0.003 100);
+  --color-zinc-200: oklch(0.908 0.004 100);
+  --color-zinc-300: oklch(0.852 0.005 100);
+  --color-zinc-400: oklch(0.708 0.006 100);
+  --color-zinc-500: oklch(0.545 0.006 100);
+  --color-zinc-600: oklch(0.445 0.006 100);
+  --color-zinc-700: oklch(0.375 0.006 100);
+  --color-zinc-800: oklch(0.27 0.004 100);
+  --color-zinc-900: oklch(0.215 0.003 100);
+  --color-zinc-950: oklch(0.165 0.002 100);
+  --color-stone-50: oklch(0.972 0.002 100);
+  --color-stone-100: oklch(0.948 0.003 100);
+  --color-stone-200: oklch(0.908 0.004 100);
+  --color-stone-300: oklch(0.852 0.005 100);
+  --color-stone-400: oklch(0.708 0.006 100);
+  --color-stone-500: oklch(0.545 0.006 100);
+  --color-stone-600: oklch(0.445 0.006 100);
+  --color-stone-700: oklch(0.375 0.006 100);
+  --color-stone-800: oklch(0.27 0.004 100);
+  --color-stone-900: oklch(0.215 0.003 100);
+  --color-stone-950: oklch(0.165 0.002 100);
+  --color-slate-50: oklch(0.972 0.002 100);
+  --color-slate-100: oklch(0.948 0.003 100);
+  --color-slate-200: oklch(0.908 0.004 100);
+  --color-slate-300: oklch(0.852 0.005 100);
+  --color-slate-400: oklch(0.708 0.006 100);
+  --color-slate-500: oklch(0.545 0.006 100);
+  --color-slate-600: oklch(0.445 0.006 100);
+  --color-slate-700: oklch(0.375 0.006 100);
+  --color-slate-800: oklch(0.27 0.004 100);
+  --color-slate-900: oklch(0.215 0.003 100);
+  --color-slate-950: oklch(0.165 0.002 100);
 }
 
 :root {
   --radius: 0.625rem;
-  /* Mist blue, deeper: a clearly tinted page, soft off-white surfaces (no
-     pure white anywhere), navy text and the existing blue accent. */
-  --background: oklch(0.938 0.013 264);       /* #E7EBF3 page */
-  --foreground: oklch(0.208 0.042 265.755);   /* #0F172A navy */
-  --card: oklch(0.975 0.006 264);             /* #F5F7FB surfaces */
-  --card-foreground: oklch(0.208 0.042 265.755);
-  --popover: oklch(0.975 0.006 264);
-  --popover-foreground: oklch(0.208 0.042 265.755);
-  --primary: oklch(0.279 0.041 260.031);      /* #1E293B slate navy */
-  --primary-foreground: oklch(0.975 0.006 264);
-  --secondary: oklch(0.914 0.017 264);        /* #DDE3EE */
-  --secondary-foreground: oklch(0.279 0.041 260.031);
-  --muted: oklch(0.914 0.017 264);
-  --muted-foreground: oklch(0.5 0.045 257.4);
-  --accent: oklch(0.914 0.017 264);
-  --accent-foreground: oklch(0.208 0.042 265.755);
+  /* Off-white page, slightly brighter off-white surfaces, off-black text
+     and primary. The blue stays as the single accent (chat bubbles, send
+     button, links). */
+  --background: oklch(0.962 0.003 100);       /* #F5F5F3 page */
+  --foreground: oklch(0.215 0.003 100);       /* #1C1C1A off-black */
+  --card: oklch(0.985 0.002 100);             /* #FAFAF8 surfaces */
+  --card-foreground: oklch(0.215 0.003 100);
+  --popover: oklch(0.985 0.002 100);
+  --popover-foreground: oklch(0.215 0.003 100);
+  --primary: oklch(0.215 0.003 100);          /* off-black */
+  --primary-foreground: oklch(0.985 0.002 100);
+  --secondary: oklch(0.93 0.004 100);         /* #EAEAE6 */
+  --secondary-foreground: oklch(0.215 0.003 100);
+  --muted: oklch(0.93 0.004 100);
+  --muted-foreground: oklch(0.5 0.006 100);   /* #66665F */
+  --accent: oklch(0.93 0.004 100);
+  --accent-foreground: oklch(0.215 0.003 100);
   --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.878 0.022 264);           /* #D1D8E5 */
-  --input: oklch(0.878 0.022 264);
-  --ring: oklch(0.707 0.165 254.624);         /* blue-400 */
+  --border: oklch(0.895 0.005 100);           /* #DDDDD8 */
+  --input: oklch(0.895 0.005 100);
+  --ring: oklch(0.545 0.006 100);
   --chart-1: oklch(0.623 0.214 259.815);
   --chart-2: oklch(0.6 0.118 184.704);
   --chart-3: oklch(0.398 0.07 227.392);
   --chart-4: oklch(0.828 0.189 84.429);
   --chart-5: oklch(0.769 0.188 70.08);
-  --sidebar: oklch(0.955 0.01 264);
-  --sidebar-foreground: oklch(0.208 0.042 265.755);
-  --sidebar-primary: oklch(0.279 0.041 260.031);
-  --sidebar-primary-foreground: oklch(0.975 0.006 264);
-  --sidebar-accent: oklch(0.914 0.017 264);
-  --sidebar-accent-foreground: oklch(0.208 0.042 265.755);
-  --sidebar-border: oklch(0.878 0.022 264);
-  --sidebar-ring: oklch(0.707 0.165 254.624);
+  --sidebar: oklch(0.972 0.002 100);
+  --sidebar-foreground: oklch(0.215 0.003 100);
+  --sidebar-primary: oklch(0.215 0.003 100);
+  --sidebar-primary-foreground: oklch(0.985 0.002 100);
+  --sidebar-accent: oklch(0.93 0.004 100);
+  --sidebar-accent-foreground: oklch(0.215 0.003 100);
+  --sidebar-border: oklch(0.895 0.005 100);
+  --sidebar-ring: oklch(0.545 0.006 100);
 }
 
 .dark {
@@ -164,15 +189,16 @@
 }
 
 @layer utilities {
-  /* Page background: mist with a faint blue haze at the top. Fixed so it
-     doesn't scroll with long pages. */
+  /* Page background: off-white with a soft lighter glow at the top for
+     depth. Fixed so it doesn't scroll with long pages. */
   .bg-app {
     background-color: var(--background);
     background-image:
-      radial-gradient(ellipse 80% 50% at 50% -10%, oklch(0.623 0.214 259.815 / 0.13), transparent 70%),
-      radial-gradient(ellipse 60% 40% at 100% 100%, oklch(0.707 0.165 254.624 / 0.08), transparent 70%);
+      radial-gradient(ellipse 80% 45% at 50% -10%, oklch(0.995 0.002 100 / 0.9), transparent 70%),
+      radial-gradient(ellipse 60% 40% at 100% 100%, oklch(0.9 0.004 100 / 0.35), transparent 70%);
     background-attachment: fixed;
   }
+
 
   .animate-marquee {
     animation: marquee var(--duration) linear infinite;

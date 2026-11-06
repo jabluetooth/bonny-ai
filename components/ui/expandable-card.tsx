@@ -9,7 +9,7 @@ import { Separator } from "@/components/ui/separator";
 import { Github, ExternalLink, X, ArrowRight } from "lucide-react";
 import { openContact } from "@/components/contact-cta";
 
-interface Project {
+export interface Project {
     title: string;
     image_url?: string;
     description?: string;
@@ -26,7 +26,7 @@ interface Project {
 }
 
 // Sub-component for the Expanded View (Portal)
-const ProjectDetails = ({
+export const ProjectDetails = ({
     active,
     id,
     onClose,
