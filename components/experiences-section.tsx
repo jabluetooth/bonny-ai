@@ -119,7 +119,7 @@ function ExperiencesContent({ experiences, category, scrollContainer }: { experi
 
     return (
         <div className="w-full max-w-7xl mx-auto px-4 py-20" id="experiences">
-            <h2 className="text-3xl font-bold text-center mb-16 tracking-tight text-gray-900">
+            <h2 className="text-3xl font-bold text-center mb-16 tracking-tight text-foreground">
                 {category === 'education' ? 'Education' : 'Experience'}
             </h2>
 
@@ -163,16 +163,16 @@ function ExperienceCard({ experience, index }: { experience: Experience; index: 
                            flex items-center justify-center
                            ${index === 0 ? "top-0" : "top-0"} 
             `}>
-                <div className="w-4 h-4 rounded-full bg-card border-4 border-gray-300" />
+                <div className="w-4 h-4 rounded-full bg-card border-4 border-border" />
             </div>
 
             {/* Left Side (Date & Company Info) */}
             <div className={`md:text-left flex flex-col items-start md:items-start pl-20 md:pl-0 md:pr-16`}>
                 <div className="sticky top-24 transition-all duration-300">
-                    <h3 className="text-xl font-bold text-gray-900 leading-tight mb-2">{experience.company}</h3>
+                    <p className="text-base font-semibold text-foreground leading-tight mb-2">{experience.company}</p>
 
-                    <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-gray-600 mb-4">
-                        <div className="flex items-center gap-1 font-medium uppercase tracking-wide">
+                    <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-muted-foreground mb-4">
+                        <div className="flex items-center gap-1 font-medium tabular-nums">
                             <Calendar className="w-4 h-4 shrink-0" />
                             <span>{experience.date}</span>
                         </div>
@@ -192,9 +192,9 @@ function ExperienceCard({ experience, index }: { experience: Experience; index: 
                 Image shows: Company Left, Detail Right. Let's stick to that. 
              */}
             <div className="pl-20 md:pl-16 pt-2 md:pt-0">
-                <h4 className="text-2xl font-bold text-gray-900 mb-6">{experience.role}</h4>
+                <h3 className="text-xl font-semibold tracking-tight text-foreground mb-4">{experience.role}</h3>
 
-                <div className="space-y-4 text-gray-700 leading-relaxed text-[15px]">
+                <div className="max-w-[65ch] space-y-4 type-body text-foreground/85">
                     {experience.description.map((para, i) => (
                         <p key={i}>{para}</p>
                     ))}
@@ -207,7 +207,7 @@ function ExperienceCard({ experience, index }: { experience: Experience; index: 
                             key={tech}
                             className={cn(
                                 "px-3 py-1.5 text-xs font-medium rounded-xl border whitespace-normal h-auto text-left max-w-full leading-snug break-words",
-                                "bg-zinc-900 text-white border-zinc-800"
+                                "bg-foreground text-background border-foreground"
                             )}
                         >
                             {tech}

@@ -100,7 +100,7 @@ export function SiteFooter() {
                             </span>
                             <StatusLabel className="text-xs text-secondary-foreground">{config.text}</StatusLabel>
                         </Status>
-                        <span className="text-[11px] opacity-60">&copy; {year} Fil Heinz Re La Torre</span>
+                        <span className="text-xs opacity-80">&copy; {year} Fil Heinz Re La Torre</span>
                     </div>
                 </div>
             </div>
@@ -150,13 +150,13 @@ export function SiteFooter() {
                             </Status>
                         </div>
 
-                        <p className="text-xs opacity-65">&copy; {year} Bonny-AI by Fil Heinz Re La Torre</p>
+                        <p className="text-xs opacity-80">&copy; {year} Bonny-AI by Fil Heinz Re La Torre</p>
                     </div>
                 </div>
 
                 {/* Links panel */}
                 <nav aria-label="Footer" className="flex-none w-full sm:w-[200px] rounded-t-2xl border border-border bg-card px-6 pt-6 pb-5">
-                    <h2 className="text-xs font-bold uppercase tracking-wide text-muted-foreground mb-3">
+                    <h2 className="type-label text-muted-foreground mb-3">
                         Explore
                     </h2>
                     <ul className="flex flex-col gap-2">

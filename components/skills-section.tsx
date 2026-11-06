@@ -194,7 +194,7 @@ export function SkillsSection({ highlightSkill, highlightCategory }: { highlight
                                     key={skill.name}
                                     className={cn(
                                         "px-3 py-1.5 text-xs font-medium rounded-xl border whitespace-normal h-auto text-left max-w-full leading-snug break-words",
-                                        "bg-zinc-900 text-white border-zinc-800"
+                                        "bg-foreground text-background border-foreground"
                                     )}
                                 >
                                     {skill.name}

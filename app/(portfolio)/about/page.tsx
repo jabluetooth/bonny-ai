@@ -116,7 +116,7 @@ export default async function AboutPage() {
                                             {title}
                                             <ArrowUpRight size={15} className="text-muted-foreground transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
                                         </span>
-                                        <span className="mt-1 block text-sm leading-relaxed text-muted-foreground">{text}</span>
+                                        <span className="mt-1 block type-body text-muted-foreground">{text}</span>
                                     </span>
                                 </Link>
                             </li>

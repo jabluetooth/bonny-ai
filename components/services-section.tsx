@@ -170,10 +170,10 @@ export function ServicesSection() {
                                                 className="relative"
                                             >
                                                 <span aria-hidden className={cn("absolute -left-7 top-1 flex h-4 w-4 items-center justify-center rounded-full ring-4 ring-background", dot)} />
-                                                <p className={cn("mb-1 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider", text)}>
+                                                <p className={cn("type-label mb-1.5 flex items-center gap-1.5", text)}>
                                                     <Icon size={13} aria-hidden /> {label}
                                                 </p>
-                                                <p className={cn("text-sm leading-relaxed whitespace-pre-wrap", key === "outcome" ? "font-medium text-foreground" : "text-muted-foreground")}>
+                                                <p className={cn("type-body max-w-[65ch] whitespace-pre-wrap", key === "outcome" ? "font-medium text-foreground" : "text-muted-foreground")}>
                                                     {body}
                                                 </p>
                                             </motion.li>

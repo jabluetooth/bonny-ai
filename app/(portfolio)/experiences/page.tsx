@@ -31,8 +31,8 @@ function Timeline({ items, education }: { items: PortfolioExperience[]; educatio
                     <article className="rounded-2xl border border-border bg-card p-5 shadow-sm sm:p-6">
                         <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-2">
                             <div>
-                                <h3 className="text-lg font-semibold leading-snug tracking-tight">{exp.role}</h3>
                                 <p className="text-sm font-medium text-muted-foreground">{exp.company}</p>
+                                <h3 className="text-xl font-semibold leading-snug tracking-tight">{exp.role}</h3>
                             </div>
                             <span className="inline-flex items-center gap-1.5 rounded-full bg-muted px-3 py-1 text-xs font-medium tabular-nums">
                                 <Calendar size={12} aria-hidden />
@@ -48,10 +48,10 @@ function Timeline({ items, education }: { items: PortfolioExperience[]; educatio
                         )}
 
                         {exp.description.length > 0 && (
-                            <ul className="mt-4 space-y-2 text-sm leading-relaxed text-foreground/85">
+                            <ul className="mt-4 max-w-[65ch] space-y-2 type-body text-foreground/85">
                                 {exp.description.map((para, j) => (
                                     <li key={j} className="flex gap-2.5">
-                                        <span aria-hidden className="mt-2 h-1 w-1 shrink-0 rounded-full bg-muted-foreground/60" />
+                                        <span aria-hidden className="mt-[0.7rem] h-1 w-1 shrink-0 rounded-full bg-muted-foreground/60" />
                                         <span>{para}</span>
                                     </li>
                                 ))}

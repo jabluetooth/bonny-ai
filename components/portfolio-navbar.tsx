@@ -202,7 +202,7 @@ export function PortfolioNavbar() {
                         aria-label={isOpen ? "Hide navigation" : "Show navigation"}
                         aria-expanded={isOpen}
                         className={cn(
-                            "h-6 px-8 rounded-b-xl rounded-t-none text-[10px] shadow-sm border border-t-0 bg-background/80 backdrop-blur-sm transition-all duration-300 flex items-end pb-1",
+                            "h-6 px-8 rounded-b-xl rounded-t-none text-xs shadow-sm border border-t-0 bg-background/80 backdrop-blur-sm transition-all duration-300 flex items-end pb-1",
                             !isOpen && !isHoveringTrigger ? "opacity-50" : "opacity-100"
                         )}
                         onClick={() => setIsOpen(!isOpen)}

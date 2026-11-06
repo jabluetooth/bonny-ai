@@ -74,10 +74,10 @@ export default async function ServicesPage() {
                                                 if (!text) return null;
                                                 return (
                                                     <div key={key} className="border-t border-border pt-4">
-                                                        <dt className={`mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider ${tone}`}>
+                                                        <dt className={`type-label mb-2 flex items-center gap-1.5 ${tone}`}>
                                                             <Icon size={14} aria-hidden /> {label}
                                                         </dt>
-                                                        <dd className={`text-sm leading-relaxed ${key === "outcome" ? "font-medium text-foreground" : "text-muted-foreground"}`}>
+                                                        <dd className={`type-body ${key === "outcome" ? "font-medium text-foreground" : "text-muted-foreground"}`}>
                                                             {text}
                                                         </dd>
                                                     </div>

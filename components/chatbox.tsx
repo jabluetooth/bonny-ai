@@ -306,7 +306,7 @@ export function Chatbox() {
                             value={input}
                             onChange={(e) => setInput(e.target.value)}
                             placeholder={isChatDisabled ? "Message limit reached." : "Ask me anything..."}
-                            className="w-full h-12 sm:h-14 pl-5 sm:pl-6 pr-14 sm:pr-16 rounded-full text-base sm:text-lg shadow-lg border-muted-foreground/20 bg-card focus-visible:border-brand focus-visible:ring-2 focus-visible:ring-brand/40 transition-shadow hover:shadow-xl relative z-10"
+                            className="w-full h-12 sm:h-14 pl-5 sm:pl-6 pr-14 sm:pr-16 rounded-full text-base sm:text-lg md:text-lg shadow-lg border-muted-foreground/20 bg-card focus-visible:border-brand focus-visible:ring-2 focus-visible:ring-brand/40 transition-shadow hover:shadow-xl relative z-10"
                             disabled={inputDisabled}
                         />
                         <Button
@@ -366,7 +366,7 @@ export function Chatbox() {
                                             {cleanContent && (
                                                 <div
                                                     className={cn(
-                                                        "rounded-[20px] px-4 sm:px-5 py-2.5 text-[15px] shadow-sm leading-relaxed break-words whitespace-pre-wrap [word-break:break-word] min-w-0 max-w-[88%] sm:max-w-[85%] overflow-hidden",
+                                                        "rounded-[20px] px-4 sm:px-5 py-2.5 text-base shadow-sm leading-relaxed break-words whitespace-pre-wrap [word-break:break-word] min-w-0 max-w-[88%] sm:max-w-[85%] overflow-hidden",
                                                         isUser && "bg-gradient-to-br from-brand to-brand-hover border border-brand-hover text-brand-foreground shadow-md rounded-br-none",
                                                         isAdmin && "bg-danger border border-danger text-white shadow-md rounded-bl-none",
                                                         isBot && "bg-card border border-border/70 text-foreground shadow-md rounded-bl-none"
@@ -475,7 +475,7 @@ export function Chatbox() {
                             value={input}
                             onChange={(e) => setInput(e.target.value)}
                             placeholder={isChatDisabled ? "Message limit reached." : "Type a message..."}
-                            className="w-full h-12 sm:h-14 pl-5 sm:pl-6 pr-14 sm:pr-16 rounded-full shadow-md border-border/70 bg-card focus-visible:border-brand focus-visible:ring-2 focus-visible:ring-brand/40 transition-shadow hover:shadow-lg text-base sm:text-lg relative z-10"
+                            className="w-full h-12 sm:h-14 pl-5 sm:pl-6 pr-14 sm:pr-16 rounded-full shadow-md border-border/70 bg-card focus-visible:border-brand focus-visible:ring-2 focus-visible:ring-brand/40 transition-shadow hover:shadow-lg text-base sm:text-lg md:text-lg relative z-10"
                             disabled={inputDisabled}
                         />
                         <Button

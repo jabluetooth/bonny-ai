@@ -106,7 +106,7 @@ export function ContactCta() {
                 </div>
             </div>
 
-            <p className="relative mt-4 text-sm leading-relaxed text-muted-foreground">
+            <p className="relative mt-4 max-w-[65ch] type-body text-muted-foreground">
                 Tell me what you&apos;re trying to fix or build, your timeline, and how you&apos;ll measure success. Hiring? Grab my resume or reach me on LinkedIn.
             </p>
 

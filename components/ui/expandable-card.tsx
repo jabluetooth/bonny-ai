@@ -125,8 +125,8 @@ export const ProjectDetails = ({
                                     {active.title}
                                 </h3>
                                 {active.status && (
-                                    <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold w-fit ${active.status === 'Online' ? 'bg-green-100 text-green-800' :
-                                            active.status === 'Down' ? 'bg-red-100 text-red-800' :
+                                    <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold w-fit ${active.status === 'Online' ? 'bg-success/10 text-success' :
+                                            active.status === 'Down' ? 'bg-danger/10 text-danger' :
                                                 'bg-amber-100 text-amber-800'
                                         }`}>
                                         {active.status}
@@ -140,7 +140,7 @@ export const ProjectDetails = ({
                                     href={active.project_url}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="px-4 py-2 text-sm rounded-full font-bold bg-gray-100 text-zinc-900 hover:bg-zinc-900 hover:text-white transition-colors flex items-center gap-2"
+                                    className="px-4 py-2 text-sm rounded-full font-semibold bg-muted text-foreground hover:bg-foreground hover:text-background transition-colors flex items-center gap-2"
                                 >
                                     Checkout
                                     <ExternalLink className="w-3 h-3" />
@@ -149,26 +149,26 @@ export const ProjectDetails = ({
                         </div>
 
                         <div className="pt-2 relative px-2">
-                            <div className="text-foreground/80 text-sm md:text-base h-full md:h-fit pb-1 flex flex-col gap-6">
-                                <p>{active.description}</p>
+                            <div className="text-foreground/80 h-full md:h-fit pb-1 flex flex-col gap-6">
+                                <p className="type-body max-w-[65ch]">{active.description}</p>
 
                                 {/* Case study: only shown when filled in from the admin tool */}
                                 {(active.problem || active.solution || (active.results && active.results.length > 0)) && (
                                     <div className="space-y-3">
-                                        <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
+                                        <h4 className="type-label text-muted-foreground">
                                             Case Study{active.industry ?` · ${active.industry}` : ""}
                                         </h4>
                                         <div className="grid gap-3 sm:grid-cols-2">
                                             {active.problem && (
                                                 <div className="p-4 rounded-lg border border-red-500/20 bg-red-500/5">
-                                                    <p className="text-[11px] font-semibold uppercase tracking-wider text-danger mb-1">The problem</p>
-                                                    <p className="text-sm leading-relaxed whitespace-pre-wrap">{active.problem}</p>
+                                                    <p className="type-label text-danger mb-1.5">The problem</p>
+                                                    <p className="type-body whitespace-pre-wrap">{active.problem}</p>
                                                 </div>
                                             )}
                                             {active.solution && (
                                                 <div className="p-4 rounded-lg border border-brand/20 bg-brand/5">
-                                                    <p className="text-[11px] font-semibold uppercase tracking-wider text-brand mb-1">What I built</p>
-                                                    <p className="text-sm leading-relaxed whitespace-pre-wrap">{active.solution}</p>
+                                                    <p className="type-label text-brand mb-1.5">What I built</p>
+                                                    <p className="type-body whitespace-pre-wrap">{active.solution}</p>
                                                 </div>
                                             )}
                                         </div>
@@ -204,14 +204,14 @@ export const ProjectDetails = ({
 
                                 {/* Tech Stack */}
                                 <div className="space-y-3">
-                                    <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Tech Stack</h4>
+                                    <h4 className="type-label text-muted-foreground">Tech Stack</h4>
                                     <div className="flex flex-wrap gap-2">
                                         {active.tech_stack?.map((tech) => (
                                             <span
                                                 key={tech}
                                                 className={cn(
                                                     "px-3 py-1.5 text-xs font-medium rounded-xl border whitespace-normal h-auto text-left max-w-full leading-snug break-words",
-                                                    "bg-zinc-900 text-white border-zinc-800"
+                                                    "bg-foreground text-background border-foreground"
                                                 )}
                                             >
                                                 {tech}
@@ -222,12 +222,12 @@ export const ProjectDetails = ({
 
                                 {/* Features */}
                                 <div className="space-y-3">
-                                    <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Key Features</h4>
+                                    <h4 className="type-label text-muted-foreground">Key Features</h4>
                                     <ul className="grid grid-cols-1 md:grid-cols-2 gap-2">
                                         {active.features?.map((feature, i) => (
-                                            <li key={i} className="text-sm flex items-start gap-2">
-                                                <span aria-hidden className="mt-1.5 w-1.5 h-1.5 rounded-full bg-primary shrink-0" />
-                                                <span className="leading-snug">{feature}</span>
+                                            <li key={i} className="type-body flex items-start gap-2">
+                                                <span aria-hidden className="mt-2.5 w-1.5 h-1.5 rounded-full bg-primary shrink-0" />
+                                                <span>{feature}</span>
                                             </li>
                                         ))}
                                     </ul>
@@ -235,8 +235,8 @@ export const ProjectDetails = ({
 
                                 {/* Challenges */}
                                 {active.challenges && <div className="space-y-3">
-                                    <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Challenges & Learning</h4>
-                                    <div className="p-4 rounded-lg bg-muted/50 text-sm leading-relaxed border border-border/50">
+                                    <h4 className="type-label text-muted-foreground">Challenges & Learning</h4>
+                                    <div className="p-4 rounded-lg bg-muted/50 type-body whitespace-pre-wrap border border-border/50">
                                         {active.challenges}
                                     </div>
                                 </div>}

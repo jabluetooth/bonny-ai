@@ -97,7 +97,7 @@ export function CaseStudyGrid({ projects }: { projects: CaseStudy[] }) {
 
                             <div className="flex flex-1 flex-col gap-3 p-5">
                                 <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-                                    {p.type && <span className="font-semibold uppercase tracking-wider">{p.type}</span>}
+                                    {p.type && <span className="type-label">{p.type}</span>}
                                     {p.industry && <span>· {p.industry}</span>}
                                     {p.status && (
                                         <span className="ml-auto inline-flex items-center gap-1.5">
@@ -109,7 +109,7 @@ export function CaseStudyGrid({ projects }: { projects: CaseStudy[] }) {
 
                                 <h2 className="text-lg font-semibold leading-snug tracking-tight">{p.title}</h2>
 
-                                <p className="line-clamp-3 text-sm leading-relaxed text-muted-foreground">
+                                <p className="line-clamp-3 type-body text-muted-foreground">
                                     {p.problem || p.description}
                                 </p>
 

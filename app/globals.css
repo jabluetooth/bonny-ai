@@ -296,6 +296,26 @@
   }
 }
 
+/*
+ * Type roles. Named type-* (not text-*) so tailwind-merge never mistakes
+ * them for a text colour and drops one of the two.
+ *   type-body   descriptions people actually read (16px, airy leading)
+ *   type-label  small all-caps labels above a block ("The problem")
+ */
+@utility type-body {
+  font-size: 1rem;
+  line-height: 1.625;
+  text-wrap: pretty;
+}
+
+@utility type-label {
+  font-size: 0.75rem;
+  line-height: 1rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
 @utility animate-accordion-down {
   animation: accordion-down 0.2s ease-out;
 }

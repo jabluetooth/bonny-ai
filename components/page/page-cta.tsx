@@ -15,7 +15,7 @@ export function PageCta({
     return (
         <section aria-labelledby="page-cta-heading" className="rounded-3xl bg-primary px-6 py-8 text-primary-foreground sm:px-10 sm:py-10">
             <h2 id="page-cta-heading" className="text-2xl font-bold tracking-tight text-balance sm:text-3xl">{title}</h2>
-            <p className="mt-3 max-w-xl text-sm leading-relaxed opacity-75 sm:text-base">{description}</p>
+            <p className="mt-3 max-w-xl type-body opacity-80">{description}</p>
             <div className="mt-6 flex flex-wrap gap-3">
                 <button
                     type="button"
