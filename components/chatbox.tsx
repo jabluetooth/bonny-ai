@@ -100,6 +100,68 @@ function Block({ children, className }: { children: React.ReactNode; className?:
     );
 }
 
+/**
+ * Scrolls the page so `el` sits just above the on-screen keyboard, or the
+ * bottom of the screen when there is none. The visual viewport is the part
+ * of the page the keyboard leaves visible; on iPhones the layout viewport
+ * doesn't shrink, so aligning to the window bottom hides the box behind it.
+ */
+function pinAboveKeyboard(el: HTMLElement | null, smooth = true) {
+    if (!el) return;
+    const vv = window.visualViewport;
+    const visibleTop = vv ? vv.offsetTop : 0;
+    const visibleBottom = vv ? vv.offsetTop + vv.height : window.innerHeight;
+    const rect = el.getBoundingClientRect();
+    const gap = 8;
+    // Already fully visible above the keyboard: leave the page where it is.
+    if (rect.top >= visibleTop && rect.bottom + gap <= visibleBottom) return;
+    window.scrollBy({ top: rect.bottom + gap - visibleBottom, behavior: smooth ? "smooth" : "auto" });
+}
+
+/**
+ * Touch screens only: while `inputRef` has focus, keep `targetRef` above the
+ * keyboard as it opens, as its height changes, and as the visitor types.
+ */
+function useKeyboardMagnet(
+    inputRef: React.RefObject<HTMLInputElement | null>,
+    targetRef: React.RefObject<HTMLElement | null>,
+    remountKey: unknown
+) {
+    useEffect(() => {
+        const input = inputRef.current;
+        if (!input || !window.matchMedia("(pointer: coarse)").matches) return;
+        const vv = window.visualViewport;
+        let raf = 0;
+        let fallback = 0;
+        const pin = () => {
+            cancelAnimationFrame(raf);
+            raf = requestAnimationFrame(() => pinAboveKeyboard(targetRef.current));
+        };
+        const onFocus = () => {
+            pin();
+            vv?.addEventListener("resize", pin);
+            // Browsers without visualViewport resize events: try again once
+            // the keyboard has had time to open.
+            fallback = window.setTimeout(pin, 400);
+        };
+        const onBlur = () => {
+            vv?.removeEventListener("resize", pin);
+            clearTimeout(fallback);
+        };
+        input.addEventListener("focus", onFocus);
+        input.addEventListener("blur", onBlur);
+        input.addEventListener("input", pin);
+        if (document.activeElement === input) onFocus();
+        return () => {
+            onBlur();
+            cancelAnimationFrame(raf);
+            input.removeEventListener("focus", onFocus);
+            input.removeEventListener("blur", onBlur);
+            input.removeEventListener("input", pin);
+        };
+    }, [inputRef, targetRef, remountKey]);
+}
+
 function BotAvatar() {
     return (
         <Avatar className="h-8 w-8 sm:h-10 sm:w-10 shrink-0 border-none shadow-none rounded-none bg-transparent">
@@ -148,6 +210,8 @@ export function Chatbox() {
     const scrollContainerRef = useRef<HTMLDivElement>(null);
     const chatInputRef = useRef<HTMLInputElement>(null);
     const composerRef = useRef<HTMLDivElement>(null);
+    const heroInputRef = useRef<HTMLInputElement>(null);
+    const heroFormRef = useRef<HTMLFormElement>(null);
 
     const scrollToBottom = () => {
         // Scroll only the message list. scrollIntoView would also scroll the
@@ -172,10 +236,18 @@ export function Chatbox() {
     useEffect(() => {
         if (messages.length === 0) return;
         const id = requestAnimationFrame(() => {
-            composerRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+            // With the phone keyboard open, sit above the keyboard instead
+            // of behind it.
+            if (document.activeElement === chatInputRef.current) pinAboveKeyboard(composerRef.current);
+            else composerRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
         });
         return () => cancelAnimationFrame(id);
     }, [messages.length, isLoading, lastStreaming]);
+
+    // On phones, tapping either message box or typing in it keeps the box
+    // just above the on-screen keyboard.
+    const isHero = messages.length === 0;
+    useKeyboardMagnet(isHero ? heroInputRef : chatInputRef, isHero ? heroFormRef : composerRef, isHero);
 
     // When a reply finishes, put the cursor back in the input on devices with
     // a mouse. Skipped on touch screens so the keyboard doesn't pop open.
@@ -216,6 +288,7 @@ export function Chatbox() {
 
                 <div className="w-full max-w-lg mx-auto px-1 sm:px-4 animate-in fade-in zoom-in duration-500 slide-in-from-bottom-4">
                     <form
+                        ref={heroFormRef}
                         onSubmit={(e) => {
                             e.preventDefault();
                             handleSend();
@@ -224,6 +297,7 @@ export function Chatbox() {
                     >
                         <label htmlFor="hero-chat-input" className="sr-only">Describe your problem or ask a question</label>
                         <Input
+                            ref={heroInputRef}
                             id="hero-chat-input"
                             name="message"
                             autoComplete="off"
@@ -400,13 +474,6 @@ export function Chatbox() {
                             spellCheck={false}
                             value={input}
                             onChange={(e) => setInput(e.target.value)}
-                            onFocus={() => {
-                                // Snap the input into view once the on-screen
-                                // keyboard finishes opening.
-                                setTimeout(() => {
-                                    chatInputRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
-                                }, 300);
-                            }}
                             placeholder={isChatDisabled ? "Message limit reached." : "Type a message..."}
                             className="w-full h-12 sm:h-14 pl-5 sm:pl-6 pr-14 sm:pr-16 rounded-full shadow-md border-border/70 bg-card focus-visible:border-brand focus-visible:ring-2 focus-visible:ring-brand/40 transition-shadow hover:shadow-lg text-base sm:text-lg relative z-10"
                             disabled={inputDisabled}
