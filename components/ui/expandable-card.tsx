@@ -55,7 +55,7 @@ const ProjectDetails = ({
                     animate={{ opacity: 1, scale: 1 }}
                     exit={{ opacity: 0, scale: 0.9 }}
                     ref={refProp}
-                    className="w-full max-w-2xl h-full md:h-fit md:max-h-[85vh] flex flex-col bg-white dark:bg-neutral-900 sm:rounded-3xl overflow-hidden shadow-2xl pointer-events-auto"
+                    className="w-full max-w-2xl h-full md:h-fit md:max-h-[85vh] flex flex-col bg-card dark:bg-neutral-900 sm:rounded-3xl overflow-hidden shadow-2xl pointer-events-auto"
                 >
                     {/* Close Button */}
                     <motion.button
@@ -63,7 +63,7 @@ const ProjectDetails = ({
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        className="absolute top-4 right-4 bg-white/50 dark:bg-black/50 p-2 rounded-full z-10 backdrop-blur-sm"
+                        className="absolute top-4 right-4 bg-card/70 dark:bg-black/50 p-2 rounded-full z-10 backdrop-blur-sm"
                         onClick={onClose}
                     >
                         <X className="w-4 h-4 text-neutral-800 dark:text-neutral-200" />

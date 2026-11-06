@@ -164,7 +164,7 @@ function ExperienceCard({ experience, index }: { experience: Experience; index: 
                            flex items-center justify-center
                            ${index === 0 ? "top-0" : "top-0"} 
             `}>
-                <div className="w-4 h-4 rounded-full bg-white border-4 border-gray-300" />
+                <div className="w-4 h-4 rounded-full bg-card border-4 border-gray-300" />
             </div>
 
             {/* Left Side (Date & Company Info) */}
