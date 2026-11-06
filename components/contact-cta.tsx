@@ -44,7 +44,7 @@ interface ActionTileProps {
 function ActionTile({ icon, title, hint, primary, onClick, href, index }: ActionTileProps) {
     const className = primary
         ? "bg-gradient-to-br from-blue-600/90 to-blue-600/70 border-blue-400/30 text-white"
-        : "bg-background/70 border-border/50 text-foreground hover:border-blue-400/40";
+        : "bg-muted/60 border-border/60 text-foreground hover:border-blue-400/40";
     const inner = (
         <>
             <span className={primary ? "text-white" : "text-blue-500"} aria-hidden>{icon}</span>
@@ -88,7 +88,7 @@ export function ContactCta() {
     }, []);
 
     return (
-        <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-muted/80 to-muted/30 p-5 shadow-xl backdrop-blur-md sm:p-6">
+        <div className="relative overflow-hidden rounded-3xl border border-border/70 bg-gradient-to-br from-card to-card/70 p-5 shadow-xl backdrop-blur-md sm:p-6">
             {/* Soft brand glow */}
             <span aria-hidden className="pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-full bg-blue-500/20 blur-3xl" />
 
@@ -128,7 +128,7 @@ export function ContactCta() {
                                     href={l.url}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="inline-flex items-center gap-1.5 rounded-full border border-border/40 bg-background/60 px-3 py-1.5 text-xs text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
+                                    className="inline-flex items-center gap-1.5 rounded-full border border-border/70 bg-card px-3 py-1.5 text-xs text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
                                 >
                                     <Icon size={13} aria-hidden />
                                     {l.platform}

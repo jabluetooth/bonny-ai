@@ -43,39 +43,81 @@
   --radius-xl: calc(var(--radius) + 4px);
 }
 
+/* Mist-blue palette: the neutral greys used across components (neutral,
+   gray, zinc) are re-pointed at Tailwind's cool slate scale, so hard-coded
+   greys pick up the same blue tint as the theme tokens below. */
+@theme {
+  --color-neutral-50: oklch(98.4% 0.003 247.858);
+  --color-neutral-100: oklch(96.8% 0.007 247.896);
+  --color-neutral-200: oklch(92.9% 0.013 255.508);
+  --color-neutral-300: oklch(86.9% 0.022 252.894);
+  --color-neutral-400: oklch(70.4% 0.04 256.788);
+  --color-neutral-500: oklch(55.4% 0.046 257.417);
+  --color-neutral-600: oklch(44.6% 0.043 257.281);
+  --color-neutral-700: oklch(37.2% 0.044 257.287);
+  --color-neutral-800: oklch(27.9% 0.041 260.031);
+  --color-neutral-900: oklch(20.8% 0.042 265.755);
+  --color-neutral-950: oklch(12.9% 0.042 264.695);
+  --color-gray-50: oklch(98.4% 0.003 247.858);
+  --color-gray-100: oklch(96.8% 0.007 247.896);
+  --color-gray-200: oklch(92.9% 0.013 255.508);
+  --color-gray-300: oklch(86.9% 0.022 252.894);
+  --color-gray-400: oklch(70.4% 0.04 256.788);
+  --color-gray-500: oklch(55.4% 0.046 257.417);
+  --color-gray-600: oklch(44.6% 0.043 257.281);
+  --color-gray-700: oklch(37.2% 0.044 257.287);
+  --color-gray-800: oklch(27.9% 0.041 260.031);
+  --color-gray-900: oklch(20.8% 0.042 265.755);
+  --color-gray-950: oklch(12.9% 0.042 264.695);
+  --color-zinc-50: oklch(98.4% 0.003 247.858);
+  --color-zinc-100: oklch(96.8% 0.007 247.896);
+  --color-zinc-200: oklch(92.9% 0.013 255.508);
+  --color-zinc-300: oklch(86.9% 0.022 252.894);
+  --color-zinc-400: oklch(70.4% 0.04 256.788);
+  --color-zinc-500: oklch(55.4% 0.046 257.417);
+  --color-zinc-600: oklch(44.6% 0.043 257.281);
+  --color-zinc-700: oklch(37.2% 0.044 257.287);
+  --color-zinc-800: oklch(27.9% 0.041 260.031);
+  --color-zinc-900: oklch(20.8% 0.042 265.755);
+  --color-zinc-950: oklch(12.9% 0.042 264.695);
+}
+
 :root {
   --radius: 0.625rem;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
+  /* Mist blue: a cool off-white page with white cards, navy text and the
+     existing blue accent. Calmer than pure white, and the fluid cursor's
+     colours stay vivid on it. */
+  --background: oklch(0.972 0.007 264);       /* #F4F6FB mist */
+  --foreground: oklch(0.208 0.042 265.755);   /* #0F172A navy */
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
+  --card-foreground: oklch(0.208 0.042 265.755);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
+  --popover-foreground: oklch(0.208 0.042 265.755);
+  --primary: oklch(0.279 0.041 260.031);      /* #1E293B slate navy */
+  --primary-foreground: oklch(0.984 0.003 247.858);
+  --secondary: oklch(0.953 0.01 264);         /* #ECEFF6 */
+  --secondary-foreground: oklch(0.279 0.041 260.031);
+  --muted: oklch(0.953 0.01 264);
+  --muted-foreground: oklch(0.554 0.046 257.417);
+  --accent: oklch(0.953 0.01 264);
+  --accent-foreground: oklch(0.208 0.042 265.755);
   --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.646 0.222 41.116);
+  --border: oklch(0.922 0.014 264);           /* #E1E6F0 */
+  --input: oklch(0.922 0.014 264);
+  --ring: oklch(0.707 0.165 254.624);         /* blue-400 */
+  --chart-1: oklch(0.623 0.214 259.815);
   --chart-2: oklch(0.6 0.118 184.704);
   --chart-3: oklch(0.398 0.07 227.392);
   --chart-4: oklch(0.828 0.189 84.429);
   --chart-5: oklch(0.769 0.188 70.08);
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  --sidebar: oklch(0.984 0.003 247.858);
+  --sidebar-foreground: oklch(0.208 0.042 265.755);
+  --sidebar-primary: oklch(0.279 0.041 260.031);
+  --sidebar-primary-foreground: oklch(0.984 0.003 247.858);
+  --sidebar-accent: oklch(0.953 0.01 264);
+  --sidebar-accent-foreground: oklch(0.208 0.042 265.755);
+  --sidebar-border: oklch(0.922 0.014 264);
+  --sidebar-ring: oklch(0.707 0.165 254.624);
 }
 
 .dark {
@@ -123,6 +165,16 @@
 }
 
 @layer utilities {
+  /* Page background: mist with a faint blue haze at the top. Fixed so it
+     doesn't scroll with long pages. */
+  .bg-app {
+    background-color: var(--background);
+    background-image:
+      radial-gradient(ellipse 80% 50% at 50% -10%, oklch(0.623 0.214 259.815 / 0.10), transparent 70%),
+      radial-gradient(ellipse 60% 40% at 100% 100%, oklch(0.707 0.165 254.624 / 0.06), transparent 70%);
+    background-attachment: fixed;
+  }
+
   .animate-marquee {
     animation: marquee var(--duration) linear infinite;
   }

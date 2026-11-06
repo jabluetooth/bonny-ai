@@ -96,7 +96,7 @@ function Block({ children, className }: { children: React.ReactNode; className?:
                 duration: 0.4,
                 scale: { type: "spring", visualDuration: 0.4, bounce: 0.25 },
             }}
-            className={cn("mt-1 w-full grid grid-cols-1 min-w-0 overflow-hidden rounded-xl bg-background/50 backdrop-blur-sm", className)}
+            className={cn("mt-1 w-full grid grid-cols-1 min-w-0 overflow-hidden rounded-xl bg-card/60 backdrop-blur-sm", className)}
         >
             {children}
         </motion.div>
@@ -224,7 +224,7 @@ export function Chatbox() {
                             value={input}
                             onChange={(e) => setInput(e.target.value)}
                             placeholder={isChatDisabled ? "Message limit reached." : "Ask me anything..."}
-                            className="w-full h-12 sm:h-14 pl-5 sm:pl-6 pr-14 sm:pr-16 rounded-full text-base sm:text-lg shadow-lg border-muted-foreground/20 bg-background focus-visible:ring-1 focus-visible:ring-primary/50 transition-all hover:shadow-xl relative z-10"
+                            className="w-full h-12 sm:h-14 pl-5 sm:pl-6 pr-14 sm:pr-16 rounded-full text-base sm:text-lg shadow-lg border-muted-foreground/20 bg-card focus-visible:ring-1 focus-visible:ring-primary/50 transition-all hover:shadow-xl relative z-10"
                             disabled={inputDisabled}
                         />
                         <Button
@@ -280,7 +280,7 @@ export function Chatbox() {
                                                         "rounded-[20px] px-4 sm:px-5 py-2.5 text-[15px] shadow-sm leading-relaxed break-words whitespace-pre-wrap [word-break:break-word] min-w-0 max-w-[88%] sm:max-w-[85%] overflow-hidden",
                                                         isUser && "bg-gradient-to-br from-blue-600/90 to-blue-600/70 backdrop-blur-md border border-blue-400/30 shadow-xl text-white rounded-br-none",
                                                         isAdmin && "bg-gradient-to-br from-red-600/90 to-red-600/70 backdrop-blur-md border border-red-400/30 shadow-xl text-white rounded-bl-none",
-                                                        isBot && "bg-gradient-to-br from-muted/80 to-muted/40 backdrop-blur-md border border-white/10 shadow-xl text-foreground rounded-bl-none"
+                                                        isBot && "bg-gradient-to-br from-card to-card/80 backdrop-blur-md border border-border/70 shadow-xl text-foreground rounded-bl-none"
                                                     )}
                                                 >
                                                                                                         {shouldAnimate ? (
@@ -327,7 +327,7 @@ export function Chatbox() {
                                             maxResolution={100}
                                         />
                                     </div>
-                                    <div className="bg-muted text-foreground rounded-[20px] rounded-bl-none px-5 py-4 flex gap-1 items-center shadow-sm">
+                                    <div className="bg-card border border-border/70 text-foreground rounded-[20px] rounded-bl-none px-5 py-4 flex gap-1 items-center shadow-sm">
                                         <span className="w-1.5 h-1.5 bg-foreground/40 rounded-full animate-bounce [animation-delay:-0.3s]" />
                                         <span className="w-1.5 h-1.5 bg-foreground/40 rounded-full animate-bounce [animation-delay:-0.15s]" />
                                         <span className="w-1.5 h-1.5 bg-foreground/40 rounded-full animate-bounce" />
@@ -358,7 +358,7 @@ export function Chatbox() {
                                             type="button"
                                             onClick={() => handlePrompt(s.prompt, s.intent)}
                                             disabled={isLoading}
-                                            className="shrink-0 rounded-full border border-border/40 bg-background/60 backdrop-blur-sm px-3.5 py-1.5 text-xs text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-all duration-150 disabled:opacity-30 disabled:cursor-not-allowed whitespace-nowrap"
+                                            className="shrink-0 rounded-full border border-border/70 bg-card/80 backdrop-blur-sm px-3.5 py-1.5 text-xs text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-all duration-150 disabled:opacity-30 disabled:cursor-not-allowed whitespace-nowrap"
                                         >
                                             {s.label}
                                         </button>
@@ -393,7 +393,7 @@ export function Chatbox() {
                                 }, 300);
                             }}
                             placeholder={isChatDisabled ? "Message limit reached." : "Type a message..."}
-                            className="w-full h-12 sm:h-14 pl-5 sm:pl-6 pr-14 sm:pr-16 rounded-full shadow-md border-border/40 bg-background/80 backdrop-blur-md focus-visible:ring-1 focus-visible:ring-primary/30 transition-shadow hover:shadow-lg text-base sm:text-lg relative z-10"
+                            className="w-full h-12 sm:h-14 pl-5 sm:pl-6 pr-14 sm:pr-16 rounded-full shadow-md border-border/70 bg-card/90 backdrop-blur-md focus-visible:ring-1 focus-visible:ring-primary/30 transition-shadow hover:shadow-lg text-base sm:text-lg relative z-10"
                             disabled={inputDisabled}
                         />
                         <Button

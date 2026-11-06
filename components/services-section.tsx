@@ -110,7 +110,7 @@ export function ServicesSection() {
                 </div>
 
                 {/* Detail panel */}
-                <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-muted/80 to-muted/30 backdrop-blur-md shadow-xl">
+                <div className="relative overflow-hidden rounded-2xl border border-border/70 bg-gradient-to-br from-card to-card/70 backdrop-blur-md shadow-xl">
                     <AnimatePresence mode="wait">
                         <motion.div
                             key={active.id}
